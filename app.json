@@ -1,13 +1,14 @@
 {
   "expo": {
-    "name": "crash_course",
-    "slug": "crash_course",
+    "name": "Agrotech",
+    "slug": "Agrotech",
+    "scheme": "Agrotech",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/jsk-splash.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -15,9 +16,11 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "package": "com.mycorp.myapp"
     },
     "android": {
+      "package": "com.agrotech.jsk",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -25,6 +28,21 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-build-properties"
+    ],
+    "permissions": [
+      "LOCATION"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "04edc6cc-d06f-42ad-9389-9ae8c003d43e"
+      }
     }
   }
 }

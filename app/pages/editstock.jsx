@@ -1,0 +1,172 @@
+import React, { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { updateDoc, doc } from "firebase/firestore";
+import { db } from "../../lib/fire";
+import FormField from "../../components/FormField";
+import CustomButton from "../../components/CustomButton";
+import * as ImagePicker from "expo-image-picker";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
+const EditStock = () => {
+  const { item: itemString, photoURL } = useLocalSearchParams();
+  const item = JSON.parse(itemString);
+  console.log("itemString:", itemString);
+  const router = useRouter();
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    cropName: item.cropName,
+    amount: item.amount,
+    unit: item.unit,
+    locationString: item.locationString,
+    photoURL: photoURL,
+  });
+  // console.log(form);
+  const submit = async () => {
+    // console.log(form);
+    if (!form.cropName || !form.photoURL || !form.amount) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await updateDoc(doc(db, "stock", item.id), form);
+      Alert.alert("Success", "Stock updated successfully");
+      router.back(); // Navigate back after successful update
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openPicker = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      const photoUri = result.assets[0].uri;
+      const response = await fetch(photoUri);
+      const blob = await response.blob();
+      const storageRef = ref(getStorage(), `photos/${item.uid}/${Date.now()}`);
+      await uploadBytes(storageRef, blob);
+      const photoURL = await getDownloadURL(storageRef);
+      setForm({ ...form, photoURL });
+    } else {
+      Alert.alert(
+        "Notice",
+        "Image selection was cancelled, keeping existing image."
+      );
+    }
+  };
+
+  return (
+    <SafeAreaView className="bg-primary h-full">
+      <ScrollView style={{ paddingBottom: hp("5%") }}>
+        <View className="flex justify-center items-center mt-3">
+          <Text className="text-4xl text-secondary font-pbold">Edit Stock</Text>
+        </View>
+
+        <View
+          className="w-full flex justify-start mt-4 h-full px-4"
+          style={{ minHeight: Dimensions.get("window").height - 100 }}
+        >
+          <FormField
+            title="Crop Name"
+            value={form.cropName}
+            handleChangeText={(e) => setForm({ ...form, cropName: e })}
+            otherStyles="mt-7"
+          />
+
+          <TouchableOpacity onPress={openPicker}>
+            <View className="mt-7 space-y-2">
+              <Text className="text-base text-black font-pmedium">
+                Crop Image
+              </Text>
+              <Image
+                source={{ uri: form.photoURL }}
+                className="w-full h-40 rounded-lg mb-4"
+              />
+              <View className="w-full h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2">
+                <Text className="text-sm text-black font-pmedium">
+                  Change Image
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <FormField
+            title="Selling Amount"
+            value={form.amount}
+            handleChangeText={(e) => setForm({ ...form, amount: e })}
+            otherStyles="mt-7"
+            keyboardType="numeric"
+          />
+
+          <View className="mt-7 flex flex-row">
+            <TouchableOpacity
+              className={`py-2 px-4 rounded-md ${
+                form.unit === "kg" ? "bg-secondary" : "bg-gray-400"
+              }`}
+              onPress={() => setForm({ ...form, unit: "kg" })}
+            >
+              <Text className="text-white font-semibold">kg</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`py-2 px-4 rounded-md ml-2 ${
+                form.unit === "quintal" ? "bg-secondary" : "bg-gray-400"
+              }`}
+              onPress={() => setForm({ ...form, unit: "quintal" })}
+            >
+              <Text className="text-white font-semibold">quintal</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`py-2 px-4 rounded-md ml-2 ${
+                form.unit === "ton" ? "bg-secondary" : "bg-gray-400"
+              }`}
+              onPress={() => setForm({ ...form, unit: "ton" })}
+            >
+              <Text className="text-white font-semibold">ton</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`py-2 px-4 rounded-md ml-2 ${
+                form.unit === "crate" ? "bg-secondary" : "bg-gray-400"
+              }`}
+              onPress={() => setForm({ ...form, unit: "crate" })}
+            >
+              <Text className="text-white font-semibold">crate</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View className="space-y-2 mt-7">
+            <Text className="text-base text-black font-pmedium">Location</Text>
+            <Text className="text-base text-black">{form.locationString}</Text>
+          </View>
+          <CustomButton
+            title="Update Stock"
+            handlePress={submit}
+            containerStyles="mt-7"
+            isLoading={isSubmitting}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+export default EditStock;
