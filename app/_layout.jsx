@@ -2,8 +2,9 @@ import { StyleSheet, Text, View } from "react-native";
 import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
 import { useFonts } from "expo-font";
+import { I18nextProvider } from "react-i18next";
 import GlobalProvider from "../context/GlobalProvider";
-
+import i18n from "../i18n/i18n";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 const RootLayout = () => {
@@ -35,23 +36,34 @@ const RootLayout = () => {
   }
   return (
     <GlobalProvider>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(btabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="(crops)"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen name="search/[query]" options={{ headerShown: false }} />
-        <Stack.Screen name="diseases/[crop]" options={{ headerShown: false }} />
-        <Stack.Screen name="pages/editstock" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="pages/requestStock"
-          options={{ headerShown: false }}
-        />
-      </Stack>
+      <I18nextProvider i18n={i18n}>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(btabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(crops)"
+            options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="search/[query]"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="diseases/[crop]"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="pages/editstock"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="pages/requestStock"
+            options={{ headerShown: false }}
+          />
+        </Stack>
+      </I18nextProvider>
     </GlobalProvider>
   );
 };

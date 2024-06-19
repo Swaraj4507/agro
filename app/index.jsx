@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { ScrollView, Text, Image, View } from "react-native";
+import { ScrollView, Text, Image, View, TouchableOpacity } from "react-native";
 import { Redirect, router } from "expo-router";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -10,9 +10,15 @@ import { useGlobalContext } from "../context/GlobalProvider";
 import Loader from "../components/Loader";
 import { useState } from "react";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
+
 export default function App() {
   const { loading, isLogged, userType } = useGlobalContext();
+  const { t, i18n } = useTranslation();
   // console.log(process.env.EXPO_FIREBASE_API_KEY);
+  const handleLanguageChange = (language) => {
+    i18n.changeLanguage(language);
+  };
   if (loading) {
     return <Loader isLoading={loading} />;
   }
@@ -44,9 +50,10 @@ export default function App() {
               </Text>
               ,{"\n"}
               your agricultural hub.
+              {/* {t("welcomeMessage")} */}
             </Text>
             <Text className="text-sm font-pbold  text-black-100 mt-7 text-left">
-              Bringing the fields to your fingertips
+              {t("bringingFields")}
             </Text>
           </Animated.View>
 
@@ -54,7 +61,8 @@ export default function App() {
             userType === "farmer" ? (
               <>
                 <CustomButton
-                  title={"Go to farmer section"}
+                  // title={"Go to farmer section"}
+                  title={t("goToFarmerSection")}
                   handlePress={() => router.push("/home")}
                   containerStyles="w-full mt-20"
                 />
@@ -69,12 +77,12 @@ export default function App() {
           ) : (
             <>
               <CustomButton
-                title="Continue as farmer"
+                title={t("continueAsFarmer")}
                 handlePress={() => router.push("/sign-in-f")}
                 containerStyles="w-full mt-20"
               />
               <CustomButton
-                title="Continue as buyer"
+                title={t("continueAsBuyer")}
                 handlePress={() => router.push("/sign-up-b")}
                 containerStyles="w-full mt-10"
               />
@@ -82,6 +90,20 @@ export default function App() {
           )}
         </Animated.View>
       </ScrollView>
+      <View className="flex flex-row justify-center mt-4">
+        <TouchableOpacity
+          onPress={() => handleLanguageChange("en")}
+          style={{ marginHorizontal: 10 }}
+        >
+          <Text>English</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => handleLanguageChange("hi")}
+          style={{ marginHorizontal: 10 }}
+        >
+          <Text>हिन्दी</Text>
+        </TouchableOpacity>
+      </View>
 
       <StatusBar backgroundColor="#000" style="light" />
     </SafeAreaView>

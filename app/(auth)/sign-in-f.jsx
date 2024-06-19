@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 
 import { images } from "../../constants";
-
+import { useTranslation } from "react-i18next";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
 import { useGlobalContext } from "../../context/GlobalProvider";
@@ -15,6 +15,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 const SignIn = () => {
   const auth = getAuth(app);
   const { setUser, setIsLogged, setUserType } = useGlobalContext();
+  const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     mobile: "",
@@ -101,38 +102,37 @@ const SignIn = () => {
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
-        <View className="flex justify-center items-center  mt-3">
-          <Text className="text-4xl text-secondary font-psemibold">
-            Agro tech
+        <View className="flex justify-center items-center mt-3">
+          <Text className="text-3xl text-secondary font-psemibold pt-2">
+            {t("appName")}
           </Text>
-          {/* <Text className="text-4xl text-black font-bold mt-5">Register</Text> */}
           <Text className="text-xm text-black font-psemibold mt-5">
-            Say Bye to Middle Man’s 👋
+            {t("slogan")}
           </Text>
         </View>
         <View
-          className="w-full flex justify-start  h-full px-4 my-6"
+          className="w-full flex justify-start h-full px-4  my-6 "
           style={{
             minHeight: Dimensions.get("window").height - 100,
           }}
         >
-          <Text className="text-3xl font-semibold text-black mt-10 font-psemibold">
-            Login as Farmer
+          <Text className="text-3xl font-semibold text-black mt-10 font-psemibold pt-2">
+            {t("loginAsFarmer")}
           </Text>
           <View className="flex justify-start pt-5 flex-row gap-2">
             <Text className="text-lg text-gray-500 font-pregular">
-              Don't have an account?
+              {t("noAccount")}
             </Text>
             <Link
               href="/sign-up-f"
               className="text-lg font-psemibold text-secondary"
             >
-              Register
+              {t("register")}
             </Link>
           </View>
 
           <FormField
-            title="Mobile number"
+            title={t("mobileNumber")}
             value={form.mobile}
             handleChangeText={(e) => setForm({ ...form, mobile: e })}
             otherStyles="mt-7"
@@ -140,14 +140,14 @@ const SignIn = () => {
           />
 
           <FormField
-            title="Password"
+            title={t("password")}
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
           />
 
           <CustomButton
-            title="Sign In"
+            title={t("signIn")}
             handlePress={submit}
             containerStyles="mt-7"
             isLoading={isSubmitting}

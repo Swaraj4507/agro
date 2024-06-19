@@ -1,0 +1,21 @@
+{
+  "welcomeMessage": "Welcome to JSK AgroTech, your agricultural hub.",
+  "bringingFields": "Bringing the fields to your fingertips",
+  "goToFarmerSection": "Go to farmer section",
+  "goToBuyerSection": "Go to Buyer section",
+  "continueAsFarmer": "Continue as farmer",
+  "continueAsBuyer": "Continue as buyer",
+  "appName": "Agro tech",
+  "slogan": "Say Bye to Middle Man’s 👋",
+  "loginAsFarmer": "Login as Farmer",
+  "noAccount": "Don't have an account?",
+  "register": "Register",
+  "mobileNumber": "Mobile number",
+  "password": "Password",
+  "signIn": "Sign In",
+  "error": "Error",
+  "fillFields": "Please fill in all fields",
+  "success": "Success",
+  "userSignedIn": "User signed in successfully",
+  "userNotFound": "User document not found"
+}
