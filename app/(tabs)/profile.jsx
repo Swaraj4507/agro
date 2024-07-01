@@ -29,12 +29,11 @@ import { router } from "expo-router";
 import { app } from "../../lib/fire";
 import StockCard from "../../components/StockCard";
 import { Loader } from "../../components";
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from "react-native-responsive-screen";
+import { heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { useTranslation } from "react-i18next";
 const Profile = () => {
-  const { user, setUser, setIsLogged, setUserType } = useGlobalContext();
+  const { user, logout } = useGlobalContext();
+  const { t } = useTranslation();
   const [userInfo, setUserInfo] = useState(null);
   const [stock, setStock] = useState([]);
   const auth = getAuth(app);
@@ -95,11 +94,12 @@ const Profile = () => {
     }
   }, [user]);
 
-  const logout = async () => {
+  const signout = async () => {
     await firebaseSignOut(auth);
-    setUser(null);
-    setIsLogged(false);
-    setUserType(null);
+    //setUser(null);
+    // setIsLogged(false);
+    // setUserType(null);
+    await logout();
     router.replace("/sign-in-f");
   };
 
@@ -115,16 +115,16 @@ const Profile = () => {
         renderItem={({ item }) => <StockCard item={item} />}
         ListEmptyComponent={() => (
           <EmptyState
-            title="No Stock Found"
-            subtitle="You have not placed any orders yet."
+            title={t("nothing_found_title")}
+            subtitle={t("nothing_found_subtitle")}
           />
         )}
-        contentContainerStyle={{ paddingBottom: hp("10%") }}
+        contentContainerStyle={{ paddingBottom: hp("12%") }}
         // stickyHeaderIndices={[0]}
         ListHeaderComponent={() => (
           <View className="w-full flex justify-center items-center mt-6 mb-4 px-4 text-black">
             <TouchableOpacity
-              onPress={logout}
+              onPress={signout}
               className="flex w-full items-end mb-10"
             >
               <Image
@@ -151,19 +151,19 @@ const Profile = () => {
             <View className="mt-5 flex flex-row">
               <InfoBox
                 title={stock.length || 0}
-                subtitle="Stock"
+                subtitle={t("stock")}
                 titleStyles="text-xl"
                 containerStyles="mr-10"
               />
               <InfoBox
                 title={userInfo.mobile || "N/A"}
-                subtitle="Mobile"
+                subtitle={t("mobile")}
                 titleStyles="text-xl"
               />
             </View>
             <View>
               <Text className="font-pbold text-lg text-black mt-5">
-                Your Stock
+                {t("yourStock")}
               </Text>
             </View>
           </View>

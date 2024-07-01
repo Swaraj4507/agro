@@ -20,7 +20,9 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { useTranslation } from "react-i18next";
 const EditStock = () => {
+  const { t } = useTranslation();
   const { item: itemString, photoURL } = useLocalSearchParams();
   const item = JSON.parse(itemString);
   console.log("itemString:", itemString);
@@ -79,7 +81,9 @@ const EditStock = () => {
     <SafeAreaView className="bg-primary h-full">
       <ScrollView style={{ paddingBottom: hp("5%") }}>
         <View className="flex justify-center items-center mt-3">
-          <Text className="text-4xl text-secondary font-pbold">Edit Stock</Text>
+          <Text className="text-4xl text-secondary font-pbold">
+            {t("editStock")}
+          </Text>
         </View>
 
         <View
@@ -87,7 +91,7 @@ const EditStock = () => {
           style={{ minHeight: Dimensions.get("window").height - 100 }}
         >
           <FormField
-            title="Crop Name"
+            title={t("cropName")}
             value={form.cropName}
             handleChangeText={(e) => setForm({ ...form, cropName: e })}
             otherStyles="mt-7"
@@ -96,7 +100,7 @@ const EditStock = () => {
           <TouchableOpacity onPress={openPicker}>
             <View className="mt-7 space-y-2">
               <Text className="text-base text-black font-pmedium">
-                Crop Image
+                {t("cropImage")}
               </Text>
               <Image
                 source={{ uri: form.photoURL }}
@@ -104,14 +108,14 @@ const EditStock = () => {
               />
               <View className="w-full h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2">
                 <Text className="text-sm text-black font-pmedium">
-                  Change Image
+                  {t("changeImage")}
                 </Text>
               </View>
             </View>
           </TouchableOpacity>
 
           <FormField
-            title="Selling Amount"
+            title={t("sellingAmount")}
             value={form.amount}
             handleChangeText={(e) => setForm({ ...form, amount: e })}
             otherStyles="mt-7"
@@ -125,7 +129,7 @@ const EditStock = () => {
               }`}
               onPress={() => setForm({ ...form, unit: "kg" })}
             >
-              <Text className="text-white font-semibold">kg</Text>
+              <Text className="text-white font-semibold">{t("kg")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className={`py-2 px-4 rounded-md ml-2 ${
@@ -133,7 +137,7 @@ const EditStock = () => {
               }`}
               onPress={() => setForm({ ...form, unit: "quintal" })}
             >
-              <Text className="text-white font-semibold">quintal</Text>
+              <Text className="text-white font-semibold">{t("quintal")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className={`py-2 px-4 rounded-md ml-2 ${
@@ -141,7 +145,7 @@ const EditStock = () => {
               }`}
               onPress={() => setForm({ ...form, unit: "ton" })}
             >
-              <Text className="text-white font-semibold">ton</Text>
+              <Text className="text-white font-semibold">{t("ton")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className={`py-2 px-4 rounded-md ml-2 ${
@@ -149,16 +153,18 @@ const EditStock = () => {
               }`}
               onPress={() => setForm({ ...form, unit: "crate" })}
             >
-              <Text className="text-white font-semibold">crate</Text>
+              <Text className="text-white font-semibold">{t("crate")}</Text>
             </TouchableOpacity>
           </View>
 
           <View className="space-y-2 mt-7">
-            <Text className="text-base text-black font-pmedium">Location</Text>
+            <Text className="text-base text-black font-pmedium">
+              {t("location_label")}
+            </Text>
             <Text className="text-base text-black">{form.locationString}</Text>
           </View>
           <CustomButton
-            title="Update Stock"
+            title={t("updateStock")}
             handlePress={submit}
             containerStyles="mt-7"
             isLoading={isSubmitting}

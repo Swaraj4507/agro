@@ -44,7 +44,11 @@ const RootLayout = () => {
           <Stack.Screen name="(btabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="(crops)"
-            options={{ headerShown: false, presentation: "modal" }}
+            options={{
+              headerShown: false,
+              presentation: "modal",
+              // animation: ""
+            }}
           />
           <Stack.Screen
             name="search/[query]"

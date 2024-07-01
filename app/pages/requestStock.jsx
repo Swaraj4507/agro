@@ -24,8 +24,10 @@ import CustomButton from "../../components/CustomButton";
 import { FormField } from "../../components";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 const RequestStock = () => {
   const { user } = useGlobalContext();
+  const { t } = useTranslation();
   const { item: itemString, photoURL } = useLocalSearchParams();
   const stockItem = JSON.parse(itemString);
   const [requestedQuantity, setRequestedQuantity] = useState(
@@ -118,7 +120,7 @@ const RequestStock = () => {
       <ScrollView className="">
         <Animated.View className="p-4">
           <Text className="text-4xl text-secondary font-pbold mb-1">
-            {stockItem.cropName}
+            {t(`${stockItem.cropName}`)}
           </Text>
           {/* <SharedElement id={photoURL}> */}
           <Image
@@ -127,10 +129,11 @@ const RequestStock = () => {
           />
           {/* </SharedElement> */}
           <Text className="text-base text-black font-pmedium">
-            Available Quantity: {stockItem.availableQuantity} {stockItem.unit}
+            {t("available_quantity_label")}: {stockItem.availableQuantity}{" "}
+            {stockItem.unit}
           </Text>
           <FormField
-            title="Requested Quantity"
+            title={t("requestedQuantity")}
             value={requestedQuantity.toString()}
             handleChangeText={(text) => {
               // const newValue = parseInt(text);
@@ -141,20 +144,20 @@ const RequestStock = () => {
             otherStyles="mt-1"
           />
           <FormField
-            title="Quoted Price"
+            title={t("quotedPrice")}
             value={quotedPrice}
             handleChangeText={(text) => setQuotedPrice(text)}
             keyboardType="numeric"
             otherStyles=" mt-1 "
           />
           <FormField
-            title="Delivery Details "
+            title={t("deliveryDetails")}
             value={deliveryDetails}
             handleChangeText={(text) => setDeliveryDetails(text)}
             otherStyles="mt-1"
           />
           <CustomButton
-            title="Order "
+            title={t("placeOrder")}
             handlePress={handleRequest}
             containerStyles="mt-7"
             isLoading={isSubmitting}

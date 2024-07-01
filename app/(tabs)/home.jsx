@@ -23,6 +23,7 @@ import { CustomButton, EmptyState, SearchInput } from "../../components";
 // import { Home } from "../../assets/Home.json";
 import Loader from "../../components/Loader";
 import LottieView from "lottie-react-native";
+import { useTranslation } from "react-i18next";
 // import Animated, {
 //   LightSpeedInRight,
 //   LightSpeedOutLeft,
@@ -33,6 +34,7 @@ import {
 } from "react-native-responsive-screen";
 const Home = () => {
   const { user } = useGlobalContext();
+  const { t } = useTranslation();
   const [crops, setCrops] = useState([]);
   const [stock, setStock] = useState([]);
   const [showCrops, setShowCrops] = useState(true);
@@ -102,8 +104,8 @@ const Home = () => {
         // contentContainerStyle={{ paddingBottom: hp("10%") }}
         ListEmptyComponent={() => (
           <EmptyState
-            title="Nothing Found"
-            subtitle="You have not added any thing yet."
+            title={t("nothing_found_title")}
+            subtitle={t("nothing_found_subtitle")}
           />
         )}
         stickyHeaderIndices={[0]}
@@ -112,7 +114,7 @@ const Home = () => {
             <View className="flex justify-between items-start flex-row ">
               <View>
                 <Text className="font-psemibold text-2xl mt-1 text-black">
-                  Welcome
+                  {t("welcome")}
                 </Text>
                 <Text className="text-2xl font-psemibold text-secondary">
                   {user?.fullname}
@@ -128,7 +130,7 @@ const Home = () => {
 
             <View className="flex ">
               <CustomButton
-                title="Check Crops"
+                title={t("check_crops")}
                 handlePress={() => router.push("cropsListing")}
                 containerStyles="w-full mb-2"
               />
@@ -150,7 +152,7 @@ const Home = () => {
                   // loop
                 />
                 <Text className="text-center font-psemibold text-black ">
-                  My Crops
+                  {t("my_crops")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -167,7 +169,7 @@ const Home = () => {
                   // loop
                 />
                 <Text className="text-center font-psemibold text-black">
-                  My Stock
+                  {t("my_stock")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -176,6 +178,11 @@ const Home = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        contentContainerStyle={{
+          // marginBottom: 10,
+          // backgroundColor: "#000",
+          paddingBottom: hp("12%"),
+        }}
       />
     </SafeAreaView>
   );

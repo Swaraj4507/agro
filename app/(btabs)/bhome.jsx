@@ -26,6 +26,7 @@ import { router } from "expo-router";
 import { CustomButton, EmptyState, SearchInput } from "../../components";
 import Loader from "../../components/Loader";
 import LottieView from "lottie-react-native";
+import { useTranslation } from "react-i18next";
 const bhome = () => {
   const { user } = useGlobalContext();
   const [stock, setStock] = useState([]);
@@ -33,7 +34,7 @@ const bhome = () => {
   const [showOrders, setShowOrders] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const { t } = useTranslation();
   useEffect(() => {
     if (user && user.uid) {
       const stockQuery = query(
@@ -114,8 +115,8 @@ const bhome = () => {
         }
         ListEmptyComponent={() => (
           <EmptyState
-            title="No Orders Found"
-            subtitle="You have not placed any orders yet."
+            title={t("nothing_found_title")}
+            subtitle={t("nothing_found_subtitle")}
           />
         )}
         stickyHeaderIndices={[0]}
@@ -124,7 +125,7 @@ const bhome = () => {
             <View className="flex justify-between items-start flex-row">
               <View>
                 <Text className="font-psemibold text-2xl mt-1 text-black">
-                  Welcome
+                  {t("welcome")}
                 </Text>
                 <Text className="text-2xl font-psemibold  text-secondary">
                   {user?.fullname}
@@ -133,7 +134,7 @@ const bhome = () => {
             </View>
             <View className="flex mt-1">
               <CustomButton
-                title="Check Crops"
+                title={t("check_crops")}
                 handlePress={() => router.push("cropsListing")}
                 containerStyles="w-full mb-2"
               />
@@ -154,7 +155,7 @@ const bhome = () => {
                   // loop
                 />
                 <Text className="text-center font-psemibold text-black ">
-                  Stock
+                  {t("stock_label")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -171,7 +172,7 @@ const bhome = () => {
                   // loop
                 />
                 <Text className="text-center font-psemibold text-black">
-                  My Orders
+                  {t("my_orders_label")}
                 </Text>
               </TouchableOpacity>
             </View>

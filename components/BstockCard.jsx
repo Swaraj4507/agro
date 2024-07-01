@@ -2,8 +2,10 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 // import { SharedElement } from "react-native-shared-element";
 const BStockCard = ({ item, onRequestPress }) => {
+  const { t } = useTranslation();
   const {
     cropName,
     locationString,
@@ -40,19 +42,21 @@ const BStockCard = ({ item, onRequestPress }) => {
         resizeMode="cover"
       />
       {/* </SharedElement> */}
-      <Text className="text-lg font-psemibold mb-2">{cropName}</Text>
+      <Text className="text-lg font-psemibold mb-2">{t(`${cropName}`)}</Text>
       <Text className="text-sm text-gray-600 mb-2 font-pmedium">
-        Location: {locationString}
+        {t("location_label")}: {locationString}
       </Text>
       <Text className="text-sm text-gray-600 mb-4 font-pmedium">
-        Quantity: {availableQuantity} {unit}
+        {t("available_quantity_label")}: {availableQuantity} {unit}
       </Text>
       <Text className="text-sm text-gray-600 mb-4 font-pmedium">
-        Price: {price}/ {unit}
+        {t("price_label")}: {price}/ {unit}
       </Text>
 
       {availableQuantity === 0 && (
-        <Text className="text-sm text-red-700 mb-4 font-pmedium">Sold Out</Text>
+        <Text className="text-sm text-red-700 mb-4 font-pmedium">
+          {t("sold_out_label")}
+        </Text>
       )}
 
       <View className="flex flex-row">
@@ -69,7 +73,9 @@ const BStockCard = ({ item, onRequestPress }) => {
           onPress={handleRequestPress}
           disabled={availableQuantity === 0}
         >
-          <Text className="text-white font-psemibold">Request</Text>
+          <Text className="text-white font-psemibold">
+            {t("request_button")}
+          </Text>
         </TouchableOpacity>
       </View>
     </Animated.View>

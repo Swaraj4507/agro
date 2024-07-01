@@ -30,7 +30,13 @@ import { app, db } from "../../lib/fire";
 import { router } from "expo-router";
 import { Loader } from "../../components";
 import { Dropdown } from "react-native-element-dropdown";
+import { useTranslation } from "react-i18next";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 const Create = () => {
+  const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const { user } = useGlobalContext();
   const [loading, setLoading] = useState(false);
@@ -169,16 +175,21 @@ const Create = () => {
   };
 
   return (
-    <SafeAreaView className="bg-primary h-full">
-      <Loader
-        isLoading={loading}
-        content={"Fetching your Location Please Wait"}
-      />
-      <ScrollView className="mb-10">
+    <SafeAreaView
+      className="bg-primary h-full"
+      //
+    >
+      <Loader isLoading={loading} content={t("loactionLoading")} />
+      <ScrollView
+        className=" h-full  "
+        contentContainerStyle={{ paddingBottom: hp("13%") }}
+      >
         <View className="flex justify-center items-center mt-3">
-          <Text className="text-4xl text-secondary font-pbold">Agro tech</Text>
+          <Text className="text-4xl text-secondary font-pbold">
+            {t("appName")}
+          </Text>
           <Text className="text-xm text-black font-pbold mt-5">
-            Say Bye to Middle Man’s 👋
+            {t("slogan")}
           </Text>
         </View>
 
@@ -190,20 +201,20 @@ const Create = () => {
         >
           <View className="flex justify-center items-center pt-5 flex-col gap-2">
             <Text className="text-xl text-black font-pbold">
-              Add Your Stock
+              {t("addYourStock")}
             </Text>
           </View>
           <Text className="text-base text-black font-pmedium mt-4">
-            Crop Name
+            {t("cropName")}
           </Text>
           <Dropdown
             // className="text-base text-black font-pmedium h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 focus:border-secondary flex flex-row "
-            data={cropsList.map((crop) => ({ label: crop, value: crop }))}
+            data={cropsList.map((crop) => ({ label: t(crop), value: crop }))}
             labelField="label"
             valueField="value"
-            placeholder="Select Crop"
+            placeholder={t("selectCrop")}
             search
-            searchPlaceholder="Search..."
+            searchPlaceholder={t("search")}
             value={form.cropName}
             onChange={(item) => setForm({ ...form, cropName: item.value })}
             style={{
@@ -216,7 +227,7 @@ const Create = () => {
           />
 
           <FormField
-            title="Varient"
+            title={t("variant")}
             value={form.varient}
             handleChangeText={(e) => setForm({ ...form, varient: e })}
             otherStyles="mt-7"
@@ -225,7 +236,7 @@ const Create = () => {
           <TouchableOpacity onPress={() => openPicker("image")}>
             <View className="mt-7 space-y-2">
               <Text className="text-base text-black font-pmedium">
-                Crop Image
+                {t("cropImage")}
               </Text>
               <View className="w-full h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2">
                 <Image
@@ -235,14 +246,14 @@ const Create = () => {
                   className="w-5 h-5"
                 />
                 <Text className="text-sm text-black font-pmedium">
-                  Upload image
+                  {t("uploadImage")}
                 </Text>
               </View>
             </View>
           </TouchableOpacity>
 
           <FormField
-            title="Selling Amount"
+            title={t("sellingAmount")}
             value={form.amount}
             handleChangeText={(e) => setForm({ ...form, amount: e })}
             otherStyles="mt-7"
@@ -250,7 +261,7 @@ const Create = () => {
           />
 
           <FormField
-            title="Quantity"
+            title={t("quantity_label")}
             value={form.quantity}
             handleChangeText={(e) => setForm({ ...form, quantity: e })}
             otherStyles="mt-7"
@@ -265,7 +276,7 @@ const Create = () => {
               ]}
               onPress={() => setForm({ ...form, unit: "kg" })}
             >
-              <Text style={styles.optionText}>kg</Text>
+              <Text style={styles.optionText}>{t("kg")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -274,7 +285,7 @@ const Create = () => {
               ]}
               onPress={() => setForm({ ...form, unit: "quintal" })}
             >
-              <Text style={styles.optionText}>quintal</Text>
+              <Text style={styles.optionText}>{t("quintal")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -283,7 +294,7 @@ const Create = () => {
               ]}
               onPress={() => setForm({ ...form, unit: "ton" })}
             >
-              <Text style={styles.optionText}>ton</Text>
+              <Text style={styles.optionText}>{t("ton")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -292,15 +303,17 @@ const Create = () => {
               ]}
               onPress={() => setForm({ ...form, unit: "crate" })}
             >
-              <Text style={styles.optionText}>crate</Text>
+              <Text style={styles.optionText}>{t("crate")}</Text>
             </TouchableOpacity>
           </View>
           <View className="space-y-2 mt-7">
-            <Text className="text-base text-black font-pmedium">Address</Text>
+            <Text className="text-base text-black font-pmedium">
+              {t("address")}
+            </Text>
             <Text className="text-base text-black">{form.locationString}</Text>
           </View>
           <View style={styles.toggleContainer}>
-            <Text style={styles.toggleText}>Use Current Location: </Text>
+            <Text style={styles.toggleText}>{t("useCurrentLocation")}: </Text>
             <Switch
               value={form.useCurrentLocation}
               onValueChange={(value) =>
@@ -314,20 +327,22 @@ const Create = () => {
           {/* Display address field if not using current location */}
           {!form.useCurrentLocation && (
             <FormField
-              title="Address"
+              title={t("address")}
               value={form.locationString}
               handleChangeText={(e) => setForm({ ...form, locationString: e })}
               otherStyles="mt-7"
             />
           )}
           <CustomButton
-            title="Add crop"
+            title={t("addCrop")}
             handlePress={submit}
-            containerStyles="mt-7"
+            containerStyles="mt-7 "
             isLoading={isSubmitting}
+            // style={{ marginBottom: 10 }}
           />
         </View>
       </ScrollView>
+      {/* <View style={{ height: 100 }} /> */}
     </SafeAreaView>
   );
 };

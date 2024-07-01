@@ -44,19 +44,18 @@ const StockCard = ({ item }) => {
       />
       <Text className="text-lg font-psemibold mb-2">{cropName}</Text>
       <Text className="text-sm text-gray-600 mb-2 font-pmedium">
-        Location: {locationString}
+        {t("location_label")}: {locationString}
       </Text>
       <Text className="text-sm text-gray-600 mb-4 font-pmedium">
-        Quantity: {quantity} {unit}
+        {t("quantity_label")}: {quantity} {unit}
       </Text>
       <Text className="text-sm text-gray-600 mb-4 font-pmedium">
-        Available Quantity: {availableQuantity} {unit}
+        {t("available_quantity_label")}: {availableQuantity} {unit}
       </Text>
       {isVerified && confirmedRequests && confirmedRequests.length > 0 ? (
         <View>
           <Text className="text-sm text-blue-700 mb-2 font-pmedium">
-            A match has been found for your stock! Our team will contact you
-            shortly.
+            {t("match_found_message")}
           </Text>
           {confirmedRequests.map((request, index) => (
             <View
@@ -65,21 +64,21 @@ const StockCard = ({ item }) => {
             >
               <Text className="font-pmedium">Order :{index + 1}</Text>
               <Text className="font-pmedium">
-                Requested Quantity: {request.quantity}
+                {t("requested_quantity_label")}: {request.quantity}
               </Text>
               <Text className="font-pmedium">
-                Status: {request.requestStatus}
+                {t("status_label")}: {request.requestStatus}
               </Text>
             </View>
           ))}
         </View>
       ) : isVerified ? (
         <Text className="text-sm text-green-700 mb-2 font-pmedium">
-          Your stock is verified. Our team will contact you once a buyer comes.
+          {t("verified_message")}
         </Text>
       ) : (
         <Text className="text-sm text-red-700 mb-2 font-pmedium">
-          Your stock is not verified yet
+          {t("not_verified_message")}
         </Text>
       )}
 
@@ -89,7 +88,9 @@ const StockCard = ({ item }) => {
             className="bg-secondary py-2 px-4 rounded-md"
             onPress={handleEditPress}
           >
-            <Text className="text-white font-psemibold">Edit</Text>
+            <Text className="text-white font-psemibold">
+              {t("edit_button_label")}
+            </Text>
           </TouchableOpacity>
         )}
         {/* {isVerified && (
@@ -103,7 +104,9 @@ const StockCard = ({ item }) => {
           } `}
           onPress={() => console.log("Explore button pressed")}
         >
-          <Text className="text-white font-psemibold">Explore</Text>
+          <Text className="text-white font-psemibold">
+            {t("explore_button_label")}
+          </Text>
         </TouchableOpacity>
       </View>
     </Animated.View>

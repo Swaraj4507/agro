@@ -2,6 +2,10 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { getCurrentUser } from "../lib/appwrite";
 import { db } from "../lib/fire";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+
+
 const GlobalContext = createContext();
 export const useGlobalContext = () => useContext(GlobalContext);
 const cropsList = ["Apple", "Banana", "Beans", "Beetroot", "Betel", "Bhendi", "Brinjal", "Cabbage", "Carrot", "Cauliflower", "Chilli", "Citrus", "Coconut", "Coffee", "Cucumber", "Garlic", "Gourds", "Grapes", "Guava", "Mango", "Mulberry", "Muskmelon", "OilPalm", "Onion", "Papaya", "Pomegranate", "Potato", "Radish", "Rose", "Sapota", "Satawar", "Squash", "Tea", "Tomato", "Turnip", "Watermelon"];
@@ -14,55 +18,24 @@ const GlobalProvider = ({ children }) => {
   const [diseasesData, setDiseasesData] = useState({});
   const [diseasesLoading, setDiseasesLoading] = useState(true);
   useEffect(() => {
-    getCurrentUser()
-      .then((res) => {
-        if (res) {
+    //check persistent user here
+    const checkUserLogin = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem("user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
           setIsLogged(true);
-          setUser(res);
-        } else {
-          setIsLogged(false);
-          setUser(null);
+          setUserType(parsedUser.role);
         }
-      })
-      .catch((error) => {
-        console.log(error);
-      })
-      .finally(() => {
+      } catch (error) {
+        console.error("Error fetching stored user data:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    checkUserLogin();
 
-    // const fetchDiseases = async () => {
-    //   try {
-    //     const diseasesSnapshot = await getDocs(collection(db, "diseases"));
-    //     const data = {};
-
-    //     for (const cropDoc of diseasesSnapshot.docs) {
-    //       const cropName = cropDoc.id;
-    //       const cropDiseasesSnapshot = await getDocs(collection(db, "diseases", cropName, "Diseases"));
-    //       const cropDiseases = [];
-
-    //       for (const diseaseDoc of cropDiseasesSnapshot.docs) {
-    //         const diseaseName = diseaseDoc.id;
-    //         const diseaseData = diseaseDoc.data();
-    //         const solutionsSnapshot = await getDocs(collection(diseaseDoc.ref, "Solutions"));
-    //         const solutions = solutionsSnapshot.docs.map(doc => doc.data());
-
-    //         cropDiseases.push({ name: diseaseName, img: diseaseData.img, solutions });
-    //       }
-
-    //       data[cropName] = cropDiseases;
-    //     }
-
-    //     setDiseasesData(data);
-    //     setDiseasesLoading(false);
-    //     console.log("fetching from db complete for diseases")
-    //   } catch (error) {
-    //     console.error("Error fetching data:", error);
-    //     setDiseasesLoading(false);
-    //   }
-    // };
-
-    // fetchDiseases();
   }, []);
   const fetchDiseasesForCrop = async (cropName) => {
     console.log(cropName)
@@ -90,6 +63,27 @@ const GlobalProvider = ({ children }) => {
       setDiseasesLoading(false);
     }
   };
+  const storeUser = async (user) => {
+    try {
+      await AsyncStorage.setItem("user", JSON.stringify(user));
+      setUser(user);
+      setIsLogged(true);
+      setUserType(user.role);
+    } catch (error) {
+      console.error("Error storing user data:", error);
+    }
+  };
+  const logout = async () => {
+    try {
+      await AsyncStorage.removeItem("user");
+      setUser(null);
+      setIsLogged(false);
+      setUserType("");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
     <GlobalContext.Provider
       value={{
@@ -102,7 +96,9 @@ const GlobalProvider = ({ children }) => {
         cropsList,
         diseasesData,
         diseasesLoading,
-        fetchDiseasesForCrop
+        fetchDiseasesForCrop,
+        storeUser,
+        logout,
       }}
     >
       {children}

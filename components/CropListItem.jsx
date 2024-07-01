@@ -2,6 +2,7 @@ import React from "react";
 
 // import { CustomButton } from "../../components";
 import CustomButton from "./CustomButton";
+import { useTranslation } from "react-i18next";
 import {
   FlatList,
   Image,
@@ -13,6 +14,7 @@ import {
   StyleSheet,
 } from "react-native";
 const CropListItem = ({ title, onPress, isSubmitting }) => {
+  const { t } = useTranslation();
   const styles = StyleSheet.create({
     shadow: {
       shadowColor: "#000",
@@ -39,11 +41,11 @@ const CropListItem = ({ title, onPress, isSubmitting }) => {
                 className="font-psemibold text-lg text-[#65B741]"
                 numberOfLines={1}
               >
-                {title}
+                {t(`${title}`)}
               </Text>
             </View>
             <CustomButton
-              title="Explore"
+              title={t("explore_button_label")}
               handlePress={onPress}
               containerStyles="mt-1 pl-5 pr-5"
               isLoading={isSubmitting}

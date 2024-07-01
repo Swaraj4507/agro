@@ -2,8 +2,9 @@ import React from "react";
 import { View, Text, Image } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import StepIndicator from "react-native-step-indicator";
-
+import { useTranslation } from "react-i18next";
 const OrderStatusIndicator = ({ status }) => {
+  const { t } = useTranslation();
   const stepLabels = ["requested", "confirmed", "delivered"];
   const stepIndex = stepLabels.indexOf(status);
 
@@ -35,13 +36,14 @@ const OrderStatusIndicator = ({ status }) => {
     <StepIndicator
       customStyles={customStyles}
       currentPosition={stepIndex}
-      labels={stepLabels}
+      labels={stepLabels.map((label) => t(`${label}`))}
       stepCount={3}
     />
   );
 };
 
 const OrderCard = ({ item }) => {
+  const { t } = useTranslation();
   const {
     cropName,
     deliveryLocation,
@@ -62,18 +64,19 @@ const OrderCard = ({ item }) => {
         className="w-full h-40 rounded-lg mb-4"
         resizeMode="cover"
       />
-      <Text className="text-lg font-psemibold mb-2">{cropName}</Text>
+      <Text className="text-lg font-psemibold mb-2">{t(`${cropName}`)}</Text>
       <Text className="text-sm text-gray-600 mb-2 font-psemibold">
-        Location: {deliveryLocation}
+        {t("location_label")}: {deliveryLocation}
       </Text>
       <Text className="text-sm text-gray-600 mb-4 font-psemibold">
-        Quantity: {quantity} {unit}
+        {t("quantity")}: {quantity} {unit}
       </Text>
       <Text className="text-sm text-gray-600 mb-4 font-psemibold">
-        Quoted Price: {quotedPrice} / {unit}
+        {t("quoted_price")}: {quotedPrice} / {unit}
       </Text>
       <Text className="text-sm text-gray-600 mb-4 font-psemibold">
-        Status: {status}
+        {t("status_label")}: {t(`${status}`)}
+        {/* {t("translations.status_label")}: {t(`translations.${status}`)} */}
       </Text>
       <OrderStatusIndicator status={status} />
     </Animated.View>

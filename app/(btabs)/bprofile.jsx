@@ -33,8 +33,10 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import { Loader } from "../../components";
+import { useTranslation } from "react-i18next";
 const Profile = () => {
-  const { user, setUser, setIsLogged, setUserType } = useGlobalContext();
+  const { user, logout } = useGlobalContext();
+  const { t } = useTranslation();
   const [userInfo, setUserInfo] = useState(null);
   const [orders, setOrders] = useState([]);
   const auth = getAuth(app);
@@ -95,11 +97,12 @@ const Profile = () => {
     }
   }, [user]);
 
-  const logout = async () => {
+  const signout = async () => {
     await firebaseSignOut(auth);
-    setUser(null);
-    setIsLogged(false);
-    setUserType(null);
+    // setUser(null);
+    // setIsLogged(false);
+    // setUserType(null);
+    await logout();
     router.replace("/sign-in-b");
   };
 
@@ -115,14 +118,14 @@ const Profile = () => {
         renderItem={({ item }) => <OrderCard item={item} />}
         ListEmptyComponent={() => (
           <EmptyState
-            title="No Orders Found"
-            subtitle="You have not placed any orders yet."
+            title={t("nothing_found_title")}
+            subtitle={t("nothing_found_subtitle")}
           />
         )}
         ListHeaderComponent={() => (
           <View className="w-full flex justify-center items-center mt-6 mb-4 px-4 text-black">
             <TouchableOpacity
-              onPress={logout}
+              onPress={signout}
               className="flex w-full items-end mb-10"
             >
               <Image
@@ -149,19 +152,19 @@ const Profile = () => {
             <View className="mt-5 flex flex-row">
               <InfoBox
                 title={orders.length || 0}
-                subtitle="Orders"
+                subtitle={t("orders")}
                 titleStyles="text-xl"
                 containerStyles="mr-10"
               />
               <InfoBox
                 title={userInfo.orgName || "N/A"}
-                subtitle="Organization"
+                subtitle={t("store")}
                 titleStyles="text-xl"
               />
             </View>
             <View>
               <Text className="font-pbold text-lg text-black mt-5">
-                Your Orders
+                {t("yourOrders")}
               </Text>
             </View>
           </View>

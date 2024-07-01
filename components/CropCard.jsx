@@ -15,7 +15,9 @@ import {
 import { router } from "expo-router";
 import { useGlobalContext } from "../context/GlobalProvider";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 const CropCard = ({ title, area, date, id }) => {
+  const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const styles = StyleSheet.create({
     shadow: {
@@ -63,7 +65,7 @@ const CropCard = ({ title, area, date, id }) => {
                 className="font-psemibold text-lg text-[#65B741]"
                 numberOfLines={1}
               >
-                {title}
+                {t(`${title}`)}
               </Text>
               <Text
                 className="text-sm text-black-200 font-pregular"
@@ -73,7 +75,7 @@ const CropCard = ({ title, area, date, id }) => {
               </Text>
             </View>
             <CustomButton
-              title="Explore"
+              title={t("explore_button_label")}
               // handlePress={submit}
               handlePress={async () => {
                 setSubmitting(true);

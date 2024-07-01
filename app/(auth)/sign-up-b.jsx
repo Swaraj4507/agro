@@ -30,9 +30,10 @@ import {
   uploadBytes,
 } from "firebase/storage";
 import { setDoc, doc } from "firebase/firestore"; // Import setDoc and doc
+import { useTranslation } from "react-i18next";
 const SignUp = () => {
-  const { setUser, setIsLogged, setUserType } = useGlobalContext();
-
+  const { setUser, setIsLogged, setUserType, storeUser } = useGlobalContext();
+  const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     fullname: "",
@@ -48,9 +49,9 @@ const SignUp = () => {
   const auth = getAuth(app);
   const [selectedID, setSelectedID] = useState("");
   const [ID, setID] = useState([
-    { label: "Select ID", value: "" },
-    { label: "Aadhar Card", value: "Aadhar Card" },
-    { label: "Pan Card", value: "Pan Card" },
+    { label: t("selectID"), value: "" },
+    { label: t("aadharCard"), value: "Aadhar Card" },
+    { label: t("panCard"), value: "Pan Card" },
   ]);
   const handleIdChange = (value) => {
     setSelectedID(value);
@@ -128,7 +129,7 @@ const SignUp = () => {
       });
 
       Alert.alert("Success", "User registered successfully");
-      setUser({
+      await storeUser({
         uid: uid,
         fullname: form.fullname,
         role: "buyer",
@@ -140,8 +141,8 @@ const SignUp = () => {
         idType: form.IdType,
         orgName: form.orgname,
       });
-      setIsLogged(true);
-      setUserType("buyer");
+      // setIsLogged(true);
+      // setUserType("buyer");
       router.replace("/");
     } catch (error) {
       Alert.alert("Error", error.message);
@@ -153,11 +154,11 @@ const SignUp = () => {
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
         <View className="flex justify-center items-center  mt-3">
-          <Text className="text-4xl text-secondary font-psemibold">
-            Agro tech
+          <Text className="text-4xl text-secondary font-psemibold pt-2">
+            {t("appName")}
           </Text>
           <Text className="text-xm text-black font-psemibold mt-5">
-            Farmers are waiting for you !!!!!
+            {t("buyersWaiting")}
           </Text>
         </View>
 
@@ -167,36 +168,36 @@ const SignUp = () => {
             minHeight: Dimensions.get("window").height - 100,
           }}
         >
-          <Text className="text-3xl font-semibold text-black mt-10 font-psemibold">
-            Register
+          <Text className="text-3xl font-semibold text-black mt-10 font-psemibold pt-2">
+            {t("register")}
           </Text>
           <View className="flex justify-start pt-5 flex-row gap-2">
             <Text className="text-lg text-gray-500 font-pregular">
-              Have an account already?
+              {t("haveAccount")}
             </Text>
             <Link
               href="/sign-in-b"
               className="text-lg font-psemibold text-secondary"
             >
-              Login
+              {t("login")}
             </Link>
           </View>
 
           <FormField
-            title="Fullname"
+            title={t("fullname")}
             value={form.fullname}
             handleChangeText={(e) => setForm({ ...form, fullname: e })}
             otherStyles="mt-10 w-[]"
           />
 
           <FormField
-            title="Store / Organization Name"
+            title={t("storeOrgName")}
             value={form.orgname}
             handleChangeText={(e) => setForm({ ...form, orgname: e })}
             otherStyles="mt-7"
           />
           <FormField
-            title="Mobile number"
+            title={t("mobile")}
             value={form.mobile}
             handleChangeText={(e) => setForm({ ...form, mobile: e })}
             otherStyles="mt-7"
@@ -204,14 +205,14 @@ const SignUp = () => {
           />
 
           <FormField
-            title="Address"
+            title={t("address")}
             value={form.address}
             handleChangeText={(e) => setForm({ ...form, address: e })}
             otherStyles="mt-7"
           />
           <View className="flex justify-start  flex-row mb-6 ">
             <FormField
-              title="State"
+              title={t("state")}
               value={form.state}
               handleChangeText={(e) => setForm({ ...form, state: e })}
               otherStyles="mt-7 flex-1 mr-1"
@@ -219,7 +220,7 @@ const SignUp = () => {
             />
 
             <FormField
-              title="Pincode"
+              title={t("pincode")}
               value={form.pincode}
               handleChangeText={(e) => setForm({ ...form, pincode: e })}
               otherStyles="mt-7 flex-1 "
@@ -229,7 +230,7 @@ const SignUp = () => {
           </View>
 
           <SelectFormField
-            title="ID Proof"
+            title={t("idProof")}
             value={selectedID}
             options={ID}
             handleChange={handleIdChange}
@@ -238,7 +239,7 @@ const SignUp = () => {
           <TouchableOpacity onPress={() => openPicker("image")}>
             <View className="mt-7 space-y-2">
               <Text className="text-base text-black font-pmedium">
-                ID Proof Image
+                {t("idProofImage")}
               </Text>
               <View
                 className="w-full 
@@ -251,20 +252,20 @@ const SignUp = () => {
                   className="w-5 h-5"
                 />
                 <Text className="text-sm text-black font-pmedium">
-                  Upload {selectedID}
+                  {t("upload")} {selectedID}
                 </Text>
               </View>
             </View>
           </TouchableOpacity>
           <FormField
-            title="Password"
+            title={t("password")}
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
           />
 
           <CustomButton
-            title="Sign Up"
+            title={t("signUp")}
             handlePress={submit}
             containerStyles="mt-7"
             isLoading={isSubmitting}

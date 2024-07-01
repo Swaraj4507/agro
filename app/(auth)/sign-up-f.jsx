@@ -23,10 +23,14 @@ import { getAuth } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { setDoc, doc, addDoc, collection } from "firebase/firestore";
 import { Dropdown } from "react-native-element-dropdown";
-
+import { useTranslation } from "react-i18next";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 const SignUpF = () => {
-  const { setUser, setIsLogged, setUserType } = useGlobalContext();
-
+  const { storeUser } = useGlobalContext();
+  const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     fullname: "",
@@ -82,9 +86,9 @@ const SignUpF = () => {
   const auth = getAuth(app);
   const [selectedID, setSelectedID] = useState("");
   const [ID, setID] = useState([
-    { label: "Select ID", value: "" },
-    { label: "Aadhar Card", value: "Aadhar Card" },
-    { label: "Pan Card", value: "Pan Card" },
+    { label: t("selectID"), value: "" },
+    { label: t("aadharCard"), value: "Aadhar Card" },
+    { label: t("panCard"), value: "Pan Card" },
   ]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const handleIdChange = (value) => {
@@ -169,7 +173,7 @@ const SignUpF = () => {
         area: form.area,
       });
 
-      setUser({
+      await storeUser({
         uid: uid,
         fullname: form.fullname,
         role: "farmer",
@@ -180,8 +184,8 @@ const SignUpF = () => {
         idProofUrl: idProofUrl,
         idType: form.IdType,
       });
-      setIsLogged(true);
-      setUserType("farmer");
+      // setIsLogged(true);
+      // setUserType("farmer");
       router.replace("/");
       Alert.alert("Success", "User registered successfully");
     } catch (error) {
@@ -215,17 +219,17 @@ const SignUpF = () => {
     <SafeAreaView className="bg-primary h-full">
       <ScrollView className="">
         <View className="flex justify-center items-center  mt-3">
-          <Text className="text-4xl text-secondary font-psemibold">
-            Agro tech
+          <Text className="text-4xl text-secondary font-psemibold pt-2">
+            {t("appName")}
           </Text>
           {/* <Text className="text-4xl text-black font-bold mt-5">Register</Text> */}
           <Text className="text-xm text-black font-psemibold mt-5">
-            Say Bye to Middle Man’s 👋
+            {t("slogan")}
           </Text>
         </View>
 
         <View
-          className="w-full flex justify-start mt-4 h-full px-4 "
+          className="w-full flex justify-start mt-4 h-full px-4 py-4 "
           style={{
             minHeight: Dimensions.get("window").height - 100,
           }}
@@ -235,28 +239,31 @@ const SignUpF = () => {
             resizeMode="contain"
             className="w-[115px] h-[34px]"
           /> */}
-          <Text className="text-3xl font-semibold text-black mt-10 font-psemibold">
-            Register
+          <Text className="text-3xl font-semibold text-black mt-10 font-psemibold pt-2">
+            {t("register")}
           </Text>
-          <View className="flex justify-start pt-5 flex-row gap-2">
-            <Text className="text-lg text-gray-500 font-pregular">
-              Have an account already?
+          <View
+            className="flex justify-start pt-5 flex-row gap-2  "
+            style={{ width: wp("90%") }}
+          >
+            <Text className="text-lg text-gray-500 font-pregular ">
+              {t("haveAccount")}
             </Text>
             <Link
               href="/sign-in-f"
               className="text-lg font-psemibold text-secondary"
             >
-              Login
+              {t("login")}
             </Link>
           </View>
           <FormField
-            title="Fullname"
+            title={t("fullname")}
             value={form.fullname}
             handleChangeText={(e) => setForm({ ...form, fullname: e })}
             otherStyles="mt-10 w-[]"
           />
           <FormField
-            title="Mobile number"
+            title={t("mobile")}
             value={form.mobile}
             handleChangeText={(e) => setForm({ ...form, mobile: e })}
             otherStyles="mt-7"
@@ -274,14 +281,14 @@ const SignUpF = () => {
             </Picker>
           </View> */}
           <FormField
-            title="Address"
+            title={t("address")}
             value={form.address}
             handleChangeText={(e) => setForm({ ...form, address: e })}
             otherStyles="mt-7"
           />
           <View className="flex justify-start  flex-row mb-6 ">
             <FormField
-              title="State"
+              title={t("state")}
               value={form.state}
               handleChangeText={(e) => setForm({ ...form, state: e })}
               otherStyles="mt-7 flex-1 mr-1"
@@ -289,7 +296,7 @@ const SignUpF = () => {
             />
 
             <FormField
-              title="Pincode"
+              title={t("pincode")}
               value={form.pincode}
               handleChangeText={(e) => setForm({ ...form, pincode: e })}
               otherStyles="mt-7 flex-1 "
@@ -299,7 +306,7 @@ const SignUpF = () => {
           </View>
           {/* onPress={() => openPicker("image")} */}
           <SelectFormField
-            title="ID Proof"
+            title={t("idProof")}
             value={selectedID}
             options={ID}
             handleChange={handleIdChange}
@@ -308,7 +315,7 @@ const SignUpF = () => {
           <TouchableOpacity onPress={() => openPicker("image")}>
             <View className="mt-7 space-y-2">
               <Text className="text-base text-black font-pmedium">
-                ID Proof Image
+                {t("idProofImage")}
               </Text>
               <View
                 className="w-full 
@@ -321,20 +328,20 @@ const SignUpF = () => {
                   className="w-5 h-5"
                 />
                 <Text className="text-sm text-black font-pmedium">
-                  Upload {selectedID}
+                  {t("upload")} {selectedID}
                 </Text>
               </View>
             </View>
           </TouchableOpacity>
           <FormField
-            title="Password"
+            title={t("password")}
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
           />
           <View className="flex justify-center items-center pt-5 flex-col gap-2">
             <Text className="text-xl  text-black font-pbold">
-              It's Times to Add Your First Crop
+              {t("firstCrop")}
             </Text>
             {/* <Link
               href="/sign-in-f"
@@ -345,14 +352,14 @@ const SignUpF = () => {
           </View>
 
           <Text className="text-base text-black font-pmedium mt-4">
-            Crop Name
+            {t("cropName")}
           </Text>
           <Dropdown
             // className="text-base text-black font-pmedium h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 focus:border-secondary flex flex-row "
-            data={cropsList.map((crop) => ({ label: crop, value: crop }))}
+            data={cropsList.map((crop) => ({ label: t(crop), value: crop }))}
             labelField="label"
             valueField="value"
-            placeholder="Select Crop"
+            placeholder={t("selectCrop")}
             search
             searchPlaceholder="Search..."
             value={form.cropName}
@@ -367,7 +374,7 @@ const SignUpF = () => {
           />
           <View className="space-y-2 mt-7">
             <Text className="text-base text-black font-pmedium">
-              Date Of Sowing
+              {t("dateOfSowing")}
             </Text>
 
             <TouchableOpacity
@@ -390,14 +397,14 @@ const SignUpF = () => {
           </View>
 
           <FormField
-            title="Area (In Acres)"
+            title={t("areaInAcres")}
             value={form.area}
             handleChangeText={(e) => setForm({ ...form, area: e })}
             otherStyles="mt-7"
             keyboardType="numeric"
           />
           <CustomButton
-            title="Sign Up"
+            title={t("signUp")}
             handlePress={submit}
             containerStyles="mt-7 "
             isLoading={isSubmitting}

@@ -34,10 +34,20 @@ const TabsLayout = () => {
           tabBarInactiveTintColor: "#222831",
           tabBarShowLabel: false,
           tabBarStyle: {
+            position: "absolute",
             backgroundColor: "#fff",
             borderTopWidth: 0,
             borderTopColor: "#222831",
             height: hp("10%"),
+            marginHorizontal: hp("2%"),
+            marginBottom: hp("2%"),
+            paddingVertical: hp("2.5%"),
+            borderRadius: 25,
+            borderCurve: "continuous",
+            shadowColor: "black",
+            shadowOffset: { width: 0, height: 10 },
+            shadowRadius: 10,
+            shadowOpacity: 0.1,
             // paddingTop: 10,
             // paddingBottom: 3,
             // marginBottom: hp("10%"),
@@ -67,7 +77,7 @@ const TabsLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.plus}
+                icon={icons.store}
                 color={color}
                 name="Create"
                 focused={focused}
@@ -82,7 +92,7 @@ const TabsLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.plus}
+                icon={icons.crop}
                 color={color}
                 name="Add Crop"
                 focused={focused}

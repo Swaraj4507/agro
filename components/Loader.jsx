@@ -6,8 +6,10 @@ import {
   Text,
 } from "react-native";
 import LottieView from "lottie-react-native";
+import { useTranslation } from "react-i18next";
 // import {} from "../assets/Tree.json"
 const Loader = ({ isLoading, content }) => {
+  const { t } = useTranslation();
   const osName = Platform.OS;
   const screenHeight = Dimensions.get("screen").height;
 
@@ -29,7 +31,7 @@ const Loader = ({ isLoading, content }) => {
       {content ? (
         <Text className="font-pbold">{content}</Text>
       ) : (
-        <Text className="font-pbold">Loading</Text>
+        <Text className="font-pbold">{t("loading")}</Text>
       )}
     </View>
   );

@@ -14,7 +14,7 @@ import { app, db } from "../../lib/fire";
 import { collection, getDocs, query, where } from "firebase/firestore";
 const SignIn = () => {
   const auth = getAuth(app);
-  const { setUser, setIsLogged, setUserType } = useGlobalContext();
+  const { setIsLogged, setUserType, storeUser } = useGlobalContext();
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -44,7 +44,7 @@ const SignIn = () => {
       // Check if user document exists
       if (userData) {
         // Update user details in global context
-        setUser({
+        await storeUser({
           uid: userData.uid,
           fullname: userData.fullname,
           role: userData.role,
@@ -101,7 +101,7 @@ const SignIn = () => {
 
   return (
     <SafeAreaView className="bg-primary h-full">
-      <ScrollView>
+      <ScrollView className="">
         <View className="flex justify-center items-center mt-3">
           <Text className="text-3xl text-secondary font-psemibold pt-2">
             {t("appName")}

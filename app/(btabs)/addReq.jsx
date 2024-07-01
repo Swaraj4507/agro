@@ -5,8 +5,8 @@ import { Loader } from "../../components";
 const addReq = () => {
   return (
     <View>
-      <Text>addReq</Text>
-      <Loader isLoading={true} content={"Coming soon..."} />
+      {/* <Text>addReq</Text> */}
+      <Loader isLoading={true} content={t("comingSoon")} />
     </View>
   );
 };

@@ -12,21 +12,17 @@ import {
   Button,
 } from "react-native";
 import("@react-native-community/datetimepicker").DateTimePickerEvent;
-import { images, icons } from "../../constants";
 import { Dropdown } from "react-native-element-dropdown";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
-import { createUser } from "../../lib/appwrite";
 import { useGlobalContext } from "../../context/GlobalProvider";
-import * as ImagePicker from "expo-image-picker";
-import SelectFormField from "../../components/SelectFormField";
-import DatePicker from "react-native-date-picker";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
-import { app, db, storage } from "../../lib/fire";
+import { db } from "../../lib/fire";
 
 import { addDoc, collection } from "firebase/firestore";
-
+import { useTranslation } from "react-i18next";
 const addCrop = () => {
+  const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     fullname: "",
@@ -87,10 +83,12 @@ const addCrop = () => {
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
         <View className="flex justify-center items-center  mt-3">
-          <Text className="text-4xl text-secondary font-bold ">Agro tech</Text>
+          <Text className="text-4xl text-secondary font-bold pt-2">
+            {t("appName")}
+          </Text>
           {/* <Text className="text-4xl text-black font-bold mt-5">Register</Text> */}
           <Text className="text-xm text-black font-bold mt-5">
-            Say Bye to Middle Man’s 👋
+            {t("slogan")}
           </Text>
         </View>
 
@@ -108,16 +106,16 @@ const addCrop = () => {
 
           <View className="flex justify-center items-center pt-5 flex-col gap-2">
             <Text className="text-xl  text-black font-pbold">
-              Add Your crops
+              {t("addYourCrops")}
             </Text>
           </View>
 
           <Dropdown
             // className="text-base text-black font-pmedium h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 focus:border-secondary flex flex-row "
-            data={cropsList.map((crop) => ({ label: crop, value: crop }))}
+            data={cropsList.map((crop) => ({ label: t(crop), value: crop }))}
             labelField="label"
             valueField="value"
-            placeholder="Select Crop"
+            placeholder={t("selectCrop")}
             search
             searchPlaceholder="Search..."
             value={form.cropName}
@@ -146,7 +144,7 @@ const addCrop = () => {
           /> */}
           <View className="space-y-2 mt-7">
             <Text className="text-base text-black font-pmedium">
-              Date Of Sowing
+              {t("dateOfSowing")}
             </Text>
 
             <TouchableOpacity
@@ -169,14 +167,14 @@ const addCrop = () => {
           </View>
 
           <FormField
-            title="Area (In Acres)"
+            title={t("areaInAcres")}
             value={form.area}
             handleChangeText={(e) => setForm({ ...form, area: e })}
             otherStyles="mt-7"
             keyboardType="numeric"
           />
           <CustomButton
-            title="Add crop"
+            title={t("addCrop")}
             handlePress={submit}
             containerStyles="mt-7 "
             isLoading={isSubmitting}
