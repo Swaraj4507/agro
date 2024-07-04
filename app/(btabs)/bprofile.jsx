@@ -169,7 +169,7 @@ const Profile = () => {
             </View>
           </View>
         )}
-        contentContainerStyle={{ paddingBottom: hp("10%") }}
+        contentContainerStyle={{ paddingBottom: hp("12%") }}
       />
     </SafeAreaView>
   );

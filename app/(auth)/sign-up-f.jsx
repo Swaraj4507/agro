@@ -243,8 +243,8 @@ const SignUpF = () => {
             {t("register")}
           </Text>
           <View
-            className="flex justify-start pt-5 flex-row gap-2  "
-            style={{ width: wp("90%") }}
+            className="flex justify-start pt-5 flex-row gap-2  w-3/4"
+            // style={{ width: wp("90%") }}
           >
             <Text className="text-lg text-gray-500 font-pregular ">
               {t("haveAccount")}

@@ -5,6 +5,7 @@ import { useFonts } from "expo-font";
 import { I18nextProvider } from "react-i18next";
 import GlobalProvider from "../context/GlobalProvider";
 import i18n from "../i18n/i18n";
+import { CopilotProvider } from "react-native-copilot";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 const RootLayout = () => {
@@ -37,36 +38,38 @@ const RootLayout = () => {
   return (
     <GlobalProvider>
       <I18nextProvider i18n={i18n}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(btabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="(crops)"
-            options={{
-              headerShown: false,
-              presentation: "modal",
-              // animation: ""
-            }}
-          />
-          <Stack.Screen
-            name="search/[query]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="diseases/[crop]"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="pages/editstock"
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="pages/requestStock"
-            options={{ headerShown: false }}
-          />
-        </Stack>
+        <CopilotProvider>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(btabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(crops)"
+              options={{
+                headerShown: false,
+                presentation: "modal",
+                // animation: ""
+              }}
+            />
+            <Stack.Screen
+              name="search/[query]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="diseases/[crop]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="pages/editstock"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="pages/requestStock"
+              options={{ headerShown: false }}
+            />
+          </Stack>
+        </CopilotProvider>
       </I18nextProvider>
     </GlobalProvider>
   );

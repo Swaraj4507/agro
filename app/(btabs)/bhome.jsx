@@ -181,7 +181,7 @@ const bhome = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        contentContainerStyle={{ paddingBottom: hp("10%") }}
+        contentContainerStyle={{ paddingBottom: hp("12%") }}
       />
     </SafeAreaView>
   );

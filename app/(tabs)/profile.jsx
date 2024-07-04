@@ -21,8 +21,6 @@ import {
   doc,
   getDocs,
 } from "firebase/firestore";
-import CustomButton from "../../components/CustomButton";
-import VideoCard from "../../components/VideoCard";
 import InfoBox from "../../components/InfoBox";
 import EmptyState from "../../components/EmptyState";
 import { router } from "expo-router";

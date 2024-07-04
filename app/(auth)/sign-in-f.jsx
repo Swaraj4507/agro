@@ -114,12 +114,13 @@ const SignIn = () => {
           className="w-full flex justify-start h-full px-4  my-6 "
           style={{
             minHeight: Dimensions.get("window").height - 100,
+            // minWidth: Dimensions.get("window").width - 100,
           }}
         >
           <Text className="text-3xl font-semibold text-black mt-10 font-psemibold pt-2">
             {t("loginAsFarmer")}
           </Text>
-          <View className="flex justify-start pt-5 flex-row gap-2">
+          <View className="flex  pt-5 flex-row gap-2 w-3/4 justify-start">
             <Text className="text-lg text-gray-500 font-pregular">
               {t("noAccount")}
             </Text>

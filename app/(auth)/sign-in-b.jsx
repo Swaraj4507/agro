@@ -115,7 +115,7 @@ const SignIn = () => {
           <Text className="text-3xl font-semibold text-black mt-10 font-psemibold pt-2">
             {t("loginAsBuyer")}
           </Text>
-          <View className="flex justify-start pt-5 flex-row gap-2">
+          <View className="flex justify-start pt-5 flex-row gap-2 w-3/4">
             <Text className="text-lg text-gray-500 font-pregular">
               {t("noAccount")}
             </Text>

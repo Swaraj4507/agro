@@ -6,6 +6,7 @@ import {
   Image,
   ImageBackground,
   TouchableOpacity,
+  TouchableWithoutFeedback,
 } from "react-native";
 
 import { icons } from "../constants";
