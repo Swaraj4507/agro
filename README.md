@@ -16,7 +16,7 @@
 - **Expo**: Framework for building React Native apps.
 - **React Native**: JavaScript framework for mobile app development.
 - **Firebase**: Backend services for real-time database and user authentication.
-- **Other Dependencies**: List any other key libraries or tools used in the app development.
+- **Native Wind**: Utility-first CSS framework used for styling components.
 
 ## Installation and Setup
 1. Clone the repository.
