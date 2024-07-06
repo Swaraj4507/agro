@@ -1,14 +1,18 @@
 import { StyleSheet, Text, View } from "react-native";
-import { SplashScreen, Stack } from "expo-router";
-import { useEffect } from "react";
+import { router, SplashScreen, Stack, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
 import { I18nextProvider } from "react-i18next";
 import GlobalProvider from "../context/GlobalProvider";
 import i18n from "../i18n/i18n";
 import { CopilotProvider } from "react-native-copilot";
+import OnboardingScreen from "../components/OnboardingScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 const RootLayout = () => {
+  const router = useRouter();
+  const [isFirstLaunch, setIsFirstLaunch] = useState(null);
   const [fontsLoaded, error] = useFonts({
     "Poppins-Black": require("../assets/fonts/Poppins-Black.ttf"),
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
@@ -28,13 +32,27 @@ const RootLayout = () => {
     }
   }, [fontsLoaded, error]);
 
+  // useEffect(() => {
+  //   AsyncStorage.getItem("alreadyLaunched").then((value) => {
+  //     if (value == null) {
+  //       console.log("NotLaunched");
+  //       AsyncStorage.setItem("alreadyLaunched", "true"); // No need to await here
+  //       setIsFirstLaunch(true);
+  //     } else {
+  //       console.log("alreadyLaunched");
+  //       setIsFirstLaunch(false);
+  //     }
+  //   });
+  // }, []);
+
   if (!fontsLoaded) {
     return null;
   }
 
-  if (!fontsLoaded && !error) {
+  if (!fontsLoaded && !error && isFirstLaunch === null) {
     return null;
   }
+
   return (
     <GlobalProvider>
       <I18nextProvider i18n={i18n}>
@@ -46,11 +64,7 @@ const RootLayout = () => {
             <Stack.Screen name="(btabs)" options={{ headerShown: false }} />
             <Stack.Screen
               name="(crops)"
-              options={{
-                headerShown: false,
-                presentation: "modal",
-                // animation: ""
-              }}
+              options={{ headerShown: false, presentation: "modal" }}
             />
             <Stack.Screen
               name="search/[query]"

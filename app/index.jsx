@@ -26,28 +26,48 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import FHome from "../components/FHome";
-import { Trending } from "../components";
+import { Trending, OnboardingScreen } from "../components";
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 // import { useCopilot, CopilotStep } from "react-native-copilot";
 export default function App() {
   // const { start } = useCopilot();
+  const [isFirstLaunch, setIsFirstLaunch] = useState(null);
   const { loading, isLogged, userType } = useGlobalContext();
   const { t, i18n } = useTranslation();
   // console.log(process.env.EXPO_FIREBASE_API_KEY);
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("en"); // Default language is English
-
+  useEffect(() => {
+    AsyncStorage.getItem("alreadyLaunched").then((value) => {
+      if (value === null) {
+        console.log("NotLaunched");
+        AsyncStorage.setItem("alreadyLaunched", "true"); // No need to await here
+        setIsFirstLaunch(true);
+      } else {
+        console.log("alreadyLaunched");
+        setIsFirstLaunch(false);
+      }
+    });
+  }, []);
   const handleLanguageChange = (language) => {
     setSelectedLanguage(language);
     i18n.changeLanguage(language);
     setModalVisible(false);
   };
+  const clearAsyncStorage = async () => {
+    try {
+      await AsyncStorage.removeItem("alreadyLaunched");
+      console.log("AsyncStorage cleared successfully.");
+    } catch (error) {
+      console.error("Error clearing AsyncStorage:", error);
+    }
+  };
   if (loading) {
     return <Loader isLoading={loading} />;
   }
-  // useEffect(() => {
-  //   // Start the walkthrough when the component mounts
-  //   start();
-  // }, []);
+
   const temporaryPosts = [
     {
       $id: "1",
@@ -70,7 +90,10 @@ export default function App() {
     },
     // Add more posts as needed
   ];
-  return (
+  return isFirstLaunch ? (
+    <OnboardingScreen />
+  ) : (
+    // <Text>On boarding</Text>
     <SafeAreaView className="bg-primary h-full">
       <Animated.View
         entering={FadeIn.delay(200)}
@@ -81,35 +104,35 @@ export default function App() {
         </Text>
       </Animated.View>
       {/* <View className="bg-[#b2d6a3]" style={{ height: hp("40%") }}>
-        <View className="flex flex-row justify-between items-center">
-          <View className=" bg-white flex items-center justify-between w-[48%]">
-            <Image
-              source={{
-                uri: "https://media.istockphoto.com/id/1316992167/photo/red-chili-peppers-in-vegetable-garden.jpg?s=612x612&w=0&k=20&c=9WxPxtBqBegiJtWZ6J-IRr-WqLs8qgS4G_JiSEQk-IQ=",
-                // uri: icons.store,
-              }}
-              className="w-full h-full rounded-xl "
-              resizeMode="contain"
-            />
-            <Text className="text-[#65B741]  font-psemibold ">
-              JSK AgroTech
-            </Text>
-          </View>
-          <View className=" bg-slate-300 flex items-center justify-between w-[48%]">
-            <Image
-              source={{
-                uri: "https://media.istockphoto.com/id/1316992167/photo/red-chili-peppers-in-vegetable-garden.jpg?s=612x612&w=0&k=20&c=9WxPxtBqBegiJtWZ6J-IRr-WqLs8qgS4G_JiSEQk-IQ=",
-                // uri: icons.store,
-              }}
-              className="w-full h-full rounded-xl "
-              resizeMode="contain"
-            />
-            <Text className="text-[#65B741]  font-psemibold ">
-              JSK AgroTech
-            </Text>
-          </View>
+      <View className="flex flex-row justify-between items-center">
+        <View className=" bg-white flex items-center justify-between w-[48%]">
+          <Image
+            source={{
+              uri: "https://media.istockphoto.com/id/1316992167/photo/red-chili-peppers-in-vegetable-garden.jpg?s=612x612&w=0&k=20&c=9WxPxtBqBegiJtWZ6J-IRr-WqLs8qgS4G_JiSEQk-IQ=",
+              // uri: icons.store,
+            }}
+            className="w-full h-full rounded-xl "
+            resizeMode="contain"
+          />
+          <Text className="text-[#65B741]  font-psemibold ">
+            JSK AgroTech
+          </Text>
         </View>
-      </View> */}
+        <View className=" bg-slate-300 flex items-center justify-between w-[48%]">
+          <Image
+            source={{
+              uri: "https://media.istockphoto.com/id/1316992167/photo/red-chili-peppers-in-vegetable-garden.jpg?s=612x612&w=0&k=20&c=9WxPxtBqBegiJtWZ6J-IRr-WqLs8qgS4G_JiSEQk-IQ=",
+              // uri: icons.store,
+            }}
+            className="w-full h-full rounded-xl "
+            resizeMode="contain"
+          />
+          <Text className="text-[#65B741]  font-psemibold ">
+            JSK AgroTech
+          </Text>
+        </View>
+      </View>
+    </View> */}
 
       {/* <FHome /> */}
       <ScrollView>
@@ -136,10 +159,10 @@ export default function App() {
               <>
                 <View className="flex-row justify-between w-full mt-10 ">
                   {/* <CopilotStep
-                    text="This is the home button"
-                    order={1}
-                    name="homeButton"
-                  > */}
+                  text="This is the home button"
+                  order={1}
+                  name="homeButton"
+                > */}
                   <TouchableOpacity
                     className="bg-secondary p-4 rounded-md flex-1 items-center justify-center mx-2"
                     onPress={() => router.push("/home")}
@@ -186,11 +209,11 @@ export default function App() {
                     onPress={() => router.push("/bhome")}
                   >
                     {/* <Image
-                      source={icons.home}
-                      className="w-12 h-12  "
-                      resizeMode="contain"
-                      tintColor="#000"
-                    /> */}
+                    source={icons.home}
+                    className="w-12 h-12  "
+                    resizeMode="contain"
+                    tintColor="#000"
+                  /> */}
                     <Text className="font-psemibold text-black">
                       {t("home")}
                     </Text>
@@ -204,11 +227,11 @@ export default function App() {
                     </Text>
                   </TouchableOpacity>
                   {/* <TouchableOpacity
-                    className="bg-secondary p-4 rounded-md flex-2 items-center justify-center mx-2 "
-                    onPress={() => router.push("/bhome")}
-                  >
-                    <Text className="font-psemibold text-black">Language</Text>
-                  </TouchableOpacity> */}
+                  className="bg-secondary p-4 rounded-md flex-2 items-center justify-center mx-2 "
+                  onPress={() => router.push("/bhome")}
+                >
+                  <Text className="font-psemibold text-black">Language</Text>
+                </TouchableOpacity> */}
                 </View>
                 <TouchableOpacity
                   className="bg-secondary p-4 rounded-xl mt-4 w-full items-center justify-evenly flex-row"
@@ -241,6 +264,11 @@ export default function App() {
               <CustomButton
                 title={t("change_language")}
                 handlePress={() => setModalVisible(true)}
+                containerStyles="w-full mt-10"
+              />
+              <CustomButton
+                title={t("clear storage")}
+                handlePress={clearAsyncStorage}
                 containerStyles="w-full mt-10"
               />
             </>
