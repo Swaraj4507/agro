@@ -7,6 +7,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { useTranslation } from "react-i18next";
 const TabIcon = ({ icon, color, name, focused }) => {
   return (
     <View className="flex items-center justify-center gap-2">
@@ -26,6 +27,7 @@ const TabIcon = ({ icon, color, name, focused }) => {
   );
 };
 const TabsLayout = () => {
+  const { t } = useTranslation();
   return (
     <>
       <Tabs
@@ -61,7 +63,7 @@ const TabsLayout = () => {
               <TabIcon
                 icon={icons.home}
                 color={color}
-                name="Home"
+                name={t("nhome")}
                 focused={focused}
               />
             ),
@@ -92,7 +94,7 @@ const TabsLayout = () => {
               <TabIcon
                 icon={icons.profile}
                 color={color}
-                name="Profile"
+                name={t("profile")}
                 focused={focused}
               />
             ),

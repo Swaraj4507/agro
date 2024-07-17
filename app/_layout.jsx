@@ -8,6 +8,7 @@ import i18n from "../i18n/i18n";
 import { CopilotProvider } from "react-native-copilot";
 import OnboardingScreen from "../components/OnboardingScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { RootSiblingParent } from "react-native-root-siblings";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 const RootLayout = () => {
@@ -56,7 +57,7 @@ const RootLayout = () => {
   return (
     <GlobalProvider>
       <I18nextProvider i18n={i18n}>
-        <CopilotProvider>
+        <RootSiblingParent>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -83,7 +84,7 @@ const RootLayout = () => {
               options={{ headerShown: false }}
             />
           </Stack>
-        </CopilotProvider>
+        </RootSiblingParent>
       </I18nextProvider>
     </GlobalProvider>
   );

@@ -53,9 +53,8 @@ const Profile = () => {
 
           // Check if there's a matching document
           if (!querySnapshot.empty) {
-            // Since we're querying by UID, there should be at most one matching document
             const userData = querySnapshot.docs[0].data();
-            // Do something with userData, such as setting it to state
+
             setUserInfo(userData);
           } else {
             console.log("No matching document found for UID:", uid);
@@ -82,7 +81,7 @@ const Profile = () => {
 
         return unsubscribe;
       };
-      console.log(user.uid);
+
       fetchUserProfile(user.uid);
       const unsubscribeOrders = fetchUserStock();
 

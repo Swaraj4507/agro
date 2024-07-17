@@ -96,7 +96,7 @@ const Home = () => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) =>
           showCrops ? (
-            <CropCard title={item.cropName} area={item.area} className="px-4" />
+            <CropCard item={item} className="px-4" />
           ) : (
             <StockCard item={item} className="px-4" />
           )

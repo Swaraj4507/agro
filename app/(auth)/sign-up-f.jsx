@@ -166,11 +166,15 @@ const SignUpF = () => {
       });
 
       // Create crops data document
+      const cropImageRef = ref(storage, `cropImages/${form.cropName}.jpg`);
+      const cropImageUrl = await getDownloadURL(cropImageRef);
+
       await addDoc(collection(db, "crops"), {
         uid: uid, // Linking to user's UID
         cropName: form.cropName,
         timestamp: form.dateOfSow,
         area: form.area,
+        cropImage: cropImageUrl,
       });
 
       await storeUser({

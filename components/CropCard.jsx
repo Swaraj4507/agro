@@ -16,7 +16,8 @@ import { router } from "expo-router";
 import { useGlobalContext } from "../context/GlobalProvider";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
-const CropCard = ({ title, area, date, id }) => {
+const CropCard = ({ item }) => {
+  const { cropName: title, area, cropImage, id } = item;
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const styles = StyleSheet.create({
@@ -52,7 +53,8 @@ const CropCard = ({ title, area, date, id }) => {
         >
           <Image
             source={{
-              uri: "https://media.istockphoto.com/id/1316992167/photo/red-chili-peppers-in-vegetable-garden.jpg?s=612x612&w=0&k=20&c=9WxPxtBqBegiJtWZ6J-IRr-WqLs8qgS4G_JiSEQk-IQ=",
+              // uri: "https://media.istockphoto.com/id/1316992167/photo/red-chili-peppers-in-vegetable-garden.jpg?s=612x612&w=0&k=20&c=9WxPxtBqBegiJtWZ6J-IRr-WqLs8qgS4G_JiSEQk-IQ=",
+              uri: cropImage,
             }}
             className="w-full h-full rounded-xl "
             resizeMode="cover"

@@ -81,7 +81,7 @@ const TabsLayout = () => {
               <TabIcon
                 icon={icons.store}
                 color={color}
-                name="Create"
+                name={t("create_com")}
                 focused={focused}
               />
             ),
