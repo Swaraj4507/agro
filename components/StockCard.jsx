@@ -16,6 +16,7 @@ const StockCard = ({ item }) => {
     quantity,
     availableQuantity,
     amount,
+    id,
   } = item;
   const { t } = useTranslation();
   const handleEditPress = () => {
@@ -41,10 +42,9 @@ const StockCard = ({ item }) => {
   );
   const handleExplore = () => {
     router.push({
-      pathname: "/pages/requestStock",
+      pathname: "/pages/viewStockPage",
       params: {
-        photoURL: encodeURI(item.photoURL),
-        item: JSON.stringify(item),
+        stockId: id,
       },
     });
   };

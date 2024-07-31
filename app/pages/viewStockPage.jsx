@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { router, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { doc, getDoc } from "firebase/firestore";
@@ -8,17 +8,17 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/fire";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import Loader from "../../components/Loader";
-
+import { heightPercentageToDP as hp } from "react-native-responsive-screen";
 const ViewStockRequests = () => {
   const { t } = useTranslation();
-  const route = useRoute();
-  const navigation = useNavigation();
-  const { stockId } = route.params;
+  const { stockId } = useLocalSearchParams();
   const [stock, setStock] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStock = async () => {
+      console.log("fetching stock");
+      console.log(stockId);
       const stockRef = doc(db, "stock", stockId);
       const stockDoc = await getDoc(stockRef);
       if (stockDoc.exists()) {
@@ -32,13 +32,26 @@ const ViewStockRequests = () => {
   if (loading) {
     return <Loader isLoading={loading} />;
   }
-
   const handleEditPress = () => {
-    navigation.navigate("EditStock", { stock });
-  };
+    router.push({
+      pathname: "/pages/editstock",
 
+      params: {
+        photoURL: encodeURI(item.photoURL),
+        item: JSON.stringify(item),
+      },
+    });
+  };
+  const confirmedRequests = stock.buyerRequests?.filter(
+    (request) =>
+      request.requestStatus === "confirmed" ||
+      request.requestStatus === "delivered"
+  );
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }} className="bg-primary">
+    <ScrollView
+      contentContainerStyle={{ padding: 16, marginTop: hp("12%") }}
+      className="bg-primary"
+    >
       {stock && (
         <Animated.View
           entering={FadeInDown}
@@ -76,8 +89,8 @@ const ViewStockRequests = () => {
           <Text className="text-lg font-psemibold mb-4">
             {t("buyer_requests_label")}
           </Text>
-          {stock.buyerRequests && stock.buyerRequests.length > 0 ? (
-            stock.buyerRequests.map((request, index) => (
+          {confirmedRequests && confirmedRequests.length > 0 ? (
+            confirmedRequests.map((request, index) => (
               <View
                 key={index}
                 className="p-3 mb-2 border border-secondary rounded bg-white/80 bg-secondary"
