@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 // import { SharedElement } from "react-native-shared-element";
+import { Image } from "expo-image";
 const BStockCard = ({ item, onRequestPress }) => {
   const { t } = useTranslation();
   const {

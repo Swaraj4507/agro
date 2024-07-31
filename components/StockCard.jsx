@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity, Pressable } from "react-native";
+import { View, Text, TouchableOpacity, Pressable } from "react-native";
 import { router } from "expo-router";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
+import { Image } from "expo-image";
 const StockCard = ({ item }) => {
   const {
     cropName,
@@ -14,6 +15,7 @@ const StockCard = ({ item }) => {
     buyerRequests,
     quantity,
     availableQuantity,
+    amount,
   } = item;
   const { t } = useTranslation();
   const handleEditPress = () => {
@@ -26,11 +28,26 @@ const StockCard = ({ item }) => {
       },
     });
   };
+  const limitedRequests = buyerRequests ? buyerRequests.slice(0, 3) : [];
+  // const confirmedRequests = limitedRequests.filter(
+  //   (request) =>
+  //     request.requestStatus === "confirmed" ||
+  //     request.requestStatus === "delivered"
+  // );
   const confirmedRequests = buyerRequests?.filter(
     (request) =>
       request.requestStatus === "confirmed" ||
       request.requestStatus === "delivered"
   );
+  const handleExplore = () => {
+    router.push({
+      pathname: "/pages/requestStock",
+      params: {
+        photoURL: encodeURI(item.photoURL),
+        item: JSON.stringify(item),
+      },
+    });
+  };
   return (
     <Animated.View
       entering={FadeInDown}
@@ -67,10 +84,14 @@ const StockCard = ({ item }) => {
                 {t("order_label")} :{index + 1}
               </Text>
               <Text className="font-pmedium">
-                {t("requested_quantity_label")}: {request.quantity}
+                {t("requested_quantity_label")}: {request.quantity}{" "}
+                {t(`${request.unit}`)}
               </Text>
               <Text className="font-pmedium">
-                {t("status_label")}: {request.requestStatus}
+                {t("status_label")}: {t(`${request.requestStatus}`)}
+              </Text>
+              <Text className="font-pmedium">
+                {t("bill_amount")}: {amount * request.quantity} /-
               </Text>
             </View>
           ))}
@@ -105,7 +126,7 @@ const StockCard = ({ item }) => {
           className={`bg-secondary py-2 px-4 rounded-md  ${
             isVerified ? "" : "ml-4"
           } `}
-          onPress={() => console.log("Explore button pressed")}
+          onPress={handleExplore}
         >
           <Text className="text-white font-psemibold">
             {t("explore_button_label")}

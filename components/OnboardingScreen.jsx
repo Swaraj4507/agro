@@ -13,6 +13,7 @@ const OnboardingScreen = ({ navigation }) => {
   return (
     <Onboarding
       onDone={() => router.replace("/")}
+      onSkip={() => router.replace("/")}
       containerStyles={{ paddingHorizontal: hp("5%") }}
       pages={[
         {

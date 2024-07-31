@@ -8,7 +8,16 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_FIREBASE_API_KEY": "AIzaSyBzlGP0xiCA4Kq2_YAET55N9Isj3xIdmRU",
+        "EXPO_FIREBASE_AUTH_DOMAIN": "agrotech-93561.firebaseapp.com",
+        "EXPO_FIREBASE_PROJECT_ID": "agrotech-93561",
+        "EXPO_FIREBASE_STORAGE_BUCKET": "agrotech-93561.appspot.com",
+        "EXPO_FIREBASE_MESSAGING_SENDER_ID": "863711664679",
+        "EXPO_FIREBASE_APP_ID": "1:863711664679:web:f54025501f231707d78c02",
+        "EXPO_FIREBASE_MEASUREMENT_ID": "G-5KFRTWVDEQ"
+      }
     },
     "production": {
       "env": {

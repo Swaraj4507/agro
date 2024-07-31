@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -28,6 +28,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import Toast from "react-native-root-toast";
 const SignUpF = () => {
   const { storeUser } = useGlobalContext();
   const { t } = useTranslation();
@@ -91,6 +92,17 @@ const SignUpF = () => {
     { label: t("panCard"), value: "Pan Card" },
   ]);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  // const [status, requestPermission] = ImagePicker.useCameraPermissions();
+
+  // useEffect(() => {
+  //   (async () => {
+  //     // console.log(status);
+  //     if (!status.granted) {
+  //       console.log("hhhhhh");
+  //       await requestPermission();
+  //     }
+  //   })();
+  // }, []);
   const handleIdChange = (value) => {
     setSelectedID(value);
     setForm({
@@ -125,16 +137,54 @@ const SignUpF = () => {
         });
       }
     } else {
-      setTimeout(() => {
-        Alert.alert("Document picked", JSON.stringify(result, null, 2));
-      }, 100);
+      // setTimeout(() => {
+      //   Alert.alert("Document picked", JSON.stringify(result, null, 2));
+      // }, 100);
+      Toast.show("No Image Picked", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
     }
   };
 
   const submit = async () => {
     if (form.fullname === "" || form.password === "") {
-      console.log(form);
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show("Please fill in all fields", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
       return;
     }
     setSubmitting(true);
@@ -191,10 +241,47 @@ const SignUpF = () => {
       // setIsLogged(true);
       // setUserType("farmer");
       router.replace("/");
-      Alert.alert("Success", "User registered successfully");
+      Toast.show("User Registered successfully", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "green", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
     } catch (error) {
-      Alert.alert("Error", error.message);
-      console.log(error.message);
+      Toast.show("Something went Wrong.", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
     } finally {
       setSubmitting(false);
     }

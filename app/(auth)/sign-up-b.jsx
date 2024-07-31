@@ -31,6 +31,12 @@ import {
 } from "firebase/storage";
 import { setDoc, doc } from "firebase/firestore"; // Import setDoc and doc
 import { useTranslation } from "react-i18next";
+
+import Toast from "react-native-root-toast";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 const SignUp = () => {
   const { setUser, setIsLogged, setUserType, storeUser } = useGlobalContext();
   const { t } = useTranslation();
@@ -61,6 +67,7 @@ const SignUp = () => {
     });
   };
   const openPicker = async (selectType) => {
+    // console.log(selectType);
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
@@ -86,15 +93,55 @@ const SignUp = () => {
         });
       }
     } else {
-      setTimeout(() => {
-        Alert.alert("Document picked", JSON.stringify(result, null, 2));
-      }, 100);
+      // setTimeout(() => {
+      //   Alert.alert("Document picked", JSON.stringify(result, null, 2));
+      // }, 100);
+
+      Toast.show("No Image Picked", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
     }
   };
 
   const submit = async () => {
     if (form.fullname === "" || form.mobile === "" || form.password === "") {
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show("Please fill in all fields", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
       return;
     }
     setSubmitting(true);
@@ -128,7 +175,6 @@ const SignUp = () => {
         orgName: form.orgname,
       });
 
-      Alert.alert("Success", "User registered successfully");
       await storeUser({
         uid: uid,
         fullname: form.fullname,
@@ -141,11 +187,50 @@ const SignUp = () => {
         idType: form.IdType,
         orgName: form.orgname,
       });
+      Toast.show("User Registered successfully", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "green", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
       // setIsLogged(true);
       // setUserType("buyer");
       router.replace("/");
     } catch (error) {
-      Alert.alert("Error", error.message);
+      Toast.show("Something went wrong", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
     } finally {
       setSubmitting(false);
     }

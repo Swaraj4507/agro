@@ -25,7 +25,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import FHome from "../components/FHome";
+
 import { Trending, OnboardingScreen } from "../components";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -34,7 +34,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function App() {
   // const { start } = useCopilot();
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
-  const { loading, isLogged, userType } = useGlobalContext();
+  const { loading, isLogged, userType, posts, fetchPosts } = useGlobalContext();
   const { t, i18n } = useTranslation();
   // console.log(process.env.EXPO_FIREBASE_API_KEY);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -50,6 +50,7 @@ export default function App() {
         setIsFirstLaunch(false);
       }
     });
+    fetchPosts();
   }, []);
   const handleLanguageChange = (language) => {
     setSelectedLanguage(language);
@@ -164,7 +165,7 @@ export default function App() {
                   name="homeButton"
                 > */}
                   <TouchableOpacity
-                    className="bg-secondary p-4 rounded-md flex-1 items-center justify-center mx-2"
+                    className="bg-secondary p-4 rounded-md flex items-center justify-center mx-2"
                     onPress={() => router.push("/home")}
                   >
                     <Text className="font-psemibold text-black">
@@ -172,13 +173,16 @@ export default function App() {
                     </Text>
                   </TouchableOpacity>
                   {/* </CopilotStep> */}
-                  <TouchableOpacity className="bg-secondary p-4 rounded-md flex-1 items-center justify-center mx-2">
+                  <TouchableOpacity
+                    className="bg-secondary p-4 rounded-md flex items-center justify-center mx-2"
+                    onPress={() => router.push("/profile")}
+                  >
                     <Text className="font-psemibold text-black text-center">
-                      {t("my_crops")}
+                      {t("profile")}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    className="bg-secondary p-4 rounded-md flex-2 items-center justify-center mx-2 "
+                    className="bg-secondary p-4 rounded-md flex-1 items-center justify-center mx-2 "
                     onPress={() => setModalVisible(true)}
                   >
                     <Text className="font-psemibold text-black">
@@ -273,7 +277,7 @@ export default function App() {
               />
             </>
           )}
-          <Trending posts={temporaryPosts ?? []} />
+          <Trending posts={posts ?? []} />
         </Animated.View>
       </ScrollView>
 

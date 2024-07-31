@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
   RefreshControl,
+  Image,
 } from "react-native";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { db } from "../../lib/fire";
@@ -19,6 +20,7 @@ import {
 import CropCard from "../../components/CropCard";
 import StockCard from "../../components/StockCard";
 import { router } from "expo-router";
+import { images } from "../../constants";
 import { CustomButton, EmptyState, SearchInput } from "../../components";
 // import { Home } from "../../assets/Home.json";
 import Loader from "../../components/Loader";
@@ -41,7 +43,7 @@ const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
-    if (user && user.uid) {
+    if (user && user?.uid) {
       const cropsQuery = query(
         collection(db, "crops"),
         where("uid", "==", user.uid),
@@ -78,7 +80,7 @@ const Home = () => {
         unsubscribeStock();
       };
     } else {
-      console.log("login first");
+      // console.log("login first");
     }
   }, [user]);
   const onRefresh = async () => {
@@ -120,12 +122,19 @@ const Home = () => {
                   {user?.fullname}
                 </Text>
               </View>
-              <LottieView
+              {/* <LottieView
                 style={{ width: 100, height: 80, marginTop: 1 }}
                 source={require("../../assets/Home2.json")}
                 autoPlay
                 // loop
-              />
+              /> */}
+              <View className="w-16 h-16 border border-secondary rounded-lg flex justify-center items-center">
+                <Image
+                  source={images.farmer}
+                  className="w-[90%] h-[90%] rounded-lg"
+                  resizeMode="cover"
+                />
+              </View>
             </View>
 
             <View className="flex ">

@@ -17,22 +17,16 @@ import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
-import { db } from "../../lib/fire";
+import { db, storage } from "../../lib/fire";
 
 import { addDoc, collection } from "firebase/firestore";
 import { useTranslation } from "react-i18next";
+import { getDownloadURL, ref } from "firebase/storage";
+import Toast from "react-native-root-toast";
 const addCrop = () => {
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    fullname: "",
-    mobile: "",
-    address: "",
-    state: "",
-    pincode: "",
-    IdType: "",
-    IdImage: null,
-    password: "",
     cropName: "",
     dateOfSow: new Date(),
     area: "",
@@ -42,27 +36,89 @@ const addCrop = () => {
 
   const submit = async () => {
     if (form.cropName === "" || form.area === "") {
-      console.log(form);
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show("Please fill in all fields", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
+      return;
     }
     setSubmitting(true);
     try {
       const uid = user.uid;
+      const cropImageRef = ref(storage, `cropImages/${form.cropName}.jpg`);
+      const cropImageUrl = await getDownloadURL(cropImageRef);
 
       await addDoc(collection(db, "crops"), {
         uid: uid, // Linking to user's UID
         cropName: form.cropName,
         timestamp: form.dateOfSow,
         area: form.area,
+        cropImage: cropImageUrl,
       });
-      Alert.alert("Success", "Crops added successfully");
+      setForm({
+        cropName: "",
+        dateOfSow: new Date(),
+        area: "",
+      });
+      Toast.show("Crop added successfully", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "green", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
       // setUser(userCredential.user);
       // setIsLogged(true);
       // setUserType("farmer");
-      // router.replace("/");
+      router.replace("/home");
     } catch (error) {
-      Alert.alert("Error", error.message);
-      console.log(error.message);
+      Toast.show("Something went Wrong.", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
+      //console.log(error.message);
     } finally {
       setSubmitting(false);
     }

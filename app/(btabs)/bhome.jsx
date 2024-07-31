@@ -36,7 +36,7 @@ const bhome = () => {
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
   useEffect(() => {
-    if (user && user.uid) {
+    if (user && user?.uid) {
       const stockQuery = query(
         collection(db, "stock"),
         where("isVerified", "==", true),

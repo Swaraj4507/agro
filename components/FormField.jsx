@@ -12,6 +12,7 @@ const FormField = ({
   otherStyles,
   formwidith,
   date,
+  readOnly = false,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +31,7 @@ const FormField = ({
             placeholder={placeholder}
             placeholderTextColor="#7B7B8B"
             onChangeText={handleChangeText}
+            editable={!readOnly}
             secureTextEntry={
               (title === "Password" || title === "पासवर्ड") && !showPassword
             }

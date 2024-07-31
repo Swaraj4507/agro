@@ -10,8 +10,13 @@ import CustomButton from "../../components/CustomButton";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { app, db } from "../../lib/fire";
+import Toast from "react-native-root-toast";
 // import { app } from "../../lib/fire";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
 const SignIn = () => {
   const auth = getAuth(app);
   const { setIsLogged, setUserType, storeUser } = useGlobalContext();
@@ -23,7 +28,28 @@ const SignIn = () => {
   });
   const submit = async () => {
     if (form.email === "" || form.password === "") {
-      Alert.alert("Error", "Please fill in all fields");
+      // Alert.alert("Error", "Please fill in all fields");
+      Toast.show("Please fill in all fields", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
+      return;
     }
     setSubmitting(true);
     try {
@@ -59,13 +85,72 @@ const SignIn = () => {
 
         setIsLogged(true);
         setUserType(userData.role);
-        Alert.alert("Success", "User signed in successfully");
+        // Alert.alert("Success", "User signed in successfully");
+        Toast.show("User signed in successfully", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          delay: 0,
+          backgroundColor: "green", // Custom background color
+          textColor: "white", // Custom text color
+          opacity: 1, // Custom opacity
+          textStyle: {
+            fontSize: 16, // Custom text size
+            fontWeight: "bold", // Custom text weight
+          },
+          containerStyle: {
+            marginTop: hp("5%"),
+            borderRadius: 20, // Custom border radius
+            paddingHorizontal: 20, // Custom padding
+          },
+        });
         router.replace("/");
       } else {
-        Alert.alert("Error", "User document not found");
+        // Alert.alert("Error", "User document not found");
+        Toast.show("Invalid Credentials", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          delay: 0,
+          backgroundColor: "red", // Custom background color
+          textColor: "white", // Custom text color
+          opacity: 1, // Custom opacity
+          textStyle: {
+            fontSize: 16, // Custom text size
+            fontWeight: "bold", // Custom text weight
+          },
+          containerStyle: {
+            marginTop: hp("5%"),
+            borderRadius: 20, // Custom border radius
+            paddingHorizontal: 20, // Custom padding
+          },
+        });
       }
     } catch (error) {
-      Alert.alert("Error", error.message);
+      Toast.show("Something went wrong", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
     } finally {
       setSubmitting(false);
     }

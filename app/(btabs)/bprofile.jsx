@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useGlobalContext } from "../../context/GlobalProvider";
-import { icons } from "../../constants";
+import { icons, images } from "../../constants";
 import { db } from "../../lib/fire";
 import { getAuth, signOut as firebaseSignOut } from "firebase/auth";
 import {
@@ -20,6 +20,7 @@ import {
   getDoc,
   doc,
   getDocs,
+  orderBy,
 } from "firebase/firestore";
 import CustomButton from "../../components/CustomButton";
 import VideoCard from "../../components/VideoCard";
@@ -34,6 +35,7 @@ import {
 } from "react-native-responsive-screen";
 import { Loader } from "../../components";
 import { useTranslation } from "react-i18next";
+// import { profile } from "../../assets/images/profile.png";
 const Profile = () => {
   const { user, logout } = useGlobalContext();
   const { t } = useTranslation();
@@ -42,7 +44,7 @@ const Profile = () => {
   const auth = getAuth(app);
 
   useEffect(() => {
-    console.log(user);
+    // console.log(user);
     if (user) {
       // Fetch user profile information from Firestore
       const fetchUserProfile = async (uid) => {
@@ -74,7 +76,8 @@ const Profile = () => {
       const fetchUserOrders = () => {
         const ordersQuery = query(
           collection(db, "orders"),
-          where("buyerId", "==", user.uid)
+          where("buyerId", "==", user.uid),
+          orderBy("timestamp", "desc")
         );
 
         const unsubscribe = onSnapshot(ordersQuery, (snapshot) => {
@@ -87,7 +90,7 @@ const Profile = () => {
 
         return unsubscribe;
       };
-      console.log(user.uid);
+      // console.log(user.uid);
       fetchUserProfile(user.uid);
       const unsubscribeOrders = fetchUserOrders();
 
@@ -137,7 +140,8 @@ const Profile = () => {
 
             <View className="w-16 h-16 border border-secondary rounded-lg flex justify-center items-center">
               <Image
-                source={{ uri: userInfo.idProofUrl }}
+                // source={{ uri: userInfo.idProofUrl }}
+                source={images.farmer}
                 className="w-[90%] h-[90%] rounded-lg"
                 resizeMode="cover"
               />

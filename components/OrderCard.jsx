@@ -1,8 +1,9 @@
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import StepIndicator from "react-native-step-indicator";
 import { useTranslation } from "react-i18next";
+import { Image } from "expo-image";
 const OrderStatusIndicator = ({ status }) => {
   const { t } = useTranslation();
   const stepLabels = ["requested", "confirmed", "delivered"];
@@ -76,7 +77,9 @@ const OrderCard = ({ item }) => {
       </Text>
       <Text className="text-sm text-gray-600 mb-4 font-psemibold">
         {t("status_label")}: {t(`${status}`)}
-        {/* {t("translations.status_label")}: {t(`translations.${status}`)} */}
+      </Text>
+      <Text className="text-sm text-gray-600 mb-4 font-psemibold">
+        {t("bill_amount")}: {quotedPrice * quantity} /-
       </Text>
       <OrderStatusIndicator status={status} />
     </Animated.View>

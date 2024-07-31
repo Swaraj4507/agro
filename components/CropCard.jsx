@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import CustomButton from "./CustomButton";
 import {
   FlatList,
-  Image,
   RefreshControl,
   Text,
   TouchableWithoutFeedback,
@@ -16,6 +15,7 @@ import { router } from "expo-router";
 import { useGlobalContext } from "../context/GlobalProvider";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
+import { Image } from "expo-image";
 const CropCard = ({ item }) => {
   const { cropName: title, area, cropImage, id } = item;
   const { t } = useTranslation();
@@ -34,11 +34,7 @@ const CropCard = ({ item }) => {
     },
   });
   const { fetchDiseasesForCrop, diseasesData } = useGlobalContext();
-  const handleExplorePress = async () => {
-    console.log("explore clicked");
-    await fetchDiseasesForCrop(title);
-    router.push(`/diseases/${title}`);
-  };
+
   return (
     <TouchableWithoutFeedback key={id}>
       <Animated.View

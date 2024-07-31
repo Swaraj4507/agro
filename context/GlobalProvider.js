@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { getCurrentUser } from "../lib/appwrite";
+
 import { db } from "../lib/fire";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -14,7 +14,7 @@ const GlobalProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState("");
-
+  const [posts, setPosts] = useState([]);
   const [diseasesData, setDiseasesData] = useState({});
   const [diseasesLoading, setDiseasesLoading] = useState(true);
   useEffect(() => {
@@ -37,8 +37,18 @@ const GlobalProvider = ({ children }) => {
     checkUserLogin();
 
   }, []);
+  const fetchPosts = async () => {
+    try {
+      const postsSnapshot = await getDocs(collection(db, "posts"));
+      const postsData = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // console.log(postsData)
+      setPosts(postsData);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+  };
   const fetchDiseasesForCrop = async (cropName) => {
-    console.log(cropName)
+
     setDiseasesLoading(true);
     try {
       const cropDiseasesSnapshot = await getDocs(collection(db, "diseases", cropName, "Diseases"));
@@ -59,7 +69,7 @@ const GlobalProvider = ({ children }) => {
       }));
       setDiseasesLoading(false);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      // console.error("Error fetching data:", error);
       setDiseasesLoading(false);
     }
   };
@@ -70,7 +80,7 @@ const GlobalProvider = ({ children }) => {
       setIsLogged(true);
       setUserType(user.role);
     } catch (error) {
-      console.error("Error storing user data:", error);
+      // console.error("Error storing user data:", error);
     }
   };
   const logout = async () => {
@@ -80,7 +90,7 @@ const GlobalProvider = ({ children }) => {
       setIsLogged(false);
       setUserType("");
     } catch (error) {
-      console.error("Error logging out:", error);
+      // console.error("Error logging out:", error);
     }
   };
 
@@ -99,6 +109,8 @@ const GlobalProvider = ({ children }) => {
         fetchDiseasesForCrop,
         storeUser,
         logout,
+        posts,
+        fetchPosts,
       }}
     >
       {children}

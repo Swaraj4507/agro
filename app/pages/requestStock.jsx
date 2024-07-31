@@ -46,7 +46,7 @@ const RequestStock = () => {
       requestedQuantity >= 1 &&
       requestedQuantity <= stockItem.quantity
     ) {
-      Alert.alert("Error", "Check Requested Quantity");
+      // Alert.alert("Error", "Check Requested Quantity");
     }
     try {
       // Add order to orders collection first
@@ -73,10 +73,11 @@ const RequestStock = () => {
         quantity: requestedQuantity,
         quotedPrice,
         deliveryDetails,
-        requestStatus: "pending",
+        requestStatus: "requested",
         buyerId: user.uid,
         buyerName: user.fullname,
         buyerMobile: user.mobile,
+        unit: stockItem.unit,
       };
 
       // Update stock item with buyer request including the order ID
@@ -132,6 +133,15 @@ const RequestStock = () => {
             {t("available_quantity_label")}: {stockItem.availableQuantity}{" "}
             {stockItem.unit}
           </Text>
+
+          <FormField
+            title={t("quotedPrice")}
+            value={quotedPrice}
+            handleChangeText={(text) => setQuotedPrice(text)}
+            keyboardType="numeric"
+            otherStyles=" mt-1 "
+            readOnly={true}
+          />
           <FormField
             title={t("requestedQuantity")}
             value={requestedQuantity.toString()}
@@ -142,13 +152,6 @@ const RequestStock = () => {
             }}
             keyboardType="numeric"
             otherStyles="mt-1"
-          />
-          <FormField
-            title={t("quotedPrice")}
-            value={quotedPrice}
-            handleChangeText={(text) => setQuotedPrice(text)}
-            keyboardType="numeric"
-            otherStyles=" mt-1 "
           />
           <FormField
             title={t("deliveryDetails")}

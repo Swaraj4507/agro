@@ -35,6 +35,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import Toast from "react-native-root-toast";
 const Create = () => {
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
@@ -91,7 +92,27 @@ const Create = () => {
 
   const submit = async () => {
     if (!form.cropName || !form.photo || !form.amount || !form.quantity) {
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show("Please fill in all fields", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          // marginTop: 30,
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
+      return;
       return;
     }
     setSubmitting(true);
@@ -126,7 +147,25 @@ const Create = () => {
         // timestamp: timestamp,
       });
 
-      Alert.alert("Success", "Stock added successfully");
+      Toast.show("Stock added successfully", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "green", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
 
       setForm({
         cropName: "",
@@ -140,7 +179,25 @@ const Create = () => {
       });
       router.replace("/home");
     } catch (error) {
-      Alert.alert("Error", error.message);
+      Toast.show("Something went Wrong.", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
     } finally {
       setSubmitting(false);
     }
@@ -168,9 +225,29 @@ const Create = () => {
         }));
       }
     } else {
-      setTimeout(() => {
-        Alert.alert("Document picked", JSON.stringify(result, null, 2));
-      }, 100);
+      // setTimeout(() => {
+      //   Alert.alert("Document picked", JSON.stringify(result, null, 2));
+      // }, 100);
+      Toast.show("No Image Picked", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          marginTop: hp("5%"),
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
     }
   };
 
@@ -185,7 +262,7 @@ const Create = () => {
         contentContainerStyle={{ paddingBottom: hp("13%") }}
       >
         <View className="flex justify-center items-center mt-3">
-          <Text className="text-4xl text-secondary font-pbold">
+          <Text className="text-4xl text-secondary font-pbold pt-2">
             {t("appName")}
           </Text>
           <Text className="text-xm text-black font-pbold mt-5">

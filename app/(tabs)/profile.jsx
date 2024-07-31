@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useGlobalContext } from "../../context/GlobalProvider";
-import { icons } from "../../constants";
+import { icons, images } from "../../constants";
 import { db } from "../../lib/fire";
 import { getAuth, signOut as firebaseSignOut } from "firebase/auth";
 import {
@@ -37,7 +37,7 @@ const Profile = () => {
   const auth = getAuth(app);
 
   useEffect(() => {
-    console.log(user);
+    // console.log(user);
     if (user) {
       // Fetch user profile information from Firestore
       const fetchUserProfile = async (uid) => {
@@ -93,9 +93,7 @@ const Profile = () => {
 
   const signout = async () => {
     await firebaseSignOut(auth);
-    //setUser(null);
-    // setIsLogged(false);
-    // setUserType(null);
+
     await logout();
     router.replace("/sign-in-f");
   };
@@ -133,7 +131,7 @@ const Profile = () => {
 
             <View className="w-16 h-16 border border-secondary rounded-lg flex justify-center items-center">
               <Image
-                source={{ uri: userInfo.idProofUrl }}
+                source={images.farmer}
                 className="w-[90%] h-[90%] rounded-lg"
                 resizeMode="cover"
               />

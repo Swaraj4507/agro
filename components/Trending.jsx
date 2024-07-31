@@ -3,12 +3,11 @@ import { ResizeMode, Video } from "expo-av";
 import * as Animatable from "react-native-animatable";
 import {
   FlatList,
-  Image,
   ImageBackground,
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from "react-native";
-
+import { Image } from "expo-image";
 import { icons } from "../constants";
 
 const zoomIn = {
@@ -55,9 +54,9 @@ const TrendingItem = ({ activeItem, item }) => {
         <TouchableOpacity
           className="relative flex justify-center items-center"
           activeOpacity={0.7}
-          onPress={() => setPlay(true)}
+          // onPress={() => setPlay(true)}
         >
-          <ImageBackground
+          <Image
             source={{
               uri: item.thumbnail,
             }}
@@ -65,11 +64,11 @@ const TrendingItem = ({ activeItem, item }) => {
             resizeMode="cover"
           />
 
-          <Image
+          {/* <Image
             source={icons.play}
             className="w-12 h-12 absolute"
             resizeMode="contain"
-          />
+          /> */}
         </TouchableOpacity>
       )}
     </Animatable.View>

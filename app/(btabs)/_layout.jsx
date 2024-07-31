@@ -79,7 +79,7 @@ const TabsLayout = () => {
               <TabIcon
                 icon={icons.plus}
                 color={color}
-                name="Add Requirement"
+                name={t("add_req")}
                 focused={focused}
               />
             ),

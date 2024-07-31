@@ -12,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "package": "com.mycorp.myapp"
@@ -29,13 +27,8 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-router",
-      "expo-build-properties"
-    ],
-    "permissions": [
-      "LOCATION"
-    ],
+    "plugins": ["expo-router", "expo-build-properties", "expo-image-picker"],
+    "permissions": ["LOCATION", "CAMERA", "READ_EXTERNAL_STORAGE"],
     "extra": {
       "router": {
         "origin": false
