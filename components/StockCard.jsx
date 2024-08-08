@@ -29,17 +29,17 @@ const StockCard = ({ item }) => {
       },
     });
   };
-  const limitedRequests = buyerRequests ? buyerRequests.slice(0, 3) : [];
-  // const confirmedRequests = limitedRequests.filter(
-  //   (request) =>
-  //     request.requestStatus === "confirmed" ||
-  //     request.requestStatus === "delivered"
-  // );
-  const confirmedRequests = buyerRequests?.filter(
+  const limitedRequests = buyerRequests ? buyerRequests.slice(-3) : [];
+  const confirmedRequests = limitedRequests.filter(
     (request) =>
       request.requestStatus === "confirmed" ||
       request.requestStatus === "delivered"
   );
+  // const confirmedRequests = buyerRequests?.filter(
+  //   (request) =>
+  //     request.requestStatus === "confirmed" ||
+  //     request.requestStatus === "delivered"
+  // );
   const handleExplore = () => {
     router.push({
       pathname: "/pages/viewStockPage",

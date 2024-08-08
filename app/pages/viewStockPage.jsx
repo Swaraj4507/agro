@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, FlatList } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
@@ -8,7 +8,11 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/fire";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import Loader from "../../components/Loader";
-import { heightPercentageToDP as hp } from "react-native-responsive-screen";
+import {
+  heightPercentageToDP as hp,
+  widthPercentageToDP as wp,
+} from "react-native-responsive-screen";
+
 const ViewStockRequests = () => {
   const { t } = useTranslation();
   const { stockId } = useLocalSearchParams();
@@ -32,103 +36,108 @@ const ViewStockRequests = () => {
   if (loading) {
     return <Loader isLoading={loading} />;
   }
+
   const handleEditPress = () => {
     router.push({
       pathname: "/pages/editstock",
-
       params: {
-        photoURL: encodeURI(item.photoURL),
-        item: JSON.stringify(item),
+        photoURL: encodeURI(stock.photoURL),
+        item: JSON.stringify(stock),
       },
     });
   };
+
   const confirmedRequests = stock.buyerRequests?.filter(
     (request) =>
       request.requestStatus === "confirmed" ||
       request.requestStatus === "delivered"
   );
-  return (
-    <ScrollView
-      contentContainerStyle={{ padding: 16, marginTop: hp("12%") }}
-      className="bg-primary"
+
+  const renderRequest = ({ item, index }) => (
+    <View
+      key={index}
+      className="p-3 mb-2 border border-secondary rounded bg-white/80 bg-secondary"
     >
-      {stock && (
-        <Animated.View
-          entering={FadeInDown}
-          className="shadow-md rounded-lg p-4 mb-10 border border-secondary bg-white"
-        >
-          <Image
-            source={{ uri: stock.photoURL }}
-            className="w-full h-40 rounded-lg mb-4"
-            resizeMode="cover"
-          />
-          <Text className="text-lg font-psemibold mb-2">
-            {t(`${stock.cropName}`)}
-          </Text>
-          <Text className="text-sm text-gray-600 mb-2 font-pmedium">
-            {t("location_label")}: {stock.locationString}
-          </Text>
-          <Text className="text-sm text-gray-600 mb-4 font-pmedium">
-            {t("quantity_label")}: {stock.quantity} {t(`${stock.unit}`)}
-          </Text>
-          <Text className="text-sm text-gray-600 mb-4 font-pmedium">
-            {t("available_quantity_label")}: {stock.availableQuantity}{" "}
-            {t(`${stock.unit}`)}
-          </Text>
+      <Text className="font-pmedium">
+        {t("order_label")}: {index + 1}
+      </Text>
+      <Text className="font-pmedium">
+        {t("requested_quantity_label")}: {item.quantity} {t(`${item.unit}`)}
+      </Text>
+      <Text className="font-pmedium">
+        {t("status_label")}: {t(`${item.requestStatus}`)}
+      </Text>
+      <Text className="font-pmedium">
+        {t("bill_amount")}: {stock.amount * item.quantity} /-
+      </Text>
+    </View>
+  );
 
-          {stock.isVerified ? (
-            <Text className="text-sm text-green-700 mb-2 font-pmedium">
-              {t("verified_message")}
-            </Text>
-          ) : (
-            <Text className="text-sm text-red-700 mb-2 font-pmedium">
-              {t("not_verified_message")}
-            </Text>
-          )}
+  return (
+    <View className="flex-1  bg-white" style={{ paddingTop: hp("5%") }}>
+      <View className="p-4 mb-5  bg-white shadow-md rounded-lg">
+        <Image
+          source={{ uri: stock.photoURL }}
+          className="w-full h-60 rounded-lg mb-4"
+          resizeMode="cover"
+        />
+        <Text className="text-lg font-psemibold mb-2">
+          {t(`${stock.cropName}`)}
+        </Text>
+        <Text className="text-sm text-gray-600 mb-2 font-pmedium">
+          {t("location_label")}: {stock.locationString}
+        </Text>
+        <Text className="text-sm text-gray-600 mb-4 font-pmedium">
+          {t("quantity_label")}: {stock.quantity} {t(`${stock.unit}`)}
+        </Text>
+        <Text className="text-sm text-gray-600 mb-4 font-pmedium">
+          {t("available_quantity_label")}: {stock.availableQuantity}{" "}
+          {t(`${stock.unit}`)}
+        </Text>
 
-          <Text className="text-lg font-psemibold mb-4">
-            {t("buyer_requests_label")}
+        {stock.isVerified ? (
+          <Text className="text-sm text-green-700 mb-2 font-pmedium">
+            {t("verified_message")}
           </Text>
-          {confirmedRequests && confirmedRequests.length > 0 ? (
-            confirmedRequests.map((request, index) => (
-              <View
-                key={index}
-                className="p-3 mb-2 border border-secondary rounded bg-white/80 bg-secondary"
-              >
-                <Text className="font-pmedium">
-                  {t("order_label")}: {index + 1}
-                </Text>
-                <Text className="font-pmedium">
-                  {t("requested_quantity_label")}: {request.quantity}{" "}
-                  {t(`${request.unit}`)}
-                </Text>
-                <Text className="font-pmedium">
-                  {t("status_label")}: {t(`${request.requestStatus}`)}
-                </Text>
-                <Text className="font-pmedium">
-                  {t("bill_amount")}: {stock.amount * request.quantity} /-
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text className="text-sm text-gray-600 mb-4 font-pmedium">
-              {t("no_requests_message")}
-            </Text>
-          )}
+        ) : (
+          <Text className="text-sm text-red-700 mb-2 font-pmedium">
+            {t("not_verified_message")}
+          </Text>
+        )}
 
-          {!stock.isVerified && (
-            <TouchableOpacity
-              className="bg-secondary py-2 px-4 rounded-md mt-4"
-              onPress={handleEditPress}
-            >
-              <Text className="text-white font-psemibold">
-                {t("edit_button_label")}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
+        {!stock.isVerified && (
+          <TouchableOpacity
+            className="bg-secondary py-2 px-4 rounded-md mt-4"
+            onPress={handleEditPress}
+          >
+            <Text className="text-white font-psemibold">
+              {t("edit_button_label")}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <Text className="text-lg font-psemibold mb-4 p-4">
+        {t("buyer_requests_label")}
+      </Text>
+
+      {confirmedRequests && confirmedRequests.length > 0 ? (
+        <FlatList
+          data={confirmedRequests}
+          renderItem={renderRequest}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={{
+            paddingHorizontal: wp("3%"),
+            paddingBottom: hp("10%"),
+            backgroundColor: "#fff",
+          }}
+        />
+      ) : (
+        <Text className="text-sm text-gray-600 mb-4 font-pmedium p-4">
+          {t("no_requests_message")}
+        </Text>
       )}
-    </ScrollView>
+    </View>
   );
 };
 
