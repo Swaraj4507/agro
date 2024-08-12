@@ -51,6 +51,7 @@ const SignUp = () => {
     IdType: "",
     IdImage: null,
     password: "",
+    email: "",
   });
   const auth = getAuth(app);
   const [selectedID, setSelectedID] = useState("");
@@ -148,7 +149,7 @@ const SignUp = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        form.mobile + "@gmail.com",
+        form.email + "@gmail.com",
         form.password
       );
 
@@ -173,20 +174,21 @@ const SignUp = () => {
         idProofUrl: idProofUrl,
         idType: form.IdType,
         orgName: form.orgname,
+        verified: false,
       });
 
-      await storeUser({
-        uid: uid,
-        fullname: form.fullname,
-        role: "buyer",
-        mobile: form.mobile,
-        address: form.address,
-        state: form.state,
-        pincode: form.pincode,
-        idProofUrl: idProofUrl,
-        idType: form.IdType,
-        orgName: form.orgname,
-      });
+      // await storeUser({
+      //   uid: uid,
+      //   fullname: form.fullname,
+      //   role: "buyer",
+      //   mobile: form.mobile,
+      //   address: form.address,
+      //   state: form.state,
+      //   pincode: form.pincode,
+      //   idProofUrl: idProofUrl,
+      //   idType: form.IdType,
+      //   orgName: form.orgname,
+      // });
       Toast.show("User Registered successfully", {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
@@ -287,6 +289,13 @@ const SignUp = () => {
             handleChangeText={(e) => setForm({ ...form, mobile: e })}
             otherStyles="mt-7"
             keyboardType="numeric"
+          />
+          <FormField
+            title={t("email")}
+            value={form.email}
+            handleChangeText={(e) => setForm({ ...form, email: e })}
+            otherStyles="mt-7"
+            keyboardType="email"
           />
 
           <FormField

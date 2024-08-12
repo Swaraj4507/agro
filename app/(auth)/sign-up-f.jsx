@@ -45,6 +45,7 @@ const SignUpF = () => {
     cropName: "",
     dateOfSow: new Date(),
     area: "",
+    email: "",
   });
   const cropsList = [
     "Apple",
@@ -191,7 +192,7 @@ const SignUpF = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        form.mobile + "@gmail.com",
+        form.email + "@gmail.com",
         form.password
       );
 
@@ -213,6 +214,7 @@ const SignUpF = () => {
         pincode: form.pincode,
         idProofUrl: idProofUrl,
         idType: form.IdType,
+        verified: false,
       });
 
       // Create crops data document
@@ -227,17 +229,17 @@ const SignUpF = () => {
         cropImage: cropImageUrl,
       });
 
-      await storeUser({
-        uid: uid,
-        fullname: form.fullname,
-        role: "farmer",
-        mobile: form.mobile,
-        address: form.address,
-        state: form.state,
-        pincode: form.pincode,
-        idProofUrl: idProofUrl,
-        idType: form.IdType,
-      });
+      // await storeUser({
+      //   uid: uid,
+      //   fullname: form.fullname,
+      //   role: "farmer",
+      //   mobile: form.mobile,
+      //   address: form.address,
+      //   state: form.state,
+      //   pincode: form.pincode,
+      //   idProofUrl: idProofUrl,
+      //   idType: form.IdType,
+      // });
       // setIsLogged(true);
       // setUserType("farmer");
       router.replace("/");
@@ -359,6 +361,13 @@ const SignUpF = () => {
             handleChangeText={(e) => setForm({ ...form, mobile: e })}
             otherStyles="mt-7"
             keyboardType="numeric"
+          />
+          <FormField
+            title={t("email")}
+            value={form.email}
+            handleChangeText={(e) => setForm({ ...form, email: e })}
+            otherStyles="mt-7"
+            keyboardType="mail"
           />
           {/* <View className="  bg-secondary-1 ">
             <Picker

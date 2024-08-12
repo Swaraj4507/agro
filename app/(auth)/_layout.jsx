@@ -36,6 +36,12 @@ const AuthLayout = () => {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="forgotPassword"
+          options={{
+            headerShown: false,
+          }}
+        />
       </Stack>
 
       {/* <Loader isLoading={loading} /> */}

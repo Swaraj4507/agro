@@ -51,23 +51,30 @@ const SignIn = () => {
     }
     setSubmitting(true);
     try {
-      console.log(form.mobile + "@gmail.com");
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        form.mobile + "@gmail.com",
-        form.password
-      );
+      const usersRef = collection(db, "users"); // Assuming 'users' is the collection name
+      const q = query(usersRef, where("mobile", "==", form.mobile));
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        console.error("No user found with this mobile number.");
+        return;
+      }
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      console.log(userData);
+      // Check if the user's ID is verified
+      if (userData.verified) {
+        // If verified, proceed with login
+        const email = userData.email;
+        console.log(email);
+        const userCredential = await signInWithEmailAndPassword(
+          auth,
+          email,
+          form.password
+        );
 
-      // Extract UID from userCredential
-      console.log(form);
-      const uid = userCredential.user.uid;
-
-      // Fetch user details from Firestore based on UID
-      const userData = await fetchUserByUID(uid);
-
-      // Check if user document exists
-      if (userData) {
-        // Update user details in global context
+        // Successful login, you can extract the UID if needed
+        const uid = userCredential.user.uid;
+        console.log("Logged in with UID:", uid);
         await storeUser({
           uid: userData.uid,
           fullname: userData.fullname,
@@ -81,8 +88,8 @@ const SignIn = () => {
           orgName: userData.orgName,
         });
 
-        // setIsLogged(true);
-        // setUserType(userData.role);
+        setIsLogged(true);
+        setUserType(userData.role);
         // Alert.alert("Success", "User signed in successfully");
         Toast.show("User signed in successfully", {
           duration: Toast.durations.SHORT,
@@ -107,7 +114,7 @@ const SignIn = () => {
         router.replace("/");
       } else {
         // Alert.alert("Error", "User document not found");
-        Toast.show("Invalid Credentials", {
+        Toast.show("Please wait for your ID to be verified.", {
           duration: Toast.durations.SHORT,
           position: Toast.positions.TOP,
           shadow: true,
@@ -129,7 +136,7 @@ const SignIn = () => {
         });
       }
     } catch (error) {
-      Toast.show("Something went Wrong.", {
+      Toast.show("Something went Wrong / Invalid Credentials", {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -153,33 +160,7 @@ const SignIn = () => {
       setSubmitting(false);
     }
   };
-  const fetchUserByUID = async (uid) => {
-    try {
-      // Create a reference to the users collection
-      const usersRef = collection(db, "users");
 
-      // Create a query to get the user document where the uid field matches the provided uid
-      const q = query(usersRef, where("uid", "==", uid));
-
-      // Execute the query
-      const querySnapshot = await getDocs(q);
-
-      // Check if any documents match the query
-      if (!querySnapshot.empty) {
-        // Since there should be only one document matching the query, get the first document
-        const userDoc = querySnapshot.docs[0];
-
-        // Return the user data
-        return userDoc.data();
-      } else {
-        // If no document matches the query, return null
-        return null;
-      }
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      throw error;
-    }
-  };
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
@@ -233,6 +214,17 @@ const SignIn = () => {
             containerStyles="mt-7"
             isLoading={isSubmitting}
           />
+          <View className="flex  pt-5 flex-row gap-2 w-3/4 justify-start">
+            <Text className="text-lg text-gray-500 font-pregular">
+              {t("forgotPassword")}
+            </Text>
+            <Link
+              href="/forgotPassword"
+              className="text-lg font-psemibold text-secondary"
+            >
+              {t("click here")}
+            </Link>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
