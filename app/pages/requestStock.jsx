@@ -41,12 +41,27 @@ const RequestStock = () => {
 
   const handleRequest = async () => {
     setSubmitting(true);
-    if (
-      !isNaN(requestedQuantity) &&
-      requestedQuantity >= 1 &&
-      requestedQuantity <= stockItem.quantity
-    ) {
+    if (!isNaN(requestedQuantity) || requestedQuantity > stockItem.quantity) {
       // Alert.alert("Error", "Check Requested Quantity");
+      Toast.show(t("checkRequestedQuantity"), {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red",
+        textColor: "white",
+        opacity: 1,
+        textStyle: {
+          fontSize: 16,
+          fontWeight: "bold",
+        },
+        containerStyle: {
+          borderRadius: 20,
+          paddingHorizontal: 20,
+        },
+      });
     }
     try {
       // Add order to orders collection first
@@ -85,14 +100,51 @@ const RequestStock = () => {
         buyerRequests: arrayUnion(requestDetails),
       });
 
-      console.log("Request submitted successfully:", requestDetails);
+      // console.log("Request submitted successfully:", requestDetails);
+      Toast.show(t("requirementAddedSuccess"), {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "green",
+        textColor: "white",
+        opacity: 1,
+        textStyle: {
+          fontSize: 16,
+          fontWeight: "bold",
+        },
+        containerStyle: {
+          borderRadius: 20,
+          paddingHorizontal: 20,
+        },
+      });
       // Reset state
       setRequestedQuantity(stockItem.quantity);
       setQuotedPrice("");
       setDeliveryDetails("");
       router.push("/bhome");
     } catch (error) {
-      console.error("Error submitting request:", error);
+      Toast.show(t("errorMessage"), {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red",
+        textColor: "white",
+        opacity: 1,
+        textStyle: {
+          fontSize: 16,
+          fontWeight: "bold",
+        },
+        containerStyle: {
+          borderRadius: 20,
+          paddingHorizontal: 20,
+        },
+      });
     } finally {
       setSubmitting(false);
     }

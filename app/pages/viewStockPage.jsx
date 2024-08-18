@@ -79,7 +79,7 @@ const ViewStockRequests = () => {
         <Image
           source={{ uri: stock.photoURL }}
           className="w-full h-60 rounded-lg mb-4"
-          resizeMode="cover"
+          contentFit="cover"
         />
         <Text className="text-lg font-psemibold mb-2">
           {t(`${stock.cropName}`)}
@@ -87,10 +87,13 @@ const ViewStockRequests = () => {
         <Text className="text-sm text-gray-600 mb-2 font-pmedium">
           {t("location_label")}: {stock.locationString}
         </Text>
-        <Text className="text-sm text-gray-600 mb-4 font-pmedium">
+        <Text className="text-sm text-gray-600 mb-2 font-pmedium">
+          {t("price")}: {stock.amount} / {t(`${stock.unit}`)}
+        </Text>
+        <Text className="text-sm text-gray-600 mb-2 font-pmedium">
           {t("quantity_label")}: {stock.quantity} {t(`${stock.unit}`)}
         </Text>
-        <Text className="text-sm text-gray-600 mb-4 font-pmedium">
+        <Text className="text-sm text-gray-600 mb-2 font-pmedium">
           {t("available_quantity_label")}: {stock.availableQuantity}{" "}
           {t(`${stock.unit}`)}
         </Text>

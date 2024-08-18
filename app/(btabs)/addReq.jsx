@@ -64,7 +64,7 @@ const addReq = () => {
       form.quantity === "" ||
       form.deliveryDetails === ""
     ) {
-      Toast.show("Please fill in all fields", {
+      Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -100,7 +100,7 @@ const addReq = () => {
         unit: "kg",
         cropImage: "",
       });
-      Toast.show("Requirement added successfully", {
+      Toast.show(t("requirementAddedSuccess"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.CENTER,
         shadow: true,
@@ -119,9 +119,9 @@ const addReq = () => {
           paddingHorizontal: 20,
         },
       });
-      router.replace("/home");
+      router.replace("/bhome");
     } catch (error) {
-      Toast.show("Something went wrong.", {
+      Toast.show(t("errorMessage"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -140,7 +140,7 @@ const addReq = () => {
           paddingHorizontal: 20,
         },
       });
-      console.error(error.message);
+      // console.error(error.message);
     } finally {
       setSubmitting(false);
     }
@@ -156,7 +156,7 @@ const addReq = () => {
             {t("appName")}
           </Text>
           <Text className="text-xm text-black font-bold mt-5">
-            {t("slogan")}
+            {t("bringingFields")}
           </Text>
         </View>
 
@@ -198,14 +198,14 @@ const addReq = () => {
           ) : null}
 
           <FormField
-            title={t("buyerMobile")}
+            title={t("mobile")}
             value={form.buyerMobile}
             handleChangeText={(e) => setForm({ ...form, buyerMobile: e })}
             otherStyles="mt-7"
           />
 
           <FormField
-            title={t("buyerName")}
+            title={t("fullname")}
             value={form.buyerName}
             handleChangeText={(e) => setForm({ ...form, buyerName: e })}
             otherStyles="mt-7"
@@ -221,20 +221,12 @@ const addReq = () => {
           <FormField
             title={t("quantity")}
             value={form.quantity}
-            handleChangeText={(e) => setForm({ ...form, quantity: e })}
-            otherStyles="mt-7"
-            keyboardType="numeric"
-          />
-
-          {/* <FormField
-            title={t("remainingQuantity")}
-            value={form.remainingQuantity.toString()}
             handleChangeText={(e) =>
-              setForm({ ...form, remainingQuantity: parseInt(e) })
+              setForm({ ...form, quantity: e, remainingQuantity: e })
             }
             otherStyles="mt-7"
             keyboardType="numeric"
-          /> */}
+          />
           <View className="mt-7 flex flex-row">
             <TouchableOpacity
               style={[
@@ -273,13 +265,6 @@ const addReq = () => {
               <Text style={styles.optionText}>{t("crate")}</Text>
             </TouchableOpacity>
           </View>
-          {/* <FormField
-            title={t("unit")}
-            value={form.unit}
-            handleChangeText={(e) => setForm({ ...form, unit: e })}
-            otherStyles="mt-7"
-          /> */}
-
           <CustomButton
             title={t("addRequirement")}
             handlePress={submit}

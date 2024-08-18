@@ -39,38 +39,41 @@ import { useTranslation } from "react-i18next";
 const Profile = () => {
   const { user, logout } = useGlobalContext();
   const { t } = useTranslation();
-  const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState(user);
   const [orders, setOrders] = useState([]);
   const auth = getAuth(app);
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     // console.log(user);
     if (user) {
       // Fetch user profile information from Firestore
-      const fetchUserProfile = async (uid) => {
-        try {
-          // Get a reference to the 'users' collection
-          const usersRef = collection(db, "users");
+      // const fetchUserProfile = async (uid) => {
+      //   try {
+      //     // Get a reference to the 'users' collection
+      //     const usersRef = collection(db, "users");
 
-          // Create a query to find the document with the matching UID
-          const q = query(usersRef, where("uid", "==", uid));
+      //     // Create a query to find the document with the matching UID
+      //     const q = query(usersRef, where("uid", "==", uid));
 
-          // Execute the query
-          const querySnapshot = await getDocs(q);
+      //     // Execute the query
+      //     const querySnapshot = await getDocs(q);
 
-          // Check if there's a matching document
-          if (!querySnapshot.empty) {
-            // Since we're querying by UID, there should be at most one matching document
-            const userData = querySnapshot.docs[0].data();
-            // Do something with userData, such as setting it to state
-            setUserInfo(userData);
-          } else {
-            console.log("No matching document found for UID:", uid);
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-        }
-      };
+      //     // Check if there's a matching document
+      //     if (!querySnapshot.empty) {
+      //       // Since we're querying by UID, there should be at most one matching document
+      //       const userData = querySnapshot.docs[0].data();
+      //       // Do something with userData, such as setting it to state
+      //       setUserInfo(userData);
+      //       // console.log(userData);
+      //       // console.log("temo");
+      //       // console.log(user);
+      //     } else {
+      //       console.log("No matching document found for UID:", uid);
+      //     }
+      //   } catch (error) {
+      //     console.error("Error fetching user profile:", error);
+      //   }
+      // };
 
       // Fetch user's orders from Firestore
       const fetchUserOrders = () => {
@@ -86,12 +89,12 @@ const Profile = () => {
             ...doc.data(),
           }));
           setOrders(ordersList);
+          setLoading(false);
         });
 
         return unsubscribe;
       };
-      // console.log(user.uid);
-      fetchUserProfile(user.uid);
+      // fetchUserProfile(user.uid);
       const unsubscribeOrders = fetchUserOrders();
 
       return () => {
@@ -102,14 +105,12 @@ const Profile = () => {
 
   const signout = async () => {
     await firebaseSignOut(auth);
-    // setUser(null);
-    // setIsLogged(false);
-    // setUserType(null);
+
     await logout();
     router.replace("/sign-in-b");
   };
 
-  if (!userInfo) {
+  if (loading) {
     return <Loader isLoading={true} />;
   }
 

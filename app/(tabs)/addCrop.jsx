@@ -36,7 +36,7 @@ const addCrop = () => {
 
   const submit = async () => {
     if (form.cropName === "" || form.area === "") {
-      Toast.show("Please fill in all fields", {
+      Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -75,7 +75,7 @@ const addCrop = () => {
         dateOfSow: new Date(),
         area: "",
       });
-      Toast.show("Crop added successfully", {
+      Toast.show(t("cropAdded"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.CENTER,
         shadow: true,
@@ -99,7 +99,7 @@ const addCrop = () => {
       // setUserType("farmer");
       router.replace("/home");
     } catch (error) {
-      Toast.show("Something went Wrong.", {
+      Toast.show(t("errorMessage"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,

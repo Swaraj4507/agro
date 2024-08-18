@@ -78,8 +78,8 @@ const ForgotPassword = () => {
       const email = userData.email;
 
       await sendPasswordResetEmail(auth, email);
-      Toast.show(`Password reset email sent to ${email} successfully`, {
-        duration: Toast.durations.SHORT,
+      Toast.show(t("passwordResetSuccess", { email }), {
+        duration: Toast.durations.LONG,
         position: Toast.positions.TOP,
         shadow: true,
         animation: true,
@@ -98,8 +98,9 @@ const ForgotPassword = () => {
           paddingHorizontal: 20,
         },
       });
+      setMobile("");
     } catch (error) {
-      Toast.show("Something went wrong. Please try again", {
+      Toast.show(t("errorMessage"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,

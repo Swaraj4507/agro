@@ -63,7 +63,7 @@ const OrderCard = ({ item }) => {
       <Image
         source={{ uri: photoURL }}
         className="w-full h-40 rounded-lg mb-4"
-        resizeMode="cover"
+        contentFit="cover"
       />
       <Text className="text-lg font-psemibold mb-2">{t(`${cropName}`)}</Text>
       <Text className="text-sm text-gray-600 mb-2 font-psemibold">

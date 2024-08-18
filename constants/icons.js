@@ -11,8 +11,9 @@ import logout from "../assets/icons/logout.png";
 import eyeHide from "../assets/icons/eye-hide.png";
 import eye from "../assets/icons/eye.png";
 import play from "../assets/icons/play.png";
-import store from "../assets/icons/store.png"
-import crop from "../assets/icons/harvest.png"
+import store from "../assets/icons/store.png";
+import crop from "../assets/icons/harvest.png";
+import booking from "../assets/icons/booking.png"
 export default {
   play,
   bookmark,
@@ -28,5 +29,6 @@ export default {
   eyeHide,
   eye,
   store,
-  crop
+  crop,
+  booking
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   FlatList,
@@ -35,6 +35,7 @@ const bhome = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation();
+  const [showEmptyState, setShowEmptyState] = useState(false);
   useEffect(() => {
     if (user && user?.uid) {
       const stockQuery = query(
@@ -78,7 +79,17 @@ const bhome = () => {
       // console.log("login first");
     }
   }, [user]);
+  useEffect(() => {
+    if (loading) {
+      const timeoutId = setTimeout(() => {
+        setShowEmptyState(true);
+      }, 2000);
 
+      return () => clearTimeout(timeoutId); // Clear the timeout if the component unmounts
+    } else {
+      setShowEmptyState(false);
+    }
+  }, [loading]);
   const onRefresh = async () => {
     setRefreshing(true);
     setRefreshing(false);
@@ -90,35 +101,53 @@ const bhome = () => {
       params: { stockItem: item },
     });
   };
+  const MemoizedOrderCard = React.memo(OrderCard, (prevProps, nextProps) => {
+    return prevProps.item.id === nextProps.item.id; // Avoid re-render if the item ID is the same
+  });
+
+  const MemoizedBStockCard = React.memo(BStockCard, (prevProps, nextProps) => {
+    return prevProps.item.id === nextProps.item.id; // Avoid re-render if the item ID is the same
+  });
+  const renderItem = useCallback(
+    ({ item }) => {
+      return showOrders ? (
+        <MemoizedOrderCard
+          item={item}
+          photoURL={encodeURI(item.photoURL)}
+          className="px-4"
+        />
+      ) : (
+        <MemoizedBStockCard
+          item={item}
+          onRequestPress={() => handleRequestPress(item)}
+          className="px-4"
+        />
+      );
+    },
+    [showOrders] // Dependencies for useCallback
+  );
   // console.log(showOrders);
+  if (loading) {
+    return <Loader isLoading={true} />;
+  }
   return (
     <SafeAreaView className="h-full w-full">
-      <Loader isLoading={loading} />
+      {/* <Loader isLoading={loading} /> */}
       <FlatList
         className="bg-primary w-full h-full"
         data={showOrders ? orders : stock}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) =>
-          showOrders ? (
-            <OrderCard
-              item={item}
-              photoURL={encodeURI(item.photoURL)}
-              className="px-4"
+        renderItem={renderItem}
+        ListEmptyComponent={() =>
+          showEmptyState ? (
+            <EmptyState
+              title={t("nothing_found_title")}
+              subtitle={t("nothing_found_subtitle")}
             />
           ) : (
-            <BStockCard
-              item={item}
-              onRequestPress={() => handleRequestPress(item)}
-              className="px-4"
-            />
+            <Loader isLoading={true} /> // Show a loader during the delay
           )
         }
-        ListEmptyComponent={() => (
-          <EmptyState
-            title={t("nothing_found_title")}
-            subtitle={t("nothing_found_subtitle")}
-          />
-        )}
         stickyHeaderIndices={[0]}
         ListHeaderComponent={() => (
           <View className="flex my-6 px-4 space-y-6 bg-white mt-0">
@@ -181,6 +210,14 @@ const bhome = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        getItemLayout={(item, index) => ({
+          length: 100, // Assuming fixed height of 100 for items
+          offset: 100 * index,
+          index,
+        })}
+        initialNumToRender={30} // Adjust based on performance
+        maxToRenderPerBatch={30} // Adjust based on performance
+        windowSize={30} // Adjust based on performance
         contentContainerStyle={{ paddingBottom: hp("12%") }}
       />
     </SafeAreaView>

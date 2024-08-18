@@ -20,12 +20,7 @@ import * as ImagePicker from "expo-image-picker";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import {
-  addDoc,
-  collection,
-  Timestamp,
-  serverTimestamp,
-} from "firebase/firestore";
+import { addDoc, collection } from "firebase/firestore";
 import { app, db } from "../../lib/fire";
 import { router } from "expo-router";
 import { Loader } from "../../components";
@@ -92,7 +87,7 @@ const Create = () => {
 
   const submit = async () => {
     if (!form.cropName || !form.photo || !form.amount || !form.quantity) {
-      Toast.show("Please fill in all fields", {
+      Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.CENTER,
         shadow: true,
@@ -112,7 +107,6 @@ const Create = () => {
           paddingHorizontal: 20, // Custom padding
         },
       });
-      return;
       return;
     }
     setSubmitting(true);
@@ -147,7 +141,7 @@ const Create = () => {
         // timestamp: timestamp,
       });
 
-      Toast.show("Stock added successfully", {
+      Toast.show(t("stockAdded"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.CENTER,
         shadow: true,
@@ -179,7 +173,7 @@ const Create = () => {
       });
       router.replace("/home");
     } catch (error) {
-      Toast.show("Something went Wrong.", {
+      Toast.show(t("errorMessage"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,

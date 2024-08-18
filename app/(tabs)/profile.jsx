@@ -32,43 +32,43 @@ import { useTranslation } from "react-i18next";
 const Profile = () => {
   const { user, logout } = useGlobalContext();
   const { t } = useTranslation();
-  const [userInfo, setUserInfo] = useState(null);
+  const [userInfo, setUserInfo] = useState(user);
   const [stock, setStock] = useState([]);
   const auth = getAuth(app);
-
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     // console.log(user);
     if (user) {
       // Fetch user profile information from Firestore
-      const fetchUserProfile = async (uid) => {
-        try {
-          // Get a reference to the 'users' collection
-          const usersRef = collection(db, "users");
+      // const fetchUserProfile = async (uid) => {
+      //   try {
+      //     // Get a reference to the 'users' collection
+      //     const usersRef = collection(db, "users");
 
-          // Create a query to find the document with the matching UID
-          const q = query(usersRef, where("uid", "==", uid));
+      //     // Create a query to find the document with the matching UID
+      //     const q = query(usersRef, where("uid", "==", uid));
 
-          // Execute the query
-          const querySnapshot = await getDocs(q);
+      //     // Execute the query
+      //     const querySnapshot = await getDocs(q);
 
-          // Check if there's a matching document
-          if (!querySnapshot.empty) {
-            const userData = querySnapshot.docs[0].data();
+      //     // Check if there's a matching document
+      //     if (!querySnapshot.empty) {
+      //       const userData = querySnapshot.docs[0].data();
 
-            setUserInfo(userData);
-          } else {
-            console.log("No matching document found for UID:", uid);
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-        }
-      };
+      //       setUserInfo(userData);
+      //     } else {
+      //       console.log("No matching document found for UID:", uid);
+      //     }
+      //   } catch (error) {
+      //     console.error("Error fetching user profile:", error);
+      //   }
+      // };
 
       // Fetch user's orders from Firestore
       const fetchUserStock = () => {
         const stockQuery = query(
           collection(db, "stock"),
-          where("uid", "==", user.uid)
+          where("uid", "==", user?.uid)
         );
 
         const unsubscribe = onSnapshot(stockQuery, (snapshot) => {
@@ -77,17 +77,20 @@ const Profile = () => {
             ...doc.data(),
           }));
           setStock(stockList);
+          setLoading(false);
         });
 
         return unsubscribe;
       };
 
-      fetchUserProfile(user.uid);
+      // fetchUserProfile(user.uid);
       const unsubscribeOrders = fetchUserStock();
 
       return () => {
         unsubscribeOrders();
       };
+    } else {
+      setLoading(false); // User is not present, end loading state
     }
   }, [user]);
 
@@ -98,7 +101,7 @@ const Profile = () => {
     router.replace("/sign-in-f");
   };
 
-  if (!userInfo) {
+  if (loading) {
     return <Loader isLoading={true} />;
   }
 

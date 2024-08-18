@@ -3,7 +3,6 @@ import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 
-import { images } from "../../constants";
 import { useTranslation } from "react-i18next";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
@@ -29,7 +28,7 @@ const SignIn = () => {
   const submit = async () => {
     if (form.email === "" || form.password === "") {
       // Alert.alert("Error", "Please fill in all fields");
-      Toast.show("Please fill in all fields", {
+      Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -58,7 +57,26 @@ const SignIn = () => {
       const q = query(usersRef, where("mobile", "==", form.mobile));
       const querySnapshot = await getDocs(q);
       if (querySnapshot.empty) {
-        console.error("No user found with this mobile number.");
+        Toast.show(t("noUserFound"), {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          delay: 0,
+          backgroundColor: "green", // Custom background color
+          textColor: "white", // Custom text color
+          opacity: 1, // Custom opacity
+          textStyle: {
+            fontSize: 16, // Custom text size
+            fontWeight: "bold", // Custom text weight
+          },
+          containerStyle: {
+            marginTop: hp("5%"),
+            borderRadius: 20, // Custom border radius
+            paddingHorizontal: 20, // Custom padding
+          },
+        });
         return;
       }
       const userDoc = querySnapshot.docs[0];
@@ -74,10 +92,6 @@ const SignIn = () => {
           email,
           form.password
         );
-
-        // Successful login, you can extract the UID if needed
-        const uid = userCredential.user.uid;
-        console.log("Logged in with UID:", uid);
         await storeUser({
           uid: userData.uid,
           fullname: userData.fullname,
@@ -88,13 +102,14 @@ const SignIn = () => {
           pincode: userData.pincode,
           idProofUrl: userData.idProofUrl,
           idType: userData.idType,
+
           // orgName: userData.orgName,
         });
 
         setIsLogged(true);
         setUserType(userData.role);
         // Alert.alert("Success", "User signed in successfully");
-        Toast.show("User signed in successfully", {
+        Toast.show(t("userSignedIn"), {
           duration: Toast.durations.SHORT,
           position: Toast.positions.TOP,
           shadow: true,
@@ -117,8 +132,8 @@ const SignIn = () => {
         router.replace("/");
       } else {
         // If not verified, show a message to the user
-        console.log("Please wait for your ID to be verified.");
-        Toast.show("Please wait for your ID to be verified.", {
+        // console.log("Please wait for your ID to be verified.");
+        Toast.show(t("idVerificationPending"), {
           duration: Toast.durations.SHORT,
           position: Toast.positions.TOP,
           shadow: true,
@@ -142,7 +157,7 @@ const SignIn = () => {
 
       // Alert.alert("Error", "User document not found");
     } catch (error) {
-      Toast.show("Something went wrong / Invalid Credentials", {
+      Toast.show(t("errorInvalidCredentials"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,

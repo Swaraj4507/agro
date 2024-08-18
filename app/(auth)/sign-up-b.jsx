@@ -10,17 +10,16 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import * as DocumentPicker from "expo-document-picker";
-import { icons, images } from "../../constants";
-// import { createUser } from "../../lib/appwrite";
+import { icons } from "../../constants";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
-// import { createUser } from "../../lib/appwrite";
-import { useGlobalContext } from "../../context/GlobalProvider";
 import * as ImagePicker from "expo-image-picker";
 import SelectFormField from "../../components/SelectFormField";
 import { app, db, storage } from "../../lib/fire";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+} from "firebase/auth";
 import { getAuth } from "firebase/auth";
 import {
   getStorage,
@@ -38,7 +37,6 @@ import {
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 const SignUp = () => {
-  const { setUser, setIsLogged, setUserType, storeUser } = useGlobalContext();
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -50,6 +48,7 @@ const SignUp = () => {
     pincode: "",
     IdType: "",
     IdImage: null,
+    OrgImage: null,
     password: "",
     email: "",
   });
@@ -92,6 +91,11 @@ const SignUp = () => {
           ...form,
           IdImage: blob,
         });
+      } else if (selectType === "org") {
+        setForm({
+          ...form,
+          OrgImage: blob,
+        });
       }
     } else {
       // setTimeout(() => {
@@ -123,7 +127,7 @@ const SignUp = () => {
 
   const submit = async () => {
     if (form.fullname === "" || form.mobile === "" || form.password === "") {
-      Toast.show("Please fill in all fields", {
+      Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -149,7 +153,7 @@ const SignUp = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        form.email + "@gmail.com",
+        form.email,
         form.password
       );
 
@@ -158,25 +162,31 @@ const SignUp = () => {
 
       const idProofRef = ref(storage, `IDProofs/${uid}`);
       await uploadBytes(idProofRef, form.IdImage);
-
+      const OrgImageRef = ref(storage, `OrganizationImages/${uid}`);
+      await uploadBytes(OrgImageRef, form.OrgImage);
       // Get the download URL of the uploaded image
       const idProofUrl = await getDownloadURL(idProofRef);
-
+      const orgUrl = await getDownloadURL(OrgImageRef);
+      console.log("done uploads");
       // Create user profile document with UID as document ID
       await setDoc(doc(db, "users", uid), {
         uid: uid,
         fullname: form.fullname,
-        role: "buyer", // Assigning the role here
+        role: "buyer",
         mobile: form.mobile,
+        email: form.email,
         address: form.address,
         state: form.state,
         pincode: form.pincode,
         idProofUrl: idProofUrl,
+        OrgImage: orgUrl,
         idType: form.IdType,
         orgName: form.orgname,
         verified: false,
+        registrationDate: new Date(),
       });
-
+      console.log("done profile");
+      await firebaseSignOut(auth);
       // await storeUser({
       //   uid: uid,
       //   fullname: form.fullname,
@@ -189,7 +199,7 @@ const SignUp = () => {
       //   idType: form.IdType,
       //   orgName: form.orgname,
       // });
-      Toast.show("User Registered successfully", {
+      Toast.show(t("registrationPendingVerification"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -213,7 +223,8 @@ const SignUp = () => {
       // setUserType("buyer");
       router.replace("/");
     } catch (error) {
-      Toast.show("Something went wrong", {
+      const errorMessage = error.message || "Something went wrong";
+      Toast.show(t("errorMessage"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -347,6 +358,27 @@ const SignUp = () => {
                 />
                 <Text className="text-sm text-black font-pmedium">
                   {t("upload")} {selectedID}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => openPicker("org")}>
+            <View className="mt-7 space-y-2">
+              <Text className="text-base text-black font-pmedium">
+                {t("OrgImage")}
+              </Text>
+              <View
+                className="w-full 
+           h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2"
+              >
+                <Image
+                  source={icons.upload}
+                  resizeMode="contain"
+                  alt="upload"
+                  className="w-5 h-5"
+                />
+                <Text className="text-sm text-black font-pmedium">
+                  {t("upload")}
                 </Text>
               </View>
             </View>

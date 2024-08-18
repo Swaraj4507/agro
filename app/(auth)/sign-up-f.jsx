@@ -18,7 +18,10 @@ import * as ImagePicker from "expo-image-picker";
 import SelectFormField from "../../components/SelectFormField";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { app, db, storage } from "../../lib/fire";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+} from "firebase/auth";
 import { getAuth } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { setDoc, doc, addDoc, collection } from "firebase/firestore";
@@ -30,7 +33,6 @@ import {
 } from "react-native-responsive-screen";
 import Toast from "react-native-root-toast";
 const SignUpF = () => {
-  const { storeUser } = useGlobalContext();
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -112,6 +114,19 @@ const SignUpF = () => {
     });
   };
   const openPicker = async (selectType) => {
+    // const result = await ImagePicker.launchImageLibraryAsync({
+    //   mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    //   aspect: [4, 3],
+    //   quality: 1,
+    // });
+
+    // if (!result.canceled) {
+    //   const idProofRef = ref(storage, `IDProofs/${uid}`);
+    //   const response = await fetch(result.assets[0].uri);
+    //   const blob = await response.blob();
+    //   await uploadBytes(idProofRef, blob);
+    // }
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
@@ -165,8 +180,9 @@ const SignUpF = () => {
   };
 
   const submit = async () => {
+    // console.log(form);
     if (form.fullname === "" || form.password === "") {
-      Toast.show("Please fill in all fields", {
+      Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -192,7 +208,7 @@ const SignUpF = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        form.email + "@gmail.com",
+        form.email,
         form.password
       );
 
@@ -209,14 +225,16 @@ const SignUpF = () => {
         fullname: form.fullname,
         role: "farmer", // Assigning the role here
         mobile: form.mobile,
+        email: form.email,
         address: form.address,
         state: form.state,
         pincode: form.pincode,
         idProofUrl: idProofUrl,
         idType: form.IdType,
         verified: false,
+        registrationDate: new Date(),
       });
-
+      console.log("done profile");
       // Create crops data document
       const cropImageRef = ref(storage, `cropImages/${form.cropName}.jpg`);
       const cropImageUrl = await getDownloadURL(cropImageRef);
@@ -228,6 +246,7 @@ const SignUpF = () => {
         area: form.area,
         cropImage: cropImageUrl,
       });
+      console.log("done crops");
 
       // await storeUser({
       //   uid: uid,
@@ -242,8 +261,10 @@ const SignUpF = () => {
       // });
       // setIsLogged(true);
       // setUserType("farmer");
-      router.replace("/");
-      Toast.show("User Registered successfully", {
+      console.log("started signing out");
+      await firebaseSignOut(auth);
+      console.log("done signinout");
+      Toast.show(t("registrationPendingVerification"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -263,8 +284,11 @@ const SignUpF = () => {
           paddingHorizontal: 20, // Custom padding
         },
       });
+      router.replace("/");
     } catch (error) {
-      Toast.show("Something went Wrong.", {
+      console.log(error);
+      const errorMessage = error.message || "Something went wrong";
+      Toast.show(t("errorMessage"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -299,13 +323,6 @@ const SignUpF = () => {
     setShowDatePicker(false);
     // setShowDatePicker(false);
     console.log(form.dateOfSow);
-  };
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || form.dateOfSow;
-    setForm({
-      ...form,
-      dateOfSow: currentDate,
-    });
   };
 
   return (

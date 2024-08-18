@@ -27,7 +27,7 @@ const SignIn = () => {
   const submit = async () => {
     if (form.email === "" || form.password === "") {
       // Alert.alert("Error", "Please fill in all fields");
-      Toast.show("Please fill in all fields", {
+      Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
@@ -55,26 +55,42 @@ const SignIn = () => {
       const q = query(usersRef, where("mobile", "==", form.mobile));
       const querySnapshot = await getDocs(q);
       if (querySnapshot.empty) {
-        console.error("No user found with this mobile number.");
+        Toast.show(t("noUserFound"), {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          delay: 0,
+          backgroundColor: "green", // Custom background color
+          textColor: "white", // Custom text color
+          opacity: 1, // Custom opacity
+          textStyle: {
+            fontSize: 16, // Custom text size
+            fontWeight: "bold", // Custom text weight
+          },
+          containerStyle: {
+            marginTop: hp("5%"),
+            borderRadius: 20, // Custom border radius
+            paddingHorizontal: 20, // Custom padding
+          },
+        });
         return;
       }
       const userDoc = querySnapshot.docs[0];
       const userData = userDoc.data();
-      console.log(userData);
+      // console.log(userData);
       // Check if the user's ID is verified
       if (userData.verified) {
         // If verified, proceed with login
         const email = userData.email;
-        console.log(email);
+        // console.log(email);
         const userCredential = await signInWithEmailAndPassword(
           auth,
           email,
           form.password
         );
 
-        // Successful login, you can extract the UID if needed
-        const uid = userCredential.user.uid;
-        console.log("Logged in with UID:", uid);
         await storeUser({
           uid: userData.uid,
           fullname: userData.fullname,
@@ -91,7 +107,7 @@ const SignIn = () => {
         setIsLogged(true);
         setUserType(userData.role);
         // Alert.alert("Success", "User signed in successfully");
-        Toast.show("User signed in successfully", {
+        Toast.show(t("userSignedIn"), {
           duration: Toast.durations.SHORT,
           position: Toast.positions.TOP,
           shadow: true,
@@ -114,7 +130,7 @@ const SignIn = () => {
         router.replace("/");
       } else {
         // Alert.alert("Error", "User document not found");
-        Toast.show("Please wait for your ID to be verified.", {
+        Toast.show(t("idVerificationPending"), {
           duration: Toast.durations.SHORT,
           position: Toast.positions.TOP,
           shadow: true,
@@ -136,7 +152,7 @@ const SignIn = () => {
         });
       }
     } catch (error) {
-      Toast.show("Something went Wrong / Invalid Credentials", {
+      Toast.show(t("errorInvalidCredentials"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,

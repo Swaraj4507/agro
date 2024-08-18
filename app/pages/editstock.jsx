@@ -39,16 +39,70 @@ const EditStock = () => {
   const submit = async () => {
     // console.log(form);
     if (!form.cropName || !form.photoURL || !form.amount) {
-      Alert.alert("Error", "Please fill in all fields");
+      Toast.show(t("fillAllFields"), {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
       return;
     }
     setSubmitting(true);
     try {
       await updateDoc(doc(db, "stock", item.id), form);
-      Alert.alert("Success", "Stock updated successfully");
+      Toast.show(t("stockUpdated"), {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "green", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
       router.back(); // Navigate back after successful update
     } catch (error) {
-      Alert.alert("Error", error.message);
+      Toast.show(t("errorMessage"), {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.TOP,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+        delay: 0,
+        backgroundColor: "red", // Custom background color
+        textColor: "white", // Custom text color
+        opacity: 1, // Custom opacity
+        textStyle: {
+          fontSize: 16, // Custom text size
+          fontWeight: "bold", // Custom text weight
+        },
+        containerStyle: {
+          borderRadius: 20, // Custom border radius
+          paddingHorizontal: 20, // Custom padding
+        },
+      });
     } finally {
       setSubmitting(false);
     }

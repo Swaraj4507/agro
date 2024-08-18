@@ -104,38 +104,7 @@ export default function App() {
           {t("appName")}
         </Text>
       </Animated.View>
-      {/* <View className="bg-[#b2d6a3]" style={{ height: hp("40%") }}>
-      <View className="flex flex-row justify-between items-center">
-        <View className=" bg-white flex items-center justify-between w-[48%]">
-          <Image
-            source={{
-              uri: "https://media.istockphoto.com/id/1316992167/photo/red-chili-peppers-in-vegetable-garden.jpg?s=612x612&w=0&k=20&c=9WxPxtBqBegiJtWZ6J-IRr-WqLs8qgS4G_JiSEQk-IQ=",
-              // uri: icons.store,
-            }}
-            className="w-full h-full rounded-xl "
-            resizeMode="contain"
-          />
-          <Text className="text-[#65B741]  font-psemibold ">
-            JSK AgroTech
-          </Text>
-        </View>
-        <View className=" bg-slate-300 flex items-center justify-between w-[48%]">
-          <Image
-            source={{
-              uri: "https://media.istockphoto.com/id/1316992167/photo/red-chili-peppers-in-vegetable-garden.jpg?s=612x612&w=0&k=20&c=9WxPxtBqBegiJtWZ6J-IRr-WqLs8qgS4G_JiSEQk-IQ=",
-              // uri: icons.store,
-            }}
-            className="w-full h-full rounded-xl "
-            resizeMode="contain"
-          />
-          <Text className="text-[#65B741]  font-psemibold ">
-            JSK AgroTech
-          </Text>
-        </View>
-      </View>
-    </View> */}
 
-      {/* <FHome /> */}
       <ScrollView>
         <Animated.View
           entering={FadeIn.delay(400)}
@@ -270,11 +239,11 @@ export default function App() {
                 handlePress={() => setModalVisible(true)}
                 containerStyles="w-full mt-10"
               />
-              <CustomButton
+              {/* <CustomButton
                 title={t("clear storage")}
                 handlePress={clearAsyncStorage}
                 containerStyles="w-full mt-10"
-              />
+              /> */}
             </>
           )}
           <Trending posts={posts ?? []} />

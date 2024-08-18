@@ -2,7 +2,6 @@ import React from "react";
 import { View, Text, TouchableOpacity, Pressable } from "react-native";
 import { router } from "expo-router";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { ScrollView } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Image } from "expo-image";
 const StockCard = ({ item }) => {
@@ -64,10 +63,16 @@ const StockCard = ({ item }) => {
       <Text className="text-sm text-gray-600 mb-2 font-pmedium">
         {t("location_label")}: {locationString}
       </Text>
-      <Text className="text-sm text-gray-600 mb-4 font-pmedium">
+      <Text className="text-sm text-gray-600 mb-2 font-pmedium">
+        {t("price")}: {amount} / {t(`${unit}`)}
+      </Text>
+      <Text className="text-sm text-gray-600 mb-2 font-pmedium">
         {t("quantity_label")}: {quantity} {t(`${unit}`)}
       </Text>
-      <Text className="text-sm text-gray-600 mb-4 font-pmedium">
+      <Text className="text-sm text-gray-600 mb-2 font-pmedium">
+        {t("assignedQuantity")}: {quantity - availableQuantity} {unit}
+      </Text>
+      <Text className="text-sm text-gray-600 mb-2 font-pmedium">
         {t("available_quantity_label")}: {availableQuantity} {t(`${unit}`)}
       </Text>
       {isVerified && confirmedRequests && confirmedRequests.length > 0 ? (

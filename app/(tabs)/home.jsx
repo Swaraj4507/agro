@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   FlatList,
@@ -42,6 +42,7 @@ const Home = () => {
   const [showCrops, setShowCrops] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showEmptyState, setShowEmptyState] = useState(false);
   useEffect(() => {
     if (user && user?.uid) {
       const cropsQuery = query(
@@ -83,12 +84,50 @@ const Home = () => {
       // console.log("login first");
     }
   }, [user]);
+  useEffect(() => {
+    if (loading) {
+      const timeoutId = setTimeout(() => {
+        setShowEmptyState(true);
+      }, 2000);
+
+      return () => clearTimeout(timeoutId); // Clear the timeout if the component unmounts
+    } else {
+      setShowEmptyState(false);
+    }
+  }, [loading]);
   const onRefresh = async () => {
     setRefreshing(true);
     // Real-time listeners already handle updates, so no need to refetch
     setRefreshing(false);
   };
+  const MemoizedOrderCard = React.memo(CropCard, (prevProps, nextProps) => {
+    return prevProps.item.id === nextProps.item.id; // Avoid re-render if the item ID is the same
+  });
 
+  const MemoizedStockCard = React.memo(StockCard, (prevProps, nextProps) => {
+    return prevProps.item.id === nextProps.item.id; // Avoid re-render if the item ID is the same
+  });
+  const renderItem = useCallback(
+    ({ item }) => {
+      return showCrops ? (
+        <MemoizedOrderCard
+          item={item}
+          photoURL={encodeURI(item.photoURL)}
+          className="px-4"
+        />
+      ) : (
+        <MemoizedStockCard
+          item={item}
+          onRequestPress={() => handleRequestPress(item)}
+          className="px-4"
+        />
+      );
+    },
+    [showCrops] // Dependencies for useCallback
+  );
+  if (loading) {
+    return <Loader isLoading={true} />;
+  }
   return (
     <SafeAreaView className=" bg-primary h-full w-full">
       <Loader isLoading={loading} />
@@ -96,20 +135,18 @@ const Home = () => {
         className="bg-primary w-full h-full"
         data={showCrops ? crops : stock}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) =>
-          showCrops ? (
-            <CropCard item={item} className="px-4" />
+        renderItem={renderItem}
+        // contentContainerStyle={{ paddingBottom: hp("10%") }}
+        ListEmptyComponent={() =>
+          showEmptyState ? (
+            <EmptyState
+              title={t("nothing_found_title")}
+              subtitle={t("nothing_found_subtitle")}
+            />
           ) : (
-            <StockCard item={item} className="px-4" />
+            <Loader isLoading={true} /> // Show a loader during the delay
           )
         }
-        // contentContainerStyle={{ paddingBottom: hp("10%") }}
-        ListEmptyComponent={() => (
-          <EmptyState
-            title={t("nothing_found_title")}
-            subtitle={t("nothing_found_subtitle")}
-          />
-        )}
         stickyHeaderIndices={[0]}
         ListHeaderComponent={() => (
           <View className="flex my-6 px-4 space-y-3 bg-white mt-0">
@@ -187,11 +224,15 @@ const Home = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        contentContainerStyle={{
-          // marginBottom: 10,
-          // backgroundColor: "#000",
-          paddingBottom: hp("12%"),
-        }}
+        getItemLayout={(item, index) => ({
+          length: 100, // Assuming fixed height of 100 for items
+          offset: 100 * index,
+          index,
+        })}
+        initialNumToRender={30} // Adjust based on performance
+        maxToRenderPerBatch={30} // Adjust based on performance
+        windowSize={30} // Adjust based on performance
+        contentContainerStyle={{ paddingBottom: hp("12%") }}
       />
     </SafeAreaView>
   );

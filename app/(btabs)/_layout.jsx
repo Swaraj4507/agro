@@ -86,6 +86,21 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
+          name="showReq"
+          options={{
+            title: "Show Requirements",
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.booking}
+                color={color}
+                name={t("my_requests")}
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="bprofile"
           options={{
             title: "Profile",
