@@ -53,11 +53,11 @@ const CropCard = ({ item }) => {
               uri: cropImage,
             }}
             className="w-full h-full rounded-xl "
-            resizeMode="cover"
+            contentFit="cover"
           />
         </View>
-        <View className="flex flex-row gap-3 items-start">
-          <View className="flex justify-center items-center flex-row flex-1">
+        <View className="flex flex-row items-start ">
+          <View className="flex justify-center items-center flex-row flex-1 ">
             <View className="flex justify-center flex-1 ml-3 gap-y-1">
               <Text
                 className="font-psemibold text-lg text-[#65B741]"
@@ -72,6 +72,8 @@ const CropCard = ({ item }) => {
                 {area} Acres
               </Text>
             </View>
+          </View>
+          <View className="flex flex-row gap-3">
             <CustomButton
               title={t("explore_button_label")}
               // handlePress={submit}
@@ -82,6 +84,20 @@ const CropCard = ({ item }) => {
                 }
                 setSubmitting(false);
                 router.push(`/diseases/${title}`);
+              }}
+              containerStyles="mt-1 mr-2  pl-5 pr-5"
+              isLoading={isSubmitting}
+            />
+            <CustomButton
+              title={t("Chat")}
+              // handlePress={submit}
+              handlePress={() => {
+                router.push({
+                  pathname: "/pages/chatScreen",
+                  params: {
+                    cropId: id,
+                  },
+                });
               }}
               containerStyles="mt-1 pl-5 pr-5"
               isLoading={isSubmitting}

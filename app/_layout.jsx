@@ -87,6 +87,10 @@ const RootLayout = () => {
               name="pages/viewStockPage"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="pages/chatScreen"
+              options={{ headerShown: false }}
+            />
           </Stack>
         </RootSiblingParent>
       </I18nextProvider>

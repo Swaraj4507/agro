@@ -28,7 +28,7 @@ import {
   getDownloadURL,
   uploadBytes,
 } from "firebase/storage";
-import { setDoc, doc } from "firebase/firestore"; // Import setDoc and doc
+import { setDoc, doc, query, where, getDocs } from "firebase/firestore"; // Import setDoc and doc
 import { useTranslation } from "react-i18next";
 
 import Toast from "react-native-root-toast";
@@ -126,7 +126,19 @@ const SignUp = () => {
   };
 
   const submit = async () => {
-    if (form.fullname === "" || form.mobile === "" || form.password === "") {
+    if (
+      form.fullname === "" ||
+      form.orgname === "" ||
+      form.mobile === "" ||
+      form.address === "" ||
+      form.state === "" ||
+      form.pincode === "" ||
+      form.IdType === "" ||
+      form.IdImage === null ||
+      form.OrgImage === null ||
+      form.password === "" ||
+      form.email === ""
+    ) {
       Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
@@ -150,7 +162,38 @@ const SignUp = () => {
       return;
     }
     setSubmitting(true);
+
     try {
+      const mobileQuery = query(
+        collection(db, "users"),
+        where("mobile", "==", form.mobile)
+      );
+      const mobileSnapshot = await getDocs(mobileQuery);
+
+      if (!mobileSnapshot.empty) {
+        Toast.show(t("mobileNumberExists"), {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          delay: 0,
+          backgroundColor: "red",
+          textColor: "white",
+          opacity: 1,
+          textStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+          },
+          containerStyle: {
+            marginTop: hp("5%"),
+            borderRadius: 20,
+            paddingHorizontal: 20,
+          },
+        });
+        setSubmitting(false);
+        return;
+      }
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         form.email,

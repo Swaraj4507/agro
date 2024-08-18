@@ -1,4 +1,5 @@
 {
+  "mobileNumberExists": "A user with the same mobile number already exists. Please log in.",
   "my_requests": "Requests",
   "assignedQuantity": "Assigned Quantity",
   "remainingQuantity": "Remaining Quantity",

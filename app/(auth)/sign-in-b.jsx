@@ -84,7 +84,7 @@ const SignIn = () => {
       if (userData.verified) {
         // If verified, proceed with login
         const email = userData.email;
-        // console.log(email);
+        console.log(email);
         const userCredential = await signInWithEmailAndPassword(
           auth,
           email,

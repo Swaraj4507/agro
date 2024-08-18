@@ -24,7 +24,15 @@ import {
 } from "firebase/auth";
 import { getAuth } from "firebase/auth";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { setDoc, doc, addDoc, collection } from "firebase/firestore";
+import {
+  setDoc,
+  doc,
+  addDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { Dropdown } from "react-native-element-dropdown";
 import { useTranslation } from "react-i18next";
 import {
@@ -95,17 +103,7 @@ const SignUpF = () => {
     { label: t("panCard"), value: "Pan Card" },
   ]);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  // const [status, requestPermission] = ImagePicker.useCameraPermissions();
 
-  // useEffect(() => {
-  //   (async () => {
-  //     // console.log(status);
-  //     if (!status.granted) {
-  //       console.log("hhhhhh");
-  //       await requestPermission();
-  //     }
-  //   })();
-  // }, []);
   const handleIdChange = (value) => {
     setSelectedID(value);
     setForm({
@@ -114,19 +112,6 @@ const SignUpF = () => {
     });
   };
   const openPicker = async (selectType) => {
-    // const result = await ImagePicker.launchImageLibraryAsync({
-    //   mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    //   aspect: [4, 3],
-    //   quality: 1,
-    // });
-
-    // if (!result.canceled) {
-    //   const idProofRef = ref(storage, `IDProofs/${uid}`);
-    //   const response = await fetch(result.assets[0].uri);
-    //   const blob = await response.blob();
-    //   await uploadBytes(idProofRef, blob);
-    // }
-
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
@@ -181,7 +166,18 @@ const SignUpF = () => {
 
   const submit = async () => {
     // console.log(form);
-    if (form.fullname === "" || form.password === "") {
+    if (
+      form.fullname === "" ||
+      form.orgname === "" ||
+      form.mobile === "" ||
+      form.address === "" ||
+      form.state === "" ||
+      form.pincode === "" ||
+      form.IdType === "" ||
+      form.IdImage === null ||
+      form.password === "" ||
+      form.email === ""
+    ) {
       Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
@@ -205,7 +201,38 @@ const SignUpF = () => {
       return;
     }
     setSubmitting(true);
+
     try {
+      const mobileQuery = query(
+        collection(db, "users"),
+        where("mobile", "==", form.mobile)
+      );
+      const mobileSnapshot = await getDocs(mobileQuery);
+      // console.log(mobileSnapshot);
+      if (!mobileSnapshot.empty) {
+        Toast.show(t("mobileNumberExists"), {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.TOP,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+          delay: 0,
+          backgroundColor: "red",
+          textColor: "white",
+          opacity: 1,
+          textStyle: {
+            fontSize: 16,
+            fontWeight: "bold",
+          },
+          containerStyle: {
+            marginTop: hp("5%"),
+            borderRadius: 20,
+            paddingHorizontal: 20,
+          },
+        });
+        setSubmitting(false);
+        return;
+      }
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         form.email,
@@ -234,7 +261,6 @@ const SignUpF = () => {
         verified: false,
         registrationDate: new Date(),
       });
-      console.log("done profile");
       // Create crops data document
       const cropImageRef = ref(storage, `cropImages/${form.cropName}.jpg`);
       const cropImageUrl = await getDownloadURL(cropImageRef);
@@ -246,24 +272,8 @@ const SignUpF = () => {
         area: form.area,
         cropImage: cropImageUrl,
       });
-      console.log("done crops");
 
-      // await storeUser({
-      //   uid: uid,
-      //   fullname: form.fullname,
-      //   role: "farmer",
-      //   mobile: form.mobile,
-      //   address: form.address,
-      //   state: form.state,
-      //   pincode: form.pincode,
-      //   idProofUrl: idProofUrl,
-      //   idType: form.IdType,
-      // });
-      // setIsLogged(true);
-      // setUserType("farmer");
-      console.log("started signing out");
       await firebaseSignOut(auth);
-      console.log("done signinout");
       Toast.show(t("registrationPendingVerification"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
@@ -322,7 +332,6 @@ const SignUpF = () => {
     }
     setShowDatePicker(false);
     // setShowDatePicker(false);
-    console.log(form.dateOfSow);
   };
 
   return (
@@ -386,17 +395,7 @@ const SignUpF = () => {
             otherStyles="mt-7"
             keyboardType="mail"
           />
-          {/* <View className="  bg-secondary-1 ">
-            <Picker
-              selectedValue={selectedLanguage}
-              onValueChange={(itemValue, itemIndex) =>
-                setSelectedLanguage(itemValue)
-              }
-            >
-              <Picker.Item label="Java" value="java" />
-              <Picker.Item label="JavaScript" value="js" />
-            </Picker>
-          </View> */}
+
           <FormField
             title={t("address")}
             value={form.address}
@@ -421,7 +420,6 @@ const SignUpF = () => {
               formwidith="w-full"
             />
           </View>
-          {/* onPress={() => openPicker("image")} */}
           <SelectFormField
             title={t("idProof")}
             value={selectedID}
@@ -460,12 +458,6 @@ const SignUpF = () => {
             <Text className="text-xl  text-black font-pbold">
               {t("firstCrop")}
             </Text>
-            {/* <Link
-              href="/sign-in-f"
-              className="text-xl font-psemibold text-secondary"
-            >
-              Product
-            </Link> */}
           </View>
 
           <Text className="text-base text-black font-pmedium mt-4">
