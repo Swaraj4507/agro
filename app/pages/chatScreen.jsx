@@ -3,7 +3,7 @@ import {
   View,
   Text,
   TextInput,
-  Button,
+  TouchableOpacity,
   FlatList,
   StyleSheet,
   KeyboardAvoidingView,
@@ -19,7 +19,9 @@ import {
 
 const ChatScreen = () => {
   const { cropId } = useLocalSearchParams();
+
   const [messages, setMessages] = useState([]);
+  const [crop, setCrop] = useState("");
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -27,6 +29,7 @@ const ChatScreen = () => {
     const unsubscribe = onSnapshot(cropRef, (doc) => {
       if (doc.exists()) {
         setMessages(doc.data().messages || []);
+        setCrop(doc.data());
       }
     });
 
@@ -40,9 +43,8 @@ const ChatScreen = () => {
         timestamp: new Date(),
         sender: "app", // or "web" depending on who is sending
       };
-
+      setMessage("");
       try {
-        setMessage("");
         const cropRef = doc(db, "crops", cropId);
         await updateDoc(cropRef, {
           messages: arrayUnion(messageData),
@@ -58,35 +60,42 @@ const ChatScreen = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
-      <View style={styles.container}>
-        <FlatList
-          data={messages}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View
-              style={[
-                styles.messageContainer,
-                item.sender === "app" ? styles.appMessage : styles.webMessage,
-              ]}
-            >
-              <Text style={styles.messageText}>
-                {item.sender}: {item.text}
-              </Text>
-              <Text style={styles.timestamp}>
-                {new Date(item.timestamp.seconds * 1000).toLocaleString()}
-              </Text>
-            </View>
-          )}
+      <View style={styles.headerContainer}>
+        <Text style={styles.heading}>Chat About Your Crop</Text>
+        <Text style={styles.cropName}>{crop.cropName}</Text>
+        <Text style={styles.cropDetails}>{crop.area} Acres</Text>
+      </View>
+
+      <FlatList
+        data={messages}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <View
+            style={[
+              styles.messageContainer,
+              item.sender === "app" ? styles.appMessage : styles.webMessage,
+            ]}
+          >
+            <Text style={styles.messageText}>{item.text}</Text>
+            <Text style={styles.timestamp}>
+              {new Date(item.timestamp.seconds * 1000).toLocaleTimeString()}
+            </Text>
+          </View>
+        )}
+        contentContainerStyle={styles.messagesList}
+      />
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Type your message..."
+          placeholderTextColor="#888"
+          value={message}
+          onChangeText={setMessage}
         />
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Type your message"
-            value={message}
-            onChangeText={setMessage}
-          />
-          <Button title="Send" onPress={handleSendMessage} />
-        </View>
+        <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+          <Text style={styles.sendButtonText}>Send</Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
@@ -95,28 +104,92 @@ const ChatScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: heightPercentageToDP("3%"),
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F5F5",
   },
-  messageContainer: { marginBottom: 10, padding: 10, borderRadius: 5 },
-  appMessage: { backgroundColor: "#d1e7dd" },
-  webMessage: { backgroundColor: "#cfe2ff" },
-  messageText: { fontSize: 16 },
-  timestamp: { fontSize: 10, color: "gray", marginTop: 5 },
+  headerContainer: {
+    paddingTop: heightPercentageToDP("8%"),
+    paddingBottom: heightPercentageToDP("2%"),
+    paddingHorizontal: widthPercentageToDP("5%"),
+    backgroundColor: "#65B741",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    marginBottom: heightPercentageToDP("2%"),
+  },
+  heading: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#FFF",
+    textAlign: "center",
+    marginBottom: heightPercentageToDP("2%"),
+  },
+  cropName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  cropDetails: {
+    fontSize: 16,
+    color: "#FFFBE6",
+  },
+  messagesList: {
+    paddingHorizontal: widthPercentageToDP("4%"),
+  },
+  messageContainer: {
+    marginBottom: 12,
+    padding: 15,
+    borderRadius: 10,
+    maxWidth: "80%",
+  },
+  appMessage: {
+    backgroundColor: "#65B741",
+    alignSelf: "flex-end",
+    borderBottomRightRadius: 0,
+  },
+  webMessage: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#65B741",
+    alignSelf: "flex-start",
+    borderBottomLeftRadius: 0,
+  },
+  messageText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 4,
+    alignSelf: "flex-end",
+  },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 1,
-    marginBottom: heightPercentageToDP("2%"),
-    marginHorizontal: widthPercentageToDP("3%"),
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#DDD",
+    backgroundColor: "#FFF",
   },
   input: {
     flex: 1,
-    padding: 10,
-    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 25,
     borderWidth: 1,
-    borderRadius: 5,
+    borderColor: "#DDD",
+    backgroundColor: "#F9F9F9",
     marginRight: 10,
+    fontSize: 16,
+  },
+  sendButton: {
+    backgroundColor: "#65B741",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+  },
+  sendButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

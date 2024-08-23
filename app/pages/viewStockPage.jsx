@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  ScrollView,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
@@ -12,6 +18,7 @@ import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from "react-native-responsive-screen";
+// import { ScrollView } from "react-native-reanimated/lib/typescript/Animated";
 
 const ViewStockRequests = () => {
   const { t } = useTranslation();
@@ -75,25 +82,25 @@ const ViewStockRequests = () => {
 
   return (
     <View className="flex-1  bg-white" style={{ paddingTop: hp("5%") }}>
-      <View className="p-4 mb-5  bg-white shadow-md rounded-lg">
+      <View className=" pl-4 pr-4 pt-4 mb-2  bg-white shadow-md rounded-lg">
         <Image
           source={{ uri: stock.photoURL }}
-          className="w-full h-60 rounded-lg mb-4"
+          className="w-full h-40 rounded-lg mb-4"
           contentFit="cover"
         />
-        <Text className="text-lg font-psemibold mb-2">
+        <Text className="text-lg font-psemibold mb-1">
           {t(`${stock.cropName}`)}
         </Text>
-        <Text className="text-sm text-gray-600 mb-2 font-pmedium">
+        <Text className="text-sm text-gray-600 mb-1 font-pmedium">
           {t("location_label")}: {stock.locationString}
         </Text>
-        <Text className="text-sm text-gray-600 mb-2 font-pmedium">
+        <Text className="text-sm text-gray-600 mb-1 font-pmedium">
           {t("price")}: {stock.amount} / {t(`${stock.unit}`)}
         </Text>
-        <Text className="text-sm text-gray-600 mb-2 font-pmedium">
+        <Text className="text-sm text-gray-600 mb-1 font-pmedium">
           {t("quantity_label")}: {stock.quantity} {t(`${stock.unit}`)}
         </Text>
-        <Text className="text-sm text-gray-600 mb-2 font-pmedium">
+        <Text className="text-sm text-gray-600 mb-1 font-pmedium">
           {t("available_quantity_label")}: {stock.availableQuantity}{" "}
           {t(`${stock.unit}`)}
         </Text>
@@ -120,7 +127,7 @@ const ViewStockRequests = () => {
         )}
       </View>
 
-      <Text className="text-lg font-psemibold mb-4 p-4">
+      <Text className="text-lg font-psemibold mb-2 p-4">
         {t("buyer_requests_label")}
       </Text>
 

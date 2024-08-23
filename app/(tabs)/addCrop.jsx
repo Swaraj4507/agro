@@ -139,7 +139,7 @@ const addCrop = () => {
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
         <View className="flex justify-center items-center  mt-3">
-          <Text className="text-4xl text-secondary font-bold pt-2">
+          <Text className="text-4xl text-secondary font-pbold pt-2">
             {t("appName")}
           </Text>
           {/* <Text className="text-4xl text-black font-bold mt-5">Register</Text> */}

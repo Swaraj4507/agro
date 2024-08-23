@@ -149,7 +149,10 @@ const addReq = () => {
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView
-        contentContainerStyle={{ paddingBottom: heightPercentageToDP("10%") }}
+        contentContainerStyle={{
+          paddingBottom: heightPercentageToDP("12%"),
+          paddingTop: heightPercentageToDP("3%"),
+        }}
       >
         <View className="flex justify-center items-center mt-3">
           <Text className="text-4xl text-secondary font-bold pt-2">

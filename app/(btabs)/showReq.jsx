@@ -72,9 +72,12 @@ const ShowReq = () => {
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView
-        contentContainerStyle={{ paddingBottom: heightPercentageToDP("10%") }}
+        contentContainerStyle={{
+          paddingBottom: heightPercentageToDP("12%"),
+          paddingTop: heightPercentageToDP("3%"),
+        }}
       >
-        <View className="flex justify-center items-center mt-3">
+        <View className="flex justify-center items-center mt-3" style={{}}>
           <Text className="text-4xl text-secondary font-bold pt-2">
             {t("appName")}
           </Text>
@@ -103,7 +106,7 @@ const ShowReq = () => {
             requests.map((request) => (
               <View
                 key={request.id}
-                className="bg-white p-4 rounded-lg mb-4 shadow-md"
+                className="bg-white p-4 rounded-lg mb-4 shadow-md border border-[#65B741]"
               >
                 <Text className="text-lg font-bold">{t(request.cropName)}</Text>
                 <Text className="text-md">
