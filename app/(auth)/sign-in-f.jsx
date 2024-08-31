@@ -64,7 +64,7 @@ const SignIn = () => {
           animation: true,
           hideOnPress: true,
           delay: 0,
-          backgroundColor: "green", // Custom background color
+          backgroundColor: "red", // Custom background color
           textColor: "white", // Custom text color
           opacity: 1, // Custom opacity
           textStyle: {

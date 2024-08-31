@@ -45,7 +45,8 @@
     "react-native-shared-element": "^0.8.9",
     "react-native-step-indicator": "^1.0.3",
     "react-native-url-polyfill": "^2.0.0",
-    "zeego": "^1.10.0"
+    "zeego": "^1.10.0",
+    "react-native-gesture-handler": "~2.16.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

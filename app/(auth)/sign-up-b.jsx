@@ -28,7 +28,14 @@ import {
   getDownloadURL,
   uploadBytes,
 } from "firebase/storage";
-import { setDoc, doc, query, where, getDocs } from "firebase/firestore"; // Import setDoc and doc
+import {
+  setDoc,
+  doc,
+  query,
+  where,
+  getDocs,
+  collection,
+} from "firebase/firestore"; // Import setDoc and doc
 import { useTranslation } from "react-i18next";
 
 import Toast from "react-native-root-toast";
@@ -126,6 +133,7 @@ const SignUp = () => {
   };
 
   const submit = async () => {
+    console.log(form);
     if (
       form.fullname === "" ||
       form.orgname === "" ||
@@ -211,7 +219,6 @@ const SignUp = () => {
       const idProofUrl = await getDownloadURL(idProofRef);
       const orgUrl = await getDownloadURL(OrgImageRef);
       console.log("done uploads");
-      // Create user profile document with UID as document ID
       await setDoc(doc(db, "users", uid), {
         uid: uid,
         fullname: form.fullname,
@@ -267,7 +274,8 @@ const SignUp = () => {
       router.replace("/");
     } catch (error) {
       const errorMessage = error.message || "Something went wrong";
-      Toast.show(t("errorMessage"), {
+      console.log(errorMessage);
+      Toast.show(errorMessage, {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
         shadow: true,
