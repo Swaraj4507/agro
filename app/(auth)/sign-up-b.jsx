@@ -7,27 +7,22 @@ import {
   ScrollView,
   Dimensions,
   Alert,
-  Image,
+  Modal,
   TouchableOpacity,
 } from "react-native";
-import { icons } from "../../constants";
-import FormField from "../../components/FormField";
-import CustomButton from "../../components/CustomButton";
 import * as ImagePicker from "expo-image-picker";
-import SelectFormField from "../../components/SelectFormField";
+import Toast from "react-native-root-toast";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
+import { useTranslation } from "react-i18next";
 import { app, db, storage } from "../../lib/fire";
 import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
+  getAuth,
 } from "firebase/auth";
-import { getAuth } from "firebase/auth";
-import {
-  getStorage,
-  ref,
-  uploadString,
-  getDownloadURL,
-  uploadBytes,
-} from "firebase/storage";
 import {
   setDoc,
   doc,
@@ -35,17 +30,20 @@ import {
   where,
   getDocs,
   collection,
-} from "firebase/firestore"; // Import setDoc and doc
-import { useTranslation } from "react-i18next";
+} from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import FormField from "../../components/FormField";
+import CustomButton from "../../components/CustomButton";
+import SelectFormField from "../../components/SelectFormField";
+import { icons } from "../../constants";
+import { Image } from "expo-image";
 
-import Toast from "react-native-root-toast";
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from "react-native-responsive-screen";
 const SignUp = () => {
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
+  const [isKYCModalVisible, setKYCModalVisible] = useState(false);
+  const [showKYCFields, setShowKYCFields] = useState(false);
+  const [isKYCStarted, setKYCStarted] = useState(false);
   const [form, setForm] = useState({
     fullname: "",
     orgname: "",
@@ -58,6 +56,8 @@ const SignUp = () => {
     OrgImage: null,
     password: "",
     email: "",
+    profileCompletion: false,
+    profileCompletionPercentage: 50,
   });
   const auth = getAuth(app);
   const [selectedID, setSelectedID] = useState("");
@@ -66,6 +66,7 @@ const SignUp = () => {
     { label: t("aadharCard"), value: "Aadhar Card" },
     { label: t("panCard"), value: "Pan Card" },
   ]);
+
   const handleIdChange = (value) => {
     setSelectedID(value);
     setForm({
@@ -73,8 +74,8 @@ const SignUp = () => {
       IdType: value,
     });
   };
+
   const openPicker = async (selectType) => {
-    // console.log(selectType);
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
@@ -105,10 +106,6 @@ const SignUp = () => {
         });
       }
     } else {
-      // setTimeout(() => {
-      //   Alert.alert("Document picked", JSON.stringify(result, null, 2));
-      // }, 100);
-
       Toast.show("No Image Picked", {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
@@ -116,36 +113,37 @@ const SignUp = () => {
         animation: true,
         hideOnPress: true,
         delay: 0,
-        backgroundColor: "red", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
+        backgroundColor: "red",
+        textColor: "white",
+        opacity: 1,
         textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
+          fontSize: 16,
+          fontWeight: "bold",
         },
         containerStyle: {
           marginTop: hp("5%"),
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
+          borderRadius: 20,
+          paddingHorizontal: 20,
         },
       });
     }
   };
 
-  const submit = async () => {
+  const submit = async (isKYCComplete) => {
     console.log(form);
+
+    // Check if mandatory fields are filled based on KYC completion
     if (
       form.fullname === "" ||
-      form.orgname === "" ||
       form.mobile === "" ||
+      form.password === "" ||
+      form.email === "" ||
+      form.orgname === "" ||
       form.address === "" ||
       form.state === "" ||
       form.pincode === "" ||
-      form.IdType === "" ||
-      form.IdImage === null ||
-      form.OrgImage === null ||
-      form.password === "" ||
-      form.email === ""
+      (isKYCComplete &&
+        (form.IdType === "" || form.IdImage === null || form.OrgImage === null)) // Validate only if KYC is complete
     ) {
       Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
@@ -154,17 +152,17 @@ const SignUp = () => {
         animation: true,
         hideOnPress: true,
         delay: 0,
-        backgroundColor: "red", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
+        backgroundColor: "red",
+        textColor: "white",
+        opacity: 1,
         textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
+          fontSize: 16,
+          fontWeight: "bold",
         },
         containerStyle: {
           marginTop: hp("5%"),
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
+          borderRadius: 20,
+          paddingHorizontal: 20,
         },
       });
       return;
@@ -202,23 +200,30 @@ const SignUp = () => {
         setSubmitting(false);
         return;
       }
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         form.email,
         form.password
       );
 
-      // Extract UID from userCredential
       const uid = userCredential.user.uid;
 
-      const idProofRef = ref(storage, `IDProofs/${uid}`);
-      await uploadBytes(idProofRef, form.IdImage);
-      const OrgImageRef = ref(storage, `OrganizationImages/${uid}`);
-      await uploadBytes(OrgImageRef, form.OrgImage);
-      // Get the download URL of the uploaded image
-      const idProofUrl = await getDownloadURL(idProofRef);
-      const orgUrl = await getDownloadURL(OrgImageRef);
-      console.log("done uploads");
+      let idProofUrl = null;
+      let orgUrl = null;
+
+      if (form.IdImage) {
+        const idProofRef = ref(storage, `IDProofs/${uid}`);
+        await uploadBytes(idProofRef, form.IdImage);
+        idProofUrl = await getDownloadURL(idProofRef);
+      }
+
+      if (form.OrgImage) {
+        const OrgImageRef = ref(storage, `OrganizationImages/${uid}`);
+        await uploadBytes(OrgImageRef, form.OrgImage);
+        orgUrl = await getDownloadURL(OrgImageRef);
+      }
+
       await setDoc(doc(db, "users", uid), {
         uid: uid,
         fullname: form.fullname,
@@ -228,49 +233,21 @@ const SignUp = () => {
         address: form.address,
         state: form.state,
         pincode: form.pincode,
+        orgName: form.orgname,
+        // ...(isKYCComplete && {
+
         idProofUrl: idProofUrl,
         OrgImage: orgUrl,
         idType: form.IdType,
-        orgName: form.orgname,
+
+        profileCompletion: form.profileCompletion,
+        profileCompletionPercentage: form.profileCompletionPercentage,
+        // }),
         verified: false,
         registrationDate: new Date(),
       });
-      console.log("done profile");
+
       await firebaseSignOut(auth);
-      // await storeUser({
-      //   uid: uid,
-      //   fullname: form.fullname,
-      //   role: "buyer",
-      //   mobile: form.mobile,
-      //   address: form.address,
-      //   state: form.state,
-      //   pincode: form.pincode,
-      //   idProofUrl: idProofUrl,
-      //   idType: form.IdType,
-      //   orgName: form.orgname,
-      // });
-      Toast.show(t("registrationPendingVerification"), {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.TOP,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "green", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
-        textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
-        },
-        containerStyle: {
-          marginTop: hp("5%"),
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
-        },
-      });
-      // setIsLogged(true);
-      // setUserType("buyer");
       router.replace("/");
     } catch (error) {
       const errorMessage = error.message || "Something went wrong";
@@ -282,23 +259,48 @@ const SignUp = () => {
         animation: true,
         hideOnPress: true,
         delay: 0,
-        backgroundColor: "red", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
+        backgroundColor: "red",
+        textColor: "white",
+        opacity: 1,
         textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
+          fontSize: 16,
+          fontWeight: "bold",
         },
         containerStyle: {
           marginTop: hp("5%"),
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
+          borderRadius: 20,
+          paddingHorizontal: 20,
         },
       });
     } finally {
       setSubmitting(false);
     }
   };
+
+  const handleKYCModalChoice = (choice) => {
+    setKYCModalVisible(false);
+    if (choice === "yes") {
+      setShowKYCFields(true);
+      setKYCStarted(true); // Set KYC started flag
+      setForm({
+        ...form,
+        profileCompletion: true,
+        profileCompletionPercentage: 100,
+      });
+    } else {
+      submit(false); // Pass false to indicate KYC not complete
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!isKYCStarted) {
+      // Show modal only if KYC process hasn't started
+      setKYCModalVisible(true);
+    } else {
+      submit(true); // Pass true to indicate KYC complete
+    }
+  };
+
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView>
@@ -326,12 +328,11 @@ const SignUp = () => {
             </Text>
             <Link
               href="/sign-in-b"
-              className="text-lg font-psemibold text-secondary"
+              className="text-lg font-pbold text-secondary"
             >
-              {t("login")}
+              {t("signIn")}
             </Link>
           </View>
-
           <FormField
             title={t("fullname")}
             value={form.fullname}
@@ -359,6 +360,12 @@ const SignUp = () => {
             otherStyles="mt-7"
             keyboardType="email"
           />
+          <FormField
+            title={t("password")}
+            value={form.password}
+            handleChangeText={(e) => setForm({ ...form, password: e })}
+            otherStyles="mt-7"
+          />
 
           <FormField
             title={t("address")}
@@ -384,71 +391,93 @@ const SignUp = () => {
               formwidith="w-full"
             />
           </View>
-
-          <SelectFormField
-            title={t("idProof")}
-            value={selectedID}
-            options={ID}
-            handleChange={handleIdChange}
-            otherStyles={{ marginBottom: 20 }}
-          />
-          <TouchableOpacity onPress={() => openPicker("image")}>
-            <View className="mt-7 space-y-2">
-              <Text className="text-base text-black font-pmedium">
-                {t("idProofImage")}
-              </Text>
-              <View
-                className="w-full 
+          {showKYCFields && (
+            <>
+              <SelectFormField
+                title={t("idProof")}
+                value={selectedID}
+                options={ID}
+                handleChange={handleIdChange}
+                otherStyles={{ marginBottom: 20 }}
+              />
+              <TouchableOpacity onPress={() => openPicker("image")}>
+                <View className="mt-7 space-y-2">
+                  <Text className="text-base text-black font-pmedium">
+                    {t("idProofImage")}
+                  </Text>
+                  <View
+                    className="w-full 
            h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2"
-              >
-                <Image
-                  source={icons.upload}
-                  resizeMode="contain"
-                  alt="upload"
-                  className="w-5 h-5"
-                />
-                <Text className="text-sm text-black font-pmedium">
-                  {t("upload")} {selectedID}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => openPicker("org")}>
-            <View className="mt-7 space-y-2">
-              <Text className="text-base text-black font-pmedium">
-                {t("OrgImage")}
-              </Text>
-              <View
-                className="w-full 
+                  >
+                    <Image
+                      source={icons.upload}
+                      resizeMode="contain"
+                      alt="upload"
+                      className="w-5 h-5"
+                    />
+                    <Text className="text-sm text-black font-pmedium">
+                      {t("upload")} {selectedID}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => openPicker("org")}>
+                <View className="mt-7 space-y-2">
+                  <Text className="text-base text-black font-pmedium">
+                    {t("OrgImage")}
+                  </Text>
+                  <View
+                    className="w-full 
            h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2"
-              >
-                <Image
-                  source={icons.upload}
-                  resizeMode="contain"
-                  alt="upload"
-                  className="w-5 h-5"
-                />
-                <Text className="text-sm text-black font-pmedium">
-                  {t("upload")}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-          <FormField
-            title={t("password")}
-            value={form.password}
-            handleChangeText={(e) => setForm({ ...form, password: e })}
-            otherStyles="mt-7"
-          />
+                  >
+                    <Image
+                      source={icons.upload}
+                      resizeMode="contain"
+                      alt="upload"
+                      className="w-5 h-5"
+                    />
+                    <Text className="text-sm text-black font-pmedium">
+                      {t("upload")}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </>
+          )}
 
           <CustomButton
-            title={t("signUp")}
-            handlePress={submit}
-            containerStyles="mt-7"
-            isLoading={isSubmitting}
+            title={isSubmitting ? t("submitting") : t("register")}
+            handlePress={handleSubmit}
+            disabled={isSubmitting}
           />
         </View>
       </ScrollView>
+
+      <Modal
+        visible={isKYCModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setKYCModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-secondary-1 bg-opacity-50">
+          <View className="bg-white p-6 rounded-lg w-4/5">
+            <Text className="text-xl font-bold mb-4">
+              {t("completeKYCQuestion")}
+            </Text>
+            <Text className="mb-4">{t("completeKYCMessage")}</Text>
+            <View className="flex flex-row justify-around mt-4">
+              <CustomButton
+                title={t("yes")}
+                handlePress={() => handleKYCModalChoice("yes")}
+              />
+              <CustomButton
+                title={t("later")}
+                handlePress={() => handleKYCModalChoice("later")}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

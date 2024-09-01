@@ -1,11 +1,19 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
 import { router } from "expo-router";
-import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
-// import { SharedElement } from "react-native-shared-element";
 import { Image } from "expo-image";
-const BStockCard = ({ item, onRequestPress }) => {
+
+const { width } = Dimensions.get("window");
+const CARD_WIDTH = width * 0.9;
+
+const VendorStockCard = ({ item }) => {
   const { t } = useTranslation();
   const {
     cropName,
@@ -14,8 +22,6 @@ const BStockCard = ({ item, onRequestPress }) => {
     photoURL,
     unit,
     isVerified,
-    match,
-    quantity,
     availableQuantity,
   } = item;
 
@@ -30,57 +36,119 @@ const BStockCard = ({ item, onRequestPress }) => {
   };
 
   return (
-    <Animated.View
-      entering={FadeInDown.duration(500).springify().damping()}
-      className={`shadow-md rounded-lg p-4 mb-4 ml-2 mr-2 ${
-        match ? "bg-white" : "bg-white"
-      } border border-secondary`}
-    >
-      {/* <SharedElement id={photoURL}> */}
-      <Image
-        source={{ uri: photoURL }}
-        className="w-full h-40 rounded-lg mb-4"
-        resizeMode="cover"
-      />
-      {/* </SharedElement> */}
-      <Text className="text-lg font-psemibold mb-2">{t(`${cropName}`)}</Text>
-      <Text className="text-sm text-gray-600 mb-2 font-pmedium">
-        {t("location_label")}: {locationString}
-      </Text>
-      <Text className="text-sm text-gray-600 mb-4 font-pmedium">
-        {t("available_quantity_label")}: {availableQuantity} {unit}
-      </Text>
-      <Text className="text-sm text-gray-600 mb-4 font-pmedium">
-        {t("price_label")}: {price}/ {unit}
-      </Text>
-
-      {availableQuantity === 0 && (
-        <Text className="text-sm text-red-700 mb-4 font-pmedium">
-          {t("sold_out_label")}
-        </Text>
-      )}
-
-      <View className="flex flex-row">
-        {/* <TouchableOpacity
-          className="bg-[#65B741] py-2 px-4 rounded-md"
-          onPress={() => console.log("Explore button pressed")}
-        >
-          <Text className="text-white font-semibold">Explore</Text>
-        </TouchableOpacity> */}
-        <TouchableOpacity
-          className={`py-2 px-4 rounded-md  ${
-            availableQuantity === 0 ? "bg-gray-400" : "bg-[#65B741]"
-          }`}
-          onPress={handleRequestPress}
-          disabled={availableQuantity === 0}
-        >
-          <Text className="text-white font-psemibold">
-            {t("request_button")}
-          </Text>
-        </TouchableOpacity>
+    <View style={styles.cardContainer}>
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: photoURL }} style={styles.image} />
+        {isVerified && (
+          <View style={styles.verifiedBadge}>
+            <Text style={styles.verifiedText}>✓</Text>
+          </View>
+        )}
       </View>
-    </Animated.View>
+      <View style={styles.infoContainer}>
+        <Text style={styles.cropName}>{t(`${cropName}`)}</Text>
+        <Text style={styles.locationText}>{locationString}</Text>
+        <Text style={styles.quantityText}>
+          {t("available_label")}: {availableQuantity} {unit}
+        </Text>
+        <Text style={styles.priceText}>
+          {t("price_label")}: {price}/{unit}
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={[
+          styles.requestButton,
+          availableQuantity === 0 && styles.disabledButton,
+        ]}
+        onPress={handleRequestPress}
+        disabled={availableQuantity === 0}
+      >
+        <Text style={styles.requestButtonText}>
+          {availableQuantity === 0 ? t("sold_out_label") : t("request_button")}
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
-export default BStockCard;
+const styles = StyleSheet.create({
+  cardContainer: {
+    width: CARD_WIDTH,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    overflow: "hidden",
+    marginVertical: 10,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    alignSelf: "center",
+    borderColor: "#65B741",
+  },
+  imageContainer: {
+    width: "100%",
+    height: 150,
+    position: "relative",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  verifiedBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#4CAF50",
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  verifiedText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  infoContainer: {
+    padding: 15,
+  },
+  cropName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333333",
+    marginBottom: 5,
+  },
+  locationText: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 3,
+  },
+  quantityText: {
+    fontSize: 14,
+    color: "#666666",
+    marginBottom: 3,
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333333",
+    marginTop: 5,
+  },
+  requestButton: {
+    backgroundColor: "#FF6B6B",
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  disabledButton: {
+    backgroundColor: "#CCCCCC",
+  },
+  requestButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+});
+
+export default VendorStockCard;
