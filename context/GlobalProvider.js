@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, doc, getDocs, onSnapshot } from "firebase/firestore";
 
 import { db } from "../lib/fire";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -17,6 +17,7 @@ const GlobalProvider = ({ children }) => {
   const [posts, setPosts] = useState([]);
   const [diseasesData, setDiseasesData] = useState({});
   const [diseasesLoading, setDiseasesLoading] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
   useEffect(() => {
     //check persistent user here
     const checkUserLogin = async () => {
@@ -24,9 +25,26 @@ const GlobalProvider = ({ children }) => {
         const storedUser = await AsyncStorage.getItem("user");
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
+          console.log(parsedUser)
           setUser(parsedUser);
           setIsLogged(true);
           setUserType(parsedUser.role);
+          const userDocRef = doc(db, "users", parsedUser.uid);
+          const unsubscribe = onSnapshot(userDocRef, (doc) => {
+            if (doc.exists()) {
+              const updatedUser = { ...parsedUser, ...doc.data() };
+              // console.log("updated")
+              // console.log(updatedUser)
+
+              setUser(updatedUser);
+              // setUserType(updatedUser.role);
+              setIsVerified(updatedUser.verified);
+              // console.log(userType);
+              // Update AsyncStorage
+              AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+            }
+          });
+          return () => unsubscribe();
         }
       } catch (error) {
         console.error("Error fetching stored user data:", error);
@@ -37,6 +55,7 @@ const GlobalProvider = ({ children }) => {
     checkUserLogin();
 
   }, []);
+
   const fetchPosts = async () => {
     try {
       const postsSnapshot = await getDocs(collection(db, "posts"));
@@ -111,6 +130,7 @@ const GlobalProvider = ({ children }) => {
         logout,
         posts,
         fetchPosts,
+        isVerified
       }}
     >
       {children}

@@ -1,14 +1,14 @@
-import { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
   ScrollView,
-  Dimensions,
-  Alert,
   Modal,
   TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Toast from "react-native-root-toast";
@@ -31,15 +31,17 @@ import {
   getDocs,
   collection,
 } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
 import SelectFormField from "../../components/SelectFormField";
 import { icons } from "../../constants";
 import { Image } from "expo-image";
+import { useGlobalContext } from "../../context/GlobalProvider";
 
 const SignUp = () => {
   const { t } = useTranslation();
+  const { setUser, setIsLogged, setUserType, storeUser } = useGlobalContext();
   const [isSubmitting, setSubmitting] = useState(false);
   const [isKYCModalVisible, setKYCModalVisible] = useState(false);
   const [showKYCFields, setShowKYCFields] = useState(false);
@@ -59,6 +61,14 @@ const SignUp = () => {
     profileCompletion: false,
     profileCompletionPercentage: 50,
   });
+  const [uploadProgress, setUploadProgress] = useState({
+    IdImage: 0,
+    OrgImage: 0,
+  });
+  const [uploadStatus, setUploadStatus] = useState({
+    IdImage: null,
+    OrgImage: null,
+  });
   const auth = getAuth(app);
   const [selectedID, setSelectedID] = useState("");
   const [ID, setID] = useState([
@@ -75,64 +85,91 @@ const SignUp = () => {
     });
   };
 
-  const openPicker = async (selectType) => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      aspect: [4, 3],
-      quality: 1,
-    });
-    const blob = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        resolve(xhr.response);
-      };
-      xhr.onerror = function () {
-        reject(new TypeError("Network request failed"));
-      };
-      xhr.responseType = "blob";
-      xhr.open("GET", result.assets[0].uri, true);
-      xhr.send(null);
-    });
-    if (!result.canceled) {
-      if (selectType === "image") {
-        setForm({
-          ...form,
-          IdImage: blob,
-        });
-      } else if (selectType === "org") {
-        setForm({
-          ...form,
-          OrgImage: blob,
-        });
-      }
-    } else {
-      Toast.show("No Image Picked", {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.TOP,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "red",
-        textColor: "white",
-        opacity: 1,
-        textStyle: {
-          fontSize: 16,
-          fontWeight: "bold",
+  const uploadImage = useCallback(
+    async (blob, type) => {
+      const storageRef = ref(storage, `${type}/${Date.now()}`);
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress((prev) => ({ ...prev, [type]: progress }));
         },
-        containerStyle: {
-          marginTop: hp("5%"),
-          borderRadius: 20,
-          paddingHorizontal: 20,
+        (error) => {
+          console.error("Upload error:", error);
+          setUploadStatus((prev) => ({ ...prev, [type]: "error" }));
+          showToast(t("uploadError"), "error");
         },
+        async () => {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          setForm((prev) => ({ ...prev, [type]: downloadURL }));
+          setUploadStatus((prev) => ({ ...prev, [type]: "success" }));
+          showToast(t("uploadSuccess"), "success");
+        }
+      );
+    },
+    [t]
+  );
+
+  const openPicker = useCallback(
+    async (selectType) => {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        aspect: [4, 3],
+        quality: 1,
       });
-    }
+
+      if (!result.canceled) {
+        const blob = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.onload = function () {
+            resolve(xhr.response);
+          };
+          xhr.onerror = function () {
+            reject(new TypeError("Network request failed"));
+          };
+          xhr.responseType = "blob";
+          xhr.open("GET", result.assets[0].uri, true);
+          xhr.send(null);
+        });
+
+        if (selectType === "IdImage" || selectType === "OrgImage") {
+          uploadImage(blob, selectType);
+        }
+      } else {
+        showToast(t("noImagePicked"), "error");
+      }
+    },
+    [uploadImage, t]
+  );
+
+  const showToast = (message, type = "default") => {
+    Toast.show(message, {
+      duration: Toast.durations.SHORT,
+      position: Toast.positions.TOP,
+      shadow: true,
+      animation: true,
+      hideOnPress: true,
+      delay: 0,
+      backgroundColor:
+        type === "error" ? "red" : type === "success" ? "#65B741" : "#333",
+      textColor: "white",
+      opacity: 1,
+      textStyle: {
+        fontSize: 16,
+        fontWeight: "bold",
+      },
+      containerStyle: {
+        marginTop: hp("5%"),
+        borderRadius: 20,
+        paddingHorizontal: 20,
+      },
+    });
   };
 
   const submit = async (isKYCComplete) => {
-    console.log(form);
-
-    // Check if mandatory fields are filled based on KYC completion
     if (
       form.fullname === "" ||
       form.mobile === "" ||
@@ -142,31 +179,21 @@ const SignUp = () => {
       form.address === "" ||
       form.state === "" ||
       form.pincode === "" ||
-      (isKYCComplete &&
-        (form.IdType === "" || form.IdImage === null || form.OrgImage === null)) // Validate only if KYC is complete
+      (isKYCComplete && (form.IdType === "" || !form.IdImage || !form.OrgImage))
     ) {
-      Toast.show(t("fillAllFields"), {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.TOP,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "red",
-        textColor: "white",
-        opacity: 1,
-        textStyle: {
-          fontSize: 16,
-          fontWeight: "bold",
-        },
-        containerStyle: {
-          marginTop: hp("5%"),
-          borderRadius: 20,
-          paddingHorizontal: 20,
-        },
-      });
+      showToast(t("fillAllFields"), "error");
       return;
     }
+
+    if (
+      isKYCComplete &&
+      (uploadStatus.IdImage !== "success" ||
+        uploadStatus.OrgImage !== "success")
+    ) {
+      showToast(t("waitForUploads"), "error");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -177,26 +204,7 @@ const SignUp = () => {
       const mobileSnapshot = await getDocs(mobileQuery);
 
       if (!mobileSnapshot.empty) {
-        Toast.show(t("mobileNumberExists"), {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.TOP,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-          delay: 0,
-          backgroundColor: "red",
-          textColor: "white",
-          opacity: 1,
-          textStyle: {
-            fontSize: 16,
-            fontWeight: "bold",
-          },
-          containerStyle: {
-            marginTop: hp("5%"),
-            borderRadius: 20,
-            paddingHorizontal: 20,
-          },
-        });
+        showToast(t("mobileNumberExists"), "error");
         setSubmitting(false);
         return;
       }
@@ -209,21 +217,6 @@ const SignUp = () => {
 
       const uid = userCredential.user.uid;
 
-      let idProofUrl = null;
-      let orgUrl = null;
-
-      if (form.IdImage) {
-        const idProofRef = ref(storage, `IDProofs/${uid}`);
-        await uploadBytes(idProofRef, form.IdImage);
-        idProofUrl = await getDownloadURL(idProofRef);
-      }
-
-      if (form.OrgImage) {
-        const OrgImageRef = ref(storage, `OrganizationImages/${uid}`);
-        await uploadBytes(OrgImageRef, form.OrgImage);
-        orgUrl = await getDownloadURL(OrgImageRef);
-      }
-
       await setDoc(doc(db, "users", uid), {
         uid: uid,
         fullname: form.fullname,
@@ -234,44 +227,37 @@ const SignUp = () => {
         state: form.state,
         pincode: form.pincode,
         orgName: form.orgname,
-        // ...(isKYCComplete && {
-
-        idProofUrl: idProofUrl,
-        OrgImage: orgUrl,
+        idProofUrl: form.IdImage,
+        OrgImage: form.OrgImage,
         idType: form.IdType,
-
         profileCompletion: form.profileCompletion,
         profileCompletionPercentage: form.profileCompletionPercentage,
-        // }),
         verified: false,
         registrationDate: new Date(),
       });
-
-      await firebaseSignOut(auth);
+      await storeUser({
+        uid: uid,
+        fullname: form.fullname,
+        role: "buyer",
+        mobile: form.mobile,
+        address: form.address,
+        state: form.state,
+        pincode: form.pincode,
+        idProofUrl: idProofUrl,
+        idType: form.IdType,
+        orgName: form.orgname,
+        profileCompletion: form.profileCompletion,
+        profileCompletionPercentage: form.profileCompletionPercentage,
+        verified: false,
+      });
+      setIsLogged(true);
+      setUserType("buyer");
+      // await firebaseSignOut(auth);
       router.replace("/");
     } catch (error) {
       const errorMessage = error.message || "Something went wrong";
       console.log(errorMessage);
-      Toast.show(errorMessage, {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.TOP,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "red",
-        textColor: "white",
-        opacity: 1,
-        textStyle: {
-          fontSize: 16,
-          fontWeight: "bold",
-        },
-        containerStyle: {
-          marginTop: hp("5%"),
-          borderRadius: 20,
-          paddingHorizontal: 20,
-        },
-      });
+      showToast(errorMessage, "error");
     } finally {
       setSubmitting(false);
     }
@@ -281,98 +267,123 @@ const SignUp = () => {
     setKYCModalVisible(false);
     if (choice === "yes") {
       setShowKYCFields(true);
-      setKYCStarted(true); // Set KYC started flag
+      setKYCStarted(true);
       setForm({
         ...form,
         profileCompletion: true,
         profileCompletionPercentage: 100,
       });
     } else {
-      submit(false); // Pass false to indicate KYC not complete
+      submit(false);
     }
   };
 
   const handleSubmit = () => {
     if (!isKYCStarted) {
-      // Show modal only if KYC process hasn't started
       setKYCModalVisible(true);
     } else {
-      submit(true); // Pass true to indicate KYC complete
+      submit(true);
     }
   };
 
+  const renderUploadButton = (type) => (
+    <TouchableOpacity
+      onPress={() => openPicker(type)}
+      style={styles.uploadButton}
+    >
+      <Text style={styles.uploadButtonText}>
+        {t(type === "IdImage" ? "idProofImage" : "OrgImage")}
+      </Text>
+      <View style={styles.uploadButtonInner}>
+        {uploadStatus[type] === "success" ? (
+          <Image
+            source={icons.checkmark}
+            style={styles.uploadIcon}
+            contentFit="contain"
+          />
+        ) : uploadProgress[type] > 0 && uploadProgress[type] < 100 ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Image
+            source={icons.upload}
+            style={styles.uploadIcon}
+            contentFit="contain"
+          />
+        )}
+        <Text style={styles.uploadText}>
+          {uploadStatus[type] === "success"
+            ? t("uploaded")
+            : uploadProgress[type] > 0 && uploadProgress[type] < 100
+            ? `${Math.round(uploadProgress[type])}%`
+            : t("upload")}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
-    <SafeAreaView className="bg-primary h-full">
-      <ScrollView>
-        <View className="flex justify-center items-center  mt-3">
-          <Text className="text-4xl text-secondary font-psemibold pt-2">
-            {t("appName")}
-          </Text>
-          <Text className="text-xm text-black font-psemibold mt-5">
-            {t("buyersWaiting")}
-          </Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.header}>
+          <Text style={styles.appName}>{t("appName")}</Text>
+          <Text style={styles.subheader}>{t("buyersWaiting")}</Text>
         </View>
 
-        <View
-          className="w-full flex justify-start mt-4 h-full px-4 "
-          style={{
-            minHeight: Dimensions.get("window").height - 100,
-          }}
-        >
-          <Text className="text-3xl font-semibold text-black mt-10 font-psemibold pt-2">
-            {t("register")}
-          </Text>
-          <View className="flex justify-start  pt-5 flex-row gap-2 w-3/4">
-            <Text className="text-lg text-gray-500 font-pregular">
-              {t("haveAccount")}
-            </Text>
-            <Link
-              href="/sign-in-b"
-              className="text-lg font-pbold text-secondary"
-            >
+        <View style={styles.formContainer}>
+          <Text style={styles.title}>{t("register")}</Text>
+          <View style={styles.loginPrompt}>
+            <Text style={styles.loginPromptText}>{t("haveAccount")}</Text>
+            <Link href="/sign-in-b" style={styles.loginLink}>
               {t("signIn")}
             </Link>
           </View>
+
           <FormField
             title={t("fullname")}
             value={form.fullname}
             handleChangeText={(e) => setForm({ ...form, fullname: e })}
-            otherStyles="mt-10 w-[]"
+            otherStyles={styles.formField}
           />
 
           <FormField
             title={t("storeOrgName")}
             value={form.orgname}
             handleChangeText={(e) => setForm({ ...form, orgname: e })}
-            otherStyles="mt-7"
+            otherStyles={styles.formField}
           />
+
           <FormField
             title={t("mobile")}
             value={form.mobile}
             handleChangeText={(e) => setForm({ ...form, mobile: e })}
-            otherStyles="mt-7"
+            otherStyles={styles.formField}
             keyboardType="numeric"
           />
+
           <FormField
             title={t("email")}
             value={form.email}
             handleChangeText={(e) => setForm({ ...form, email: e })}
-            otherStyles="mt-7"
-            keyboardType="email"
+            otherStyles={styles.formField}
+            keyboardType="email-address"
           />
+
           <FormField
             title={t("password")}
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
-            otherStyles="mt-7"
+            otherStyles={styles.formField}
+            secureTextEntry
           />
 
           <FormField
             title={t("address")}
             value={form.address}
             handleChangeText={(e) => setForm({ ...form, address: e })}
-            otherStyles="mt-7"
+            otherStyles={styles.formField}
+            // otherStyles={`formField mt-[${hp('10%')}]`}
           />
+
           <View className="flex justify-start  flex-row mb-6 ">
             <FormField
               title={t("state")}
@@ -391,6 +402,7 @@ const SignUp = () => {
               formwidith="w-full"
             />
           </View>
+
           {showKYCFields && (
             <>
               <SelectFormField
@@ -398,57 +410,23 @@ const SignUp = () => {
                 value={selectedID}
                 options={ID}
                 handleChange={handleIdChange}
-                otherStyles={{ marginBottom: 20 }}
+                otherStyles={styles.selectField}
               />
-              <TouchableOpacity onPress={() => openPicker("image")}>
-                <View className="mt-7 space-y-2">
-                  <Text className="text-base text-black font-pmedium">
-                    {t("idProofImage")}
-                  </Text>
-                  <View
-                    className="w-full 
-           h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2"
-                  >
-                    <Image
-                      source={icons.upload}
-                      resizeMode="contain"
-                      alt="upload"
-                      className="w-5 h-5"
-                    />
-                    <Text className="text-sm text-black font-pmedium">
-                      {t("upload")} {selectedID}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => openPicker("org")}>
-                <View className="mt-7 space-y-2">
-                  <Text className="text-base text-black font-pmedium">
-                    {t("OrgImage")}
-                  </Text>
-                  <View
-                    className="w-full 
-           h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2"
-                  >
-                    <Image
-                      source={icons.upload}
-                      resizeMode="contain"
-                      alt="upload"
-                      className="w-5 h-5"
-                    />
-                    <Text className="text-sm text-black font-pmedium">
-                      {t("upload")}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
+
+              {renderUploadButton("IdImage")}
+              {renderUploadButton("OrgImage")}
             </>
           )}
 
           <CustomButton
             title={isSubmitting ? t("submitting") : t("register")}
             handlePress={handleSubmit}
-            disabled={isSubmitting}
+            disabled={
+              isSubmitting ||
+              (showKYCFields &&
+                (uploadStatus.IdImage !== "success" ||
+                  uploadStatus.OrgImage !== "success"))
+            }
           />
         </View>
       </ScrollView>
@@ -459,13 +437,11 @@ const SignUp = () => {
         transparent={true}
         onRequestClose={() => setKYCModalVisible(false)}
       >
-        <View className="flex-1 justify-center items-center bg-secondary-1 bg-opacity-50">
-          <View className="bg-white p-6 rounded-lg w-4/5">
-            <Text className="text-xl font-bold mb-4">
-              {t("completeKYCQuestion")}
-            </Text>
-            <Text className="mb-4">{t("completeKYCMessage")}</Text>
-            <View className="flex flex-row justify-around mt-4">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t("completeKYCQuestion")}</Text>
+            <Text style={styles.modalMessage}>{t("completeKYCMessage")}</Text>
+            <View style={styles.modalButtons}>
               <CustomButton
                 title={t("yes")}
                 handlePress={() => handleKYCModalChoice("yes")}
@@ -481,5 +457,149 @@ const SignUp = () => {
     </SafeAreaView>
   );
 };
-
 export default SignUp;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  header: {
+    alignItems: "center",
+    marginTop: hp("3%"),
+  },
+  appName: {
+    fontSize: wp("8%"),
+    color: "#65B741",
+    fontWeight: "600",
+  },
+  subheader: {
+    fontSize: wp("4%"),
+    color: "#333",
+    marginTop: hp("2%"),
+  },
+  formContainer: {
+    paddingHorizontal: wp("5%"),
+    marginTop: hp("5%"),
+  },
+  title: {
+    fontSize: wp("8%"),
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: hp("2%"),
+  },
+  loginPrompt: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: hp("3%"),
+  },
+  loginPromptText: {
+    fontSize: wp("4%"),
+    color: "#666",
+  },
+  loginLink: {
+    fontSize: wp("4%"),
+    fontWeight: "bold",
+    color: "#65B741",
+    marginLeft: wp("2%"),
+  },
+  formField: {
+    marginBottom: hp("2%"),
+  },
+  rowContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  halfWidth: {
+    width: "48%",
+  },
+  selectField: {
+    marginBottom: hp("2%"),
+  },
+  uploadButton: {
+    marginBottom: hp("2%"),
+  },
+  uploadButtonText: {
+    fontSize: wp("4%"),
+    fontWeight: "500",
+    color: "#333",
+    marginBottom: hp("1%"),
+  },
+  uploadButtonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#A0C334",
+    borderRadius: 10,
+    padding: hp("2%"),
+  },
+  uploadIcon: {
+    width: wp("5%"),
+    height: wp("5%"),
+    marginRight: wp("2%"),
+  },
+  uploadText: {
+    fontSize: wp("4%"),
+    color: "#fff",
+    fontWeight: "500",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: wp("5%"),
+    width: wp("80%"),
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: wp("5%"),
+    fontWeight: "bold",
+    marginBottom: hp("2%"),
+    textAlign: "center",
+  },
+  modalMessage: {
+    fontSize: wp("4%"),
+    textAlign: "center",
+    marginBottom: hp("3%"),
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
+  uploadButton: {
+    marginBottom: hp("2%"),
+  },
+  uploadButtonText: {
+    fontSize: wp("4%"),
+    fontWeight: "500",
+    color: "#333",
+    marginBottom: hp("1%"),
+  },
+  uploadButtonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#A0C334",
+    borderRadius: 10,
+    padding: hp("2%"),
+  },
+  uploadIcon: {
+    width: wp("5%"),
+    height: wp("5%"),
+    marginRight: wp("2%"),
+  },
+  uploadText: {
+    fontSize: wp("4%"),
+    color: "#fff",
+    fontWeight: "500",
+  },
+});
