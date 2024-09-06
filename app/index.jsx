@@ -16,6 +16,7 @@ import { icons } from "../constants";
 
 import CustomButton from "../components/CustomButton";
 import UnverifiedAccountScreenWithVideo from "../components/UnverifiedAccountScreenWithVideo";
+import UnverifiedFarmerAccountScreen from "../components/UnverifiedFarmerAccountScreen";
 // import { CustomButton } from "../components";
 import { useGlobalContext } from "../context/GlobalProvider";
 import Loader from "../components/Loader";
@@ -31,6 +32,7 @@ import { Trending, OnboardingScreen } from "../components";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Video } from "expo-av";
+import UnverifiedBuyerAccountScreen from "../components/UnverifiedBuyerAccountScreen";
 
 // import { useCopilot, CopilotStep } from "react-native-copilot";
 export default function App() {
@@ -206,7 +208,7 @@ export default function App() {
       // console.log("yupp");
       //
       return (
-        <UnverifiedAccountScreenWithVideo />
+        <UnverifiedFarmerAccountScreen />
         // <SafeAreaView className="bg-primary h-full">
         //   <ScrollView>
         //     <Animated.View
@@ -372,31 +374,7 @@ export default function App() {
         </SafeAreaView>
       );
     } else {
-      return (
-        <SafeAreaView className="bg-primary h-full">
-          <Animated.View
-            entering={FadeIn.delay(200)}
-            className="flex justify-center items-center  mt-3"
-          >
-            <Text className="text-3xl text-[#65B741] font-psemibold pt-2 ">
-              {t("appName")}
-            </Text>
-          </Animated.View>
-          <Video
-            source={{ uri: "buyer-specific-video-url" }}
-            style={{ width: "100%", height: 200 }}
-            controls
-          />
-          <TouchableOpacity
-            className="bg-secondary p-4 rounded-md flex items-center justify-center mx-2"
-            onPress={() => {
-              /* Logout logic */
-            }}
-          >
-            <Text className="font-psemibold text-black">Logout</Text>
-          </TouchableOpacity>
-        </SafeAreaView>
-      );
+      return <UnverifiedBuyerAccountScreen />;
     }
   }
 

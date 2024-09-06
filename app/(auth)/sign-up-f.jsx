@@ -43,6 +43,8 @@ import Toast from "react-native-root-toast";
 const SignUpF = () => {
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
+  const { setUser, setIsLogged, setUserType, storeUser, setIsVerified } =
+    useGlobalContext();
   const [form, setForm] = useState({
     fullname: "",
     mobile: "",
@@ -272,28 +274,45 @@ const SignUpF = () => {
         area: form.area,
         cropImage: cropImageUrl,
       });
-
-      await firebaseSignOut(auth);
-      Toast.show(t("registrationPendingVerification"), {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.TOP,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "green", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
-        textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
-        },
-        containerStyle: {
-          marginTop: hp("5%"),
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
-        },
+      await storeUser({
+        uid: uid,
+        fullname: form.fullname,
+        role: "farmer",
+        mobile: form.mobile,
+        address: form.address,
+        email: form.email,
+        state: form.state,
+        pincode: form.pincode,
+        idProofUrl: idProofUrl,
+        idType: form.IdType,
+        profileCompletion: form.profileCompletion,
+        profileCompletionPercentage: form.profileCompletionPercentage,
+        verified: false,
       });
+      setIsLogged(true);
+      setUserType("buyer");
+      setIsVerified(false);
+      // await firebaseSignOut(auth);
+      // Toast.show(t("registrationPendingVerification"), {
+      //   duration: Toast.durations.SHORT,
+      //   position: Toast.positions.TOP,
+      //   shadow: true,
+      //   animation: true,
+      //   hideOnPress: true,
+      //   delay: 0,
+      //   backgroundColor: "green", // Custom background color
+      //   textColor: "white", // Custom text color
+      //   opacity: 1, // Custom opacity
+      //   textStyle: {
+      //     fontSize: 16, // Custom text size
+      //     fontWeight: "bold", // Custom text weight
+      //   },
+      //   containerStyle: {
+      //     marginTop: hp("5%"),
+      //     borderRadius: 20, // Custom border radius
+      //     paddingHorizontal: 20, // Custom padding
+      //   },
+      // });
       router.replace("/");
     } catch (error) {
       console.log(error);

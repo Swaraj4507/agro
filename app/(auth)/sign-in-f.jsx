@@ -18,7 +18,8 @@ import {
 } from "react-native-responsive-screen";
 const SignIn = () => {
   const auth = getAuth(app);
-  const { setIsLogged, setUserType, storeUser } = useGlobalContext();
+  const { setIsLogged, setUserType, storeUser, setIsVerified } =
+    useGlobalContext();
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -108,6 +109,7 @@ const SignIn = () => {
 
       setIsLogged(true);
       setUserType(userData.role);
+      setIsVerified(userData.verified);
       // Alert.alert("Success", "User signed in successfully");
       Toast.show(t("userSignedIn"), {
         duration: Toast.durations.SHORT,

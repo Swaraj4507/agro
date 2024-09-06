@@ -41,7 +41,8 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 
 const SignUp = () => {
   const { t } = useTranslation();
-  const { setUser, setIsLogged, setUserType, storeUser } = useGlobalContext();
+  const { setUser, setIsLogged, setUserType, storeUser, setIsVerified } =
+    useGlobalContext();
   const [isSubmitting, setSubmitting] = useState(false);
   const [isKYCModalVisible, setKYCModalVisible] = useState(false);
   const [showKYCFields, setShowKYCFields] = useState(false);
@@ -241,9 +242,10 @@ const SignUp = () => {
         role: "buyer",
         mobile: form.mobile,
         address: form.address,
+        email: form.email,
         state: form.state,
         pincode: form.pincode,
-        idProofUrl: idProofUrl,
+        idProofUrl: form.IdImage,
         idType: form.IdType,
         orgName: form.orgname,
         profileCompletion: form.profileCompletion,
@@ -252,7 +254,11 @@ const SignUp = () => {
       });
       setIsLogged(true);
       setUserType("buyer");
+      setIsVerified(false);
       // await firebaseSignOut(auth);
+      // router.replace("/");
+
+      router.dismissAll();
       router.replace("/");
     } catch (error) {
       const errorMessage = error.message || "Something went wrong";
@@ -373,7 +379,6 @@ const SignUp = () => {
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles={styles.formField}
-            secureTextEntry
           />
 
           <FormField
@@ -445,10 +450,12 @@ const SignUp = () => {
               <CustomButton
                 title={t("yes")}
                 handlePress={() => handleKYCModalChoice("yes")}
+                containerStyles="w-20"
               />
               <CustomButton
                 title={t("later")}
                 handlePress={() => handleKYCModalChoice("later")}
+                containerStyles="w-20"
               />
             </View>
           </View>

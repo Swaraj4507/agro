@@ -130,7 +130,8 @@ const GlobalProvider = ({ children }) => {
         logout,
         posts,
         fetchPosts,
-        isVerified
+        isVerified,
+        setIsVerified
       }}
     >
       {children}
