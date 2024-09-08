@@ -40,6 +40,7 @@ export default function App() {
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
   const { loading, isLogged, userType, posts, fetchPosts, isVerified } =
     useGlobalContext();
+  const [forceRender, setForceRender] = useState(false);
   const { t, i18n } = useTranslation();
   // console.log(process.env.EXPO_FIREBASE_API_KEY);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -60,6 +61,10 @@ export default function App() {
     // console.log(userType);
     // console.log(isVerified);
   }, []);
+  useEffect(() => {
+    // You can manually force a re-render here when needed
+    setForceRender((prev) => !prev);
+  }, [isLogged, userType, isVerified]);
   const handleLanguageChange = (language) => {
     setSelectedLanguage(language);
     i18n.changeLanguage(language);

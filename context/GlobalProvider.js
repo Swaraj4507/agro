@@ -20,6 +20,7 @@ const GlobalProvider = ({ children }) => {
   const [isVerified, setIsVerified] = useState(false);
   useEffect(() => {
     //check persistent user here
+    console.log("hiiiiii");
     const checkUserLogin = async () => {
       try {
         const storedUser = await AsyncStorage.getItem("user");
@@ -33,7 +34,7 @@ const GlobalProvider = ({ children }) => {
           const unsubscribe = onSnapshot(userDocRef, (doc) => {
             if (doc.exists()) {
               const updatedUser = { ...parsedUser, ...doc.data() };
-              // console.log("updated")
+              console.log("updated")
               // console.log(updatedUser)
 
               setUser(updatedUser);
@@ -54,7 +55,7 @@ const GlobalProvider = ({ children }) => {
     };
     checkUserLogin();
 
-  }, []);
+  }, [isLogged, userType, isVerified]);
 
   const fetchPosts = async () => {
     try {
@@ -95,6 +96,7 @@ const GlobalProvider = ({ children }) => {
   const storeUser = async (user) => {
     try {
       await AsyncStorage.setItem("user", JSON.stringify(user));
+      console.log(user)
       setUser(user);
       setIsLogged(true);
       setUserType(user.role);

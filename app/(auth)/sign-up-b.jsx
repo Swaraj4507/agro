@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -18,11 +18,7 @@ import {
 } from "react-native-responsive-screen";
 import { useTranslation } from "react-i18next";
 import { app, db, storage } from "../../lib/fire";
-import {
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  getAuth,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
 import {
   setDoc,
   doc,
@@ -38,15 +34,17 @@ import SelectFormField from "../../components/SelectFormField";
 import { icons } from "../../constants";
 import { Image } from "expo-image";
 import { useGlobalContext } from "../../context/GlobalProvider";
-
+import { Loader } from "../../components";
+import CircularProgress from "react-native-circular-progress-indicator";
+import { Ionicons } from "@expo/vector-icons";
 const SignUp = () => {
   const { t } = useTranslation();
   const { setUser, setIsLogged, setUserType, storeUser, setIsVerified } =
     useGlobalContext();
   const [isSubmitting, setSubmitting] = useState(false);
   const [isKYCModalVisible, setKYCModalVisible] = useState(false);
-  const [showKYCFields, setShowKYCFields] = useState(false);
-  const [isKYCStarted, setKYCStarted] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const scrollViewRef = useRef(null);
   const [form, setForm] = useState({
     fullname: "",
     orgname: "",
@@ -57,6 +55,7 @@ const SignUp = () => {
     IdType: "",
     IdImage: null,
     OrgImage: null,
+    profileImage: null,
     password: "",
     email: "",
     profileCompletion: false,
@@ -65,10 +64,12 @@ const SignUp = () => {
   const [uploadProgress, setUploadProgress] = useState({
     IdImage: 0,
     OrgImage: 0,
+    profileImage: 0,
   });
   const [uploadStatus, setUploadStatus] = useState({
     IdImage: null,
     OrgImage: null,
+    profileImage: null,
   });
   const auth = getAuth(app);
   const [selectedID, setSelectedID] = useState("");
@@ -136,11 +137,46 @@ const SignUp = () => {
           xhr.send(null);
         });
 
-        if (selectType === "IdImage" || selectType === "OrgImage") {
-          uploadImage(blob, selectType);
-        }
+        uploadImage(blob, selectType);
       } else {
         showToast(t("noImagePicked"), "error");
+      }
+    },
+    [uploadImage, t]
+  );
+
+  const openCamera = useCallback(
+    async (selectType) => {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        showToast(t("cameraPermissionDenied"), "error");
+        return;
+      }
+
+      let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        const blob = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.onload = function () {
+            resolve(xhr.response);
+          };
+          xhr.onerror = function () {
+            reject(new TypeError("Network request failed"));
+          };
+          xhr.responseType = "blob";
+          xhr.open("GET", result.assets[0].uri, true);
+          xhr.send(null);
+        });
+
+        uploadImage(blob, selectType);
+      } else {
+        showToast(t("noPhotoTaken"), "error");
       }
     },
     [uploadImage, t]
@@ -170,7 +206,7 @@ const SignUp = () => {
     });
   };
 
-  const submit = async (isKYCComplete) => {
+  const submit = async () => {
     if (
       form.fullname === "" ||
       form.mobile === "" ||
@@ -180,14 +216,15 @@ const SignUp = () => {
       form.address === "" ||
       form.state === "" ||
       form.pincode === "" ||
-      (isKYCComplete && (form.IdType === "" || !form.IdImage || !form.OrgImage))
+      (currentStep === 3 &&
+        (form.IdType === "" || !form.IdImage || !form.OrgImage))
     ) {
       showToast(t("fillAllFields"), "error");
       return;
     }
 
     if (
-      isKYCComplete &&
+      currentStep === 3 &&
       (uploadStatus.IdImage !== "success" ||
         uploadStatus.OrgImage !== "success")
     ) {
@@ -230,6 +267,7 @@ const SignUp = () => {
         orgName: form.orgname,
         idProofUrl: form.IdImage,
         OrgImage: form.OrgImage,
+        profileImage: form.profileImage,
         idType: form.IdType,
         profileCompletion: form.profileCompletion,
         profileCompletionPercentage: form.profileCompletionPercentage,
@@ -248,6 +286,7 @@ const SignUp = () => {
         idProofUrl: form.IdImage,
         idType: form.IdType,
         orgName: form.orgname,
+        profileImage: form.profileImage,
         profileCompletion: form.profileCompletion,
         profileCompletionPercentage: form.profileCompletionPercentage,
         verified: false,
@@ -255,11 +294,9 @@ const SignUp = () => {
       setIsLogged(true);
       setUserType("buyer");
       setIsVerified(false);
-      // await firebaseSignOut(auth);
-      // router.replace("/");
 
-      router.dismissAll();
       router.replace("/");
+      router.dismissAll();
     } catch (error) {
       const errorMessage = error.message || "Something went wrong";
       console.log(errorMessage);
@@ -272,23 +309,45 @@ const SignUp = () => {
   const handleKYCModalChoice = (choice) => {
     setKYCModalVisible(false);
     if (choice === "yes") {
-      setShowKYCFields(true);
-      setKYCStarted(true);
+      setCurrentStep(3);
       setForm({
         ...form,
         profileCompletion: true,
         profileCompletionPercentage: 100,
       });
+      scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
     } else {
-      submit(false);
+      submit();
     }
   };
 
-  const handleSubmit = () => {
-    if (!isKYCStarted) {
+  const handleNextStep = () => {
+    if (currentStep === 1) {
+      if (
+        form.fullname === "" ||
+        form.orgname === "" ||
+        form.mobile === "" ||
+        form.email === "" ||
+        form.password === ""
+      ) {
+        showToast(t("fillAllFields"), "error");
+        return;
+      }
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      if (form.address === "" || form.state === "" || form.pincode === "") {
+        showToast(t("fillAllFields"), "error");
+        return;
+      }
       setKYCModalVisible(true);
-    } else {
-      submit(true);
+    }
+    scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
+  };
+
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+      scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
     }
   };
 
@@ -298,7 +357,13 @@ const SignUp = () => {
       style={styles.uploadButton}
     >
       <Text style={styles.uploadButtonText}>
-        {t(type === "IdImage" ? "idProofImage" : "OrgImage")}
+        {t(
+          type === "IdImage"
+            ? "idProofImage"
+            : type === "OrgImage"
+            ? "OrgImage"
+            : "profileImage"
+        )}
       </Text>
       <View style={styles.uploadButtonInner}>
         {uploadStatus[type] === "success" ? (
@@ -327,9 +392,175 @@ const SignUp = () => {
     </TouchableOpacity>
   );
 
+  const renderStep1 = () => (
+    <>
+      <FormField
+        title={t("fullname")}
+        value={form.fullname}
+        handleChangeText={(e) => setForm({ ...form, fullname: e })}
+        otherStyles={styles.formField}
+      />
+
+      <FormField
+        title={t("storeOrgName")}
+        value={form.orgname}
+        handleChangeText={(e) => setForm({ ...form, orgname: e })}
+        otherStyles={styles.formField}
+      />
+
+      <FormField
+        title={t("mobile")}
+        value={form.mobile}
+        handleChangeText={(e) => setForm({ ...form, mobile: e })}
+        otherStyles={styles.formField}
+        keyboardType="numeric"
+      />
+
+      <FormField
+        title={t("email")}
+        value={form.email}
+        handleChangeText={(e) => setForm({ ...form, email: e })}
+        otherStyles={styles.formField}
+        keyboardType="email-address"
+      />
+
+      <FormField
+        title={t("password")}
+        value={form.password}
+        handleChangeText={(e) => setForm({ ...form, password: e })}
+        otherStyles={styles.formField}
+        secureTextEntry
+      />
+    </>
+  );
+
+  const renderStep2 = () => (
+    <>
+      <FormField
+        title={t("address")}
+        value={form.address}
+        handleChangeText={(e) => setForm({ ...form, address: e })}
+        otherStyles={styles.formField}
+      />
+
+      <View className="flex justify-start  flex-row mb-6 ">
+        <FormField
+          title={t("state")}
+          value={form.state}
+          handleChangeText={(e) => setForm({ ...form, state: e })}
+          otherStyles="mt-7 flex-1 mr-1"
+          formwidith="w-full"
+        />
+
+        <FormField
+          title={t("pincode")}
+          value={form.pincode}
+          handleChangeText={(e) => setForm({ ...form, pincode: e })}
+          otherStyles="mt-7 flex-1 "
+          keyboardType="numeric"
+          formwidith="w-full"
+        />
+      </View>
+    </>
+  );
+
+  const renderStep3 = () => {
+    const renderUploadSection = (type, title) => (
+      <View style={styles.uploadSection}>
+        <Text style={styles.uploadTitle}>{title}</Text>
+        <View style={styles.uploadContent}>
+          <CircularProgress
+            value={uploadProgress[type]}
+            radius={30}
+            duration={1000}
+            progressValueColor={"#333"}
+            maxValue={100}
+            title={"%"}
+            titleColor={"#333"}
+            titleStyle={{ fontWeight: "bold" }}
+          />
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={() => openPicker(type)}
+          >
+            <Ionicons
+              name={
+                uploadStatus[type] === "success"
+                  ? "checkmark-circle"
+                  : "cloud-upload"
+              }
+              size={24}
+              color="#fff"
+            />
+            <Text style={styles.uploadButtonText}>
+              {uploadStatus[type] === "success" ? t("uploaded") : t("upload")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+
+    return (
+      <View style={styles.step3Container}>
+        <View style={styles.profilePhotoSection}>
+          <Text style={styles.sectionTitle}>{t("profilePhoto")}</Text>
+          {form.profileImage ? (
+            <Image
+              source={{ uri: form.profileImage }}
+              style={styles.profileImage}
+            />
+          ) : (
+            <View style={styles.profileImagePlaceholder}>
+              <Text style={styles.profileImagePlaceholderText}>
+                {t("noPhotoYet")}
+              </Text>
+            </View>
+          )}
+          <View style={styles.photoButtons}>
+            <TouchableOpacity
+              style={styles.photoButton}
+              onPress={() => openCamera("profileImage")}
+            >
+              <Ionicons name="camera" size={24} color="#fff" />
+              <Text style={styles.photoButtonText}>{t("takePhoto")}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.photoButton}
+              onPress={() => openPicker("profileImage")}
+            >
+              <Ionicons name="images" size={24} color="#fff" />
+              <Text style={styles.photoButtonText}>
+                {t("chooseFromGallery")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.idSection}>
+          <Text style={styles.sectionTitle}>{t("idProof")}</Text>
+          <SelectFormField
+            title={t("idType")}
+            value={selectedID}
+            options={ID}
+            handleChange={handleIdChange}
+            otherStyles={styles.selectField}
+          />
+          {renderUploadSection("IdImage", t("idProofImage"))}
+        </View>
+
+        {renderUploadSection("OrgImage", t("organizationImage"))}
+      </View>
+    );
+  };
+  if (isSubmitting) {
+    return <Loader isLoading={true} />;
+  }
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        ref={scrollViewRef}
+      >
         <View style={styles.header}>
           <Text style={styles.appName}>{t("appName")}</Text>
           <Text style={styles.subheader}>{t("buyersWaiting")}</Text>
@@ -344,95 +575,45 @@ const SignUp = () => {
             </Link>
           </View>
 
-          <FormField
-            title={t("fullname")}
-            value={form.fullname}
-            handleChangeText={(e) => setForm({ ...form, fullname: e })}
-            otherStyles={styles.formField}
-          />
-
-          <FormField
-            title={t("storeOrgName")}
-            value={form.orgname}
-            handleChangeText={(e) => setForm({ ...form, orgname: e })}
-            otherStyles={styles.formField}
-          />
-
-          <FormField
-            title={t("mobile")}
-            value={form.mobile}
-            handleChangeText={(e) => setForm({ ...form, mobile: e })}
-            otherStyles={styles.formField}
-            keyboardType="numeric"
-          />
-
-          <FormField
-            title={t("email")}
-            value={form.email}
-            handleChangeText={(e) => setForm({ ...form, email: e })}
-            otherStyles={styles.formField}
-            keyboardType="email-address"
-          />
-
-          <FormField
-            title={t("password")}
-            value={form.password}
-            handleChangeText={(e) => setForm({ ...form, password: e })}
-            otherStyles={styles.formField}
-          />
-
-          <FormField
-            title={t("address")}
-            value={form.address}
-            handleChangeText={(e) => setForm({ ...form, address: e })}
-            otherStyles={styles.formField}
-            // otherStyles={`formField mt-[${hp('10%')}]`}
-          />
-
-          <View className="flex justify-start  flex-row mb-6 ">
-            <FormField
-              title={t("state")}
-              value={form.state}
-              handleChangeText={(e) => setForm({ ...form, state: e })}
-              otherStyles="mt-7 flex-1 mr-1"
-              formwidith="w-full"
+          <View style={styles.stepIndicator}>
+            <View
+              style={[styles.step, currentStep >= 1 && styles.activeStep]}
             />
-
-            <FormField
-              title={t("pincode")}
-              value={form.pincode}
-              handleChangeText={(e) => setForm({ ...form, pincode: e })}
-              otherStyles="mt-7 flex-1 "
-              keyboardType="numeric"
-              formwidith="w-full"
+            <View
+              style={[styles.step, currentStep >= 2 && styles.activeStep]}
+            />
+            <View
+              style={[styles.step, currentStep >= 3 && styles.activeStep]}
             />
           </View>
 
-          {showKYCFields && (
-            <>
-              <SelectFormField
-                title={t("idProof")}
-                value={selectedID}
-                options={ID}
-                handleChange={handleIdChange}
-                otherStyles={styles.selectField}
+          {currentStep === 1 && renderStep1()}
+          {currentStep === 2 && renderStep2()}
+          {currentStep === 3 && renderStep3()}
+
+          <View style={styles.buttonContainer}>
+            {currentStep > 1 && (
+              <CustomButton
+                title={t("previous")}
+                handlePress={handlePrevStep}
+                containerStyles={"w-40p"}
               />
-
-              {renderUploadButton("IdImage")}
-              {renderUploadButton("OrgImage")}
-            </>
-          )}
-
-          <CustomButton
-            title={isSubmitting ? t("submitting") : t("register")}
-            handlePress={handleSubmit}
-            disabled={
-              isSubmitting ||
-              (showKYCFields &&
-                (uploadStatus.IdImage !== "success" ||
-                  uploadStatus.OrgImage !== "success"))
-            }
-          />
+            )}
+            {currentStep < 3 ? (
+              <CustomButton
+                title={t("next")}
+                handlePress={handleNextStep}
+                containerStyles={"w-40p"}
+              />
+            ) : (
+              <CustomButton
+                title={isSubmitting ? t("submitting") : t("register")}
+                handlePress={submit}
+                disabled={isSubmitting}
+                containerStyles={"w-40p"}
+              />
+            )}
+          </View>
         </View>
       </ScrollView>
 
@@ -450,12 +631,12 @@ const SignUp = () => {
               <CustomButton
                 title={t("yes")}
                 handlePress={() => handleKYCModalChoice("yes")}
-                containerStyles="w-20"
+                containerStyles={"w-30p"}
               />
               <CustomButton
                 title={t("later")}
                 handlePress={() => handleKYCModalChoice("later")}
-                containerStyles="w-20"
+                containerStyles={"w-30p"}
               />
             </View>
           </View>
@@ -464,7 +645,7 @@ const SignUp = () => {
     </SafeAreaView>
   );
 };
-export default SignUp;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -582,31 +763,163 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     width: "100%",
   },
-  uploadButton: {
+  modalButton: {
+    width: wp("30%"),
+  },
+  stepIndicator: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: hp("3%"),
+  },
+  step: {
+    width: wp("10%"),
+    height: hp("1%"),
+    backgroundColor: "#ddd",
+    marginHorizontal: wp("1%"),
+    borderRadius: 5,
+  },
+  activeStep: {
+    backgroundColor: "#65B741",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: hp("3%"),
+  },
+  navigationButton: {
+    width: wp("40%"),
+  },
+  photoUploadContainer: {
     marginBottom: hp("2%"),
   },
-  uploadButtonText: {
+  photoUploadTitle: {
     fontSize: wp("4%"),
     fontWeight: "500",
     color: "#333",
     marginBottom: hp("1%"),
   },
-  uploadButtonInner: {
+  photoUploadButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  photoButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#A0C334",
+    borderRadius: 10,
+    padding: hp("2%"),
+    marginHorizontal: wp("1%"),
+  },
+  photoButtonIcon: {
+    width: wp("8%"),
+    height: wp("8%"),
+    marginBottom: hp("1%"),
+  },
+  photoButtonText: {
+    fontSize: wp("3%"),
+    color: "#fff",
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  profileImageContainer: {
+    alignItems: "center",
+    marginTop: hp("2%"),
+  },
+  profileImage: {
+    width: wp("30%"),
+    height: wp("30%"),
+    borderRadius: wp("15%"),
+  },
+  step3Container: {
+    marginBottom: hp("3%"),
+  },
+  sectionTitle: {
+    fontSize: wp("5%"),
+    fontWeight: "bold",
+    marginBottom: hp("2%"),
+    color: "#333",
+  },
+  profilePhotoSection: {
+    alignItems: "center",
+    marginBottom: hp("3%"),
+  },
+  profileImage: {
+    width: wp("30%"),
+    height: wp("30%"),
+    borderRadius: wp("15%"),
+    marginBottom: hp("2%"),
+  },
+  profileImagePlaceholder: {
+    width: wp("30%"),
+    height: wp("30%"),
+    borderRadius: wp("15%"),
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: hp("2%"),
+  },
+  profileImagePlaceholderText: {
+    color: "#999",
+    textAlign: "center",
+  },
+  photoButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
+  photoButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#A0C334",
+    borderRadius: 10,
+    padding: hp("1.5%"),
+    width: "45%",
+  },
+  photoButtonIcon: {
+    marginBottom: hp("1%"),
+  },
+  photoButtonText: {
+    fontSize: wp("3%"),
+    color: "#fff",
+    fontWeight: "500",
+  },
+  idSection: {
+    marginBottom: hp("3%"),
+  },
+  selectField: {
+    marginBottom: hp("2%"),
+  },
+  uploadSection: {
+    marginBottom: hp("2%"),
+  },
+  uploadTitle: {
+    fontSize: wp("4%"),
+    fontWeight: "500",
+    color: "#333",
+    marginBottom: hp("1%"),
+  },
+  uploadContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  uploadButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#A0C334",
     borderRadius: 10,
     padding: hp("2%"),
+    flex: 1,
+    marginLeft: wp("3%"),
   },
-  uploadIcon: {
-    width: wp("5%"),
-    height: wp("5%"),
-    marginRight: wp("2%"),
-  },
-  uploadText: {
+  uploadButtonText: {
     fontSize: wp("4%"),
     color: "#fff",
     fontWeight: "500",
+    marginLeft: wp("2%"),
   },
 });
+
+export default SignUp;

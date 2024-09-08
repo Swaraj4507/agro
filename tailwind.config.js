@@ -20,6 +20,10 @@ module.exports = {
           100: "#CDCDE0",
         },
       },
+      width: {
+        '40p': '40%',
+        '30p': '30%' // Add custom width for 2%
+      },
       fontFamily: {
         pthin: ["Poppins-Thin", "sans-serif"],
         pextralight: ["Poppins-ExtraLight", "sans-serif"],
