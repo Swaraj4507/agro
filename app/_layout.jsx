@@ -91,6 +91,10 @@ const RootLayout = () => {
               name="pages/chatScreen"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="pages/bProfileCompletion"
+              options={{ headerShown: false }}
+            />
           </Stack>
         </RootSiblingParent>
       </I18nextProvider>

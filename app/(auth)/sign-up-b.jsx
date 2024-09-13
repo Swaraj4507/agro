@@ -78,7 +78,7 @@ const SignUp = () => {
     { label: t("aadharCard"), value: "Aadhar Card" },
     { label: t("panCard"), value: "Pan Card" },
   ]);
-
+  const [submitted, setSubmitted] = useState(false);
   const handleIdChange = (value) => {
     setSelectedID(value);
     setForm({
@@ -208,6 +208,15 @@ const SignUp = () => {
 
   const submit = async () => {
     if (
+      (currentStep === 3 && form.IdType === "") ||
+      !form.IdImage ||
+      !form.OrgImage
+    ) {
+      setSubmitted(true);
+      // return;
+    }
+
+    if (
       form.fullname === "" ||
       form.mobile === "" ||
       form.password === "" ||
@@ -222,7 +231,6 @@ const SignUp = () => {
       showToast(t("fillAllFields"), "error");
       return;
     }
-
     if (
       currentStep === 3 &&
       (uploadStatus.IdImage !== "success" ||
@@ -232,6 +240,7 @@ const SignUp = () => {
       return;
     }
 
+    // setSubmitted(false);
     setSubmitting(true);
 
     try {
@@ -320,8 +329,14 @@ const SignUp = () => {
       submit();
     }
   };
+  const isFieldEmpty = (field) => {
+    // return form[field] === "";
+    return !form[field];
+  };
 
   const handleNextStep = () => {
+    setSubmitted(true);
+
     if (currentStep === 1) {
       if (
         form.fullname === "" ||
@@ -333,6 +348,7 @@ const SignUp = () => {
         showToast(t("fillAllFields"), "error");
         return;
       }
+      setSubmitted(false);
       setCurrentStep(2);
     } else if (currentStep === 2) {
       if (form.address === "" || form.state === "" || form.pincode === "") {
@@ -340,6 +356,7 @@ const SignUp = () => {
         return;
       }
       setKYCModalVisible(true);
+      setSubmitted(false);
     }
     scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
   };
@@ -351,53 +368,14 @@ const SignUp = () => {
     }
   };
 
-  const renderUploadButton = (type) => (
-    <TouchableOpacity
-      onPress={() => openPicker(type)}
-      style={styles.uploadButton}
-    >
-      <Text style={styles.uploadButtonText}>
-        {t(
-          type === "IdImage"
-            ? "idProofImage"
-            : type === "OrgImage"
-            ? "OrgImage"
-            : "profileImage"
-        )}
-      </Text>
-      <View style={styles.uploadButtonInner}>
-        {uploadStatus[type] === "success" ? (
-          <Image
-            source={icons.checkmark}
-            style={styles.uploadIcon}
-            contentFit="contain"
-          />
-        ) : uploadProgress[type] > 0 && uploadProgress[type] < 100 ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Image
-            source={icons.upload}
-            style={styles.uploadIcon}
-            contentFit="contain"
-          />
-        )}
-        <Text style={styles.uploadText}>
-          {uploadStatus[type] === "success"
-            ? t("uploaded")
-            : uploadProgress[type] > 0 && uploadProgress[type] < 100
-            ? `${Math.round(uploadProgress[type])}%`
-            : t("upload")}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-
   const renderStep1 = () => (
     <>
       <FormField
         title={t("fullname")}
         value={form.fullname}
         handleChangeText={(e) => setForm({ ...form, fullname: e })}
+        leftEmpty={isFieldEmpty("fullname")}
+        submitted={submitted}
         otherStyles={styles.formField}
       />
 
@@ -405,6 +383,8 @@ const SignUp = () => {
         title={t("storeOrgName")}
         value={form.orgname}
         handleChangeText={(e) => setForm({ ...form, orgname: e })}
+        leftEmpty={isFieldEmpty("orgname")}
+        submitted={submitted}
         otherStyles={styles.formField}
       />
 
@@ -414,6 +394,8 @@ const SignUp = () => {
         handleChangeText={(e) => setForm({ ...form, mobile: e })}
         otherStyles={styles.formField}
         keyboardType="numeric"
+        leftEmpty={isFieldEmpty("mobile")}
+        submitted={submitted}
       />
 
       <FormField
@@ -422,6 +404,8 @@ const SignUp = () => {
         handleChangeText={(e) => setForm({ ...form, email: e })}
         otherStyles={styles.formField}
         keyboardType="email-address"
+        leftEmpty={isFieldEmpty("email")}
+        submitted={submitted}
       />
 
       <FormField
@@ -430,6 +414,8 @@ const SignUp = () => {
         handleChangeText={(e) => setForm({ ...form, password: e })}
         otherStyles={styles.formField}
         secureTextEntry
+        leftEmpty={isFieldEmpty("password")}
+        submitted={submitted}
       />
     </>
   );
@@ -441,6 +427,8 @@ const SignUp = () => {
         value={form.address}
         handleChangeText={(e) => setForm({ ...form, address: e })}
         otherStyles={styles.formField}
+        leftEmpty={isFieldEmpty("address")}
+        submitted={submitted}
       />
 
       <View className="flex justify-start  flex-row mb-6 ">
@@ -450,6 +438,8 @@ const SignUp = () => {
           handleChangeText={(e) => setForm({ ...form, state: e })}
           otherStyles="mt-7 flex-1 mr-1"
           formwidith="w-full"
+          leftEmpty={isFieldEmpty("state")}
+          submitted={submitted}
         />
 
         <FormField
@@ -459,6 +449,8 @@ const SignUp = () => {
           otherStyles="mt-7 flex-1 "
           keyboardType="numeric"
           formwidith="w-full"
+          leftEmpty={isFieldEmpty("pincode")}
+          submitted={submitted}
         />
       </View>
     </>
@@ -467,7 +459,19 @@ const SignUp = () => {
   const renderStep3 = () => {
     const renderUploadSection = (type, title) => (
       <View style={styles.uploadSection}>
-        <Text style={styles.uploadTitle}>{title}</Text>
+        {/* <Text style={styles.uploadTitle}>{title}</Text> */}
+        <View className="flex-row items-center">
+          <Text className="text-base text-black font-pmedium">{title}</Text>
+
+          {submitted && isFieldEmpty(type) && (
+            <Ionicons
+              name="alert-circle"
+              size={24}
+              color="red"
+              style={{ marginLeft: 8 }} // Adds some spacing
+            />
+          )}
+        </View>
         <View style={styles.uploadContent}>
           <CircularProgress
             value={uploadProgress[type]}
@@ -503,7 +507,22 @@ const SignUp = () => {
     return (
       <View style={styles.step3Container}>
         <View style={styles.profilePhotoSection}>
-          <Text style={styles.sectionTitle}>{t("profilePhoto")}</Text>
+          {/* <Text style={styles.sectionTitle}>{t("profilePhoto")}</Text> */}
+          <View className="flex-row items-center">
+            <Text className="text-base text-black font-pmedium">
+              {t("profilePhoto")}
+            </Text>
+
+            {/* Conditionally render the alert icon beside the title if the field is empty */}
+            {submitted && isFieldEmpty("profileImage") && (
+              <Ionicons
+                name="alert-circle"
+                size={24}
+                color="red"
+                style={{ marginLeft: 8 }} // Adds some spacing
+              />
+            )}
+          </View>
           {form.profileImage ? (
             <Image
               source={{ uri: form.profileImage }}
@@ -538,12 +557,28 @@ const SignUp = () => {
 
         <View style={styles.idSection}>
           <Text style={styles.sectionTitle}>{t("idProof")}</Text>
+          {/* <View className="flex-row items-center">
+            <Text className="text-base text-black font-pmedium">
+              {t("idProof")}
+            </Text>
+
+            {submitted && isFieldEmpty("IdType") && (
+              <Ionicons
+                name="alert-circle"
+                size={24}
+                color="red"
+                style={{ marginLeft: 8 }} // Adds some spacing
+              />
+            )}
+          </View> */}
           <SelectFormField
             title={t("idType")}
             value={selectedID}
             options={ID}
             handleChange={handleIdChange}
             otherStyles={styles.selectField}
+            leftEmpty={isFieldEmpty("IdType")}
+            submitted={submitted}
           />
           {renderUploadSection("IdImage", t("idProofImage"))}
         </View>

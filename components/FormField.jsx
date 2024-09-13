@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
-
+import { Ionicons } from "@expo/vector-icons";
 import { icons } from "../constants";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
 
@@ -13,13 +13,27 @@ const FormField = ({
   formwidith,
   date,
   readOnly = false,
+  leftEmpty = false,
+  submitted = false,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const formwid = formwidith ? formwidith : "w-full";
   return (
     <View className={`space-y-2 ${otherStyles}`}>
-      <Text className="text-base text-black font-pmedium">{title}</Text>
+      <View className="flex-row items-center">
+        <Text className="text-base text-black font-pmedium">{title}</Text>
+
+        {/* Conditionally render the alert icon beside the title if the field is empty */}
+        {submitted && leftEmpty && (
+          <Ionicons
+            name="alert-circle"
+            size={24}
+            color="red"
+            style={{ marginLeft: 8 }} // Adds some spacing
+          />
+        )}
+      </View>
 
       <View
         className={`${formwid}  h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 focus:border-secondary flex flex-row items-center`}

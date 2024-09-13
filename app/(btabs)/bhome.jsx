@@ -126,7 +126,7 @@ const bhome = () => {
     },
     [showOrders] // Dependencies for useCallback
   );
-  // console.log(showOrders);
+  // console.log(loading);
   if (loading) {
     return <Loader isLoading={true} />;
   }
@@ -138,15 +138,22 @@ const bhome = () => {
         data={showOrders ? orders : stock}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        ListEmptyComponent={() =>
-          showEmptyState ? (
-            <EmptyState
-              title={t("nothing_found_title")}
-              subtitle={t("nothing_found_subtitle")}
-            />
-          ) : (
-            <Loader isLoading={true} /> // Show a loader during the delay
-          )
+        ListEmptyComponent={
+          () =>
+            showEmptyState ? (
+              <EmptyState
+                title={t("nothing_found_title")}
+                subtitle={t("nothing_found_subtitle")}
+              />
+            ) : showOrders ? (
+              <EmptyState
+                title={t("nothing_found_title")}
+                subtitle={t("nothing_found_subtitle")}
+              />
+            ) : (
+              <Loader isLoading={true} />
+            )
+          // Show a loader during the delay
         }
         stickyHeaderIndices={[0]}
         ListHeaderComponent={() => (

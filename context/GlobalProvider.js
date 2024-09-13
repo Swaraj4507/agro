@@ -30,6 +30,7 @@ const GlobalProvider = ({ children }) => {
           setUser(parsedUser);
           setIsLogged(true);
           setUserType(parsedUser.role);
+          setIsVerified(parsedUser.verified);
           const userDocRef = doc(db, "users", parsedUser.uid);
           const unsubscribe = onSnapshot(userDocRef, (doc) => {
             if (doc.exists()) {

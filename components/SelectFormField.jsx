@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { icons } from "../constants";
+import { Ionicons } from "@expo/vector-icons";
 
 const SelectFormField = ({
   title,
@@ -10,6 +11,8 @@ const SelectFormField = ({
   handleChange,
   otherStyles,
   formwidth,
+  leftEmpty = false,
+  submitted = false,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,9 +20,19 @@ const SelectFormField = ({
 
   return (
     <View style={otherStyles}>
-      <Text style={{ fontSize: 16, color: "black", fontWeight: "500" }}>
-        {title}
-      </Text>
+      <View className="flex-row items-center">
+        <Text className="text-base text-black font-pmedium">{title}</Text>
+
+        {/* Conditionally render the alert icon beside the title if the field is empty */}
+        {submitted && leftEmpty && (
+          <Ionicons
+            name="alert-circle"
+            size={24}
+            color="red"
+            style={{ marginLeft: 8 }} // Adds some spacing
+          />
+        )}
+      </View>
 
       <View
         style={{
