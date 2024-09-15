@@ -132,6 +132,7 @@ const SignIn = () => {
         },
       });
       router.replace("/");
+      router.dismissAll();
       // } else {.................................................................
       // If not verified, show a message to the user
       // console.log("Please wait for your ID to be verified.");

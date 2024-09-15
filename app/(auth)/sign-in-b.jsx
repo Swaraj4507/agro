@@ -130,6 +130,7 @@ const SignIn = () => {
         },
       });
       router.replace("/");
+      router.dismissAll();
       // } else {
       //   // Alert.alert("Error", "User document not found");
       //   Toast.show(t("idVerificationPending"), {

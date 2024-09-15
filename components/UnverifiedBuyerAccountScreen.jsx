@@ -7,6 +7,7 @@ import {
   View,
   StyleSheet,
   Dimensions,
+  Modal,
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import Animated, {
@@ -28,11 +29,12 @@ const { width, height } = Dimensions.get("window");
 const UnverifiedBuyerAccountScreen = () => {
   const { user, logout } = useGlobalContext();
   const auth = getAuth(app);
-  const { t } = useTranslation();
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const { t, i18n } = useTranslation();
   const videoRef = useRef(null);
   const [status, setStatus] = useState({});
   const [videoLoaded, setVideoLoaded] = useState(false);
-
+  const [isModalVisible, setModalVisible] = useState(false);
   const fadeAnim = useSharedValue(0);
   const scaleAnim = useSharedValue(1);
   const translateY = useSharedValue(50);
@@ -61,7 +63,11 @@ const UnverifiedBuyerAccountScreen = () => {
       true
     );
   }, []);
-
+  const handleLanguageChange = (language) => {
+    setSelectedLanguage(language);
+    i18n.changeLanguage(language);
+    setModalVisible(false);
+  };
   const fadeAnimStyle = useAnimatedStyle(() => {
     return {
       opacity: fadeAnim.value,
@@ -124,7 +130,12 @@ const UnverifiedBuyerAccountScreen = () => {
             </Text>
           </View>
         </Animated.View>
-
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={styles.logoutButtonText}> {t("change_language")}</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={async () => {
@@ -132,8 +143,45 @@ const UnverifiedBuyerAccountScreen = () => {
             await logout();
           }}
         >
-          <Text style={styles.logoutButtonText}>Logout</Text>
+          <Text style={styles.logoutButtonText}>{t("logout")}</Text>
         </TouchableOpacity>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Text className="font-psemibold text-lg mb-4">
+                Select Language
+              </Text>
+              <TouchableOpacity
+                onPress={() => handleLanguageChange("en")}
+                className="mb-2"
+              >
+                <Text className={selectedLanguage === "en" ? "font-bold" : ""}>
+                  English
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleLanguageChange("hi")}
+                className="mb-2"
+              >
+                <Text className={selectedLanguage === "hi" ? "font-bold" : ""}>
+                  हिन्दी
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                className="mt-4"
+              >
+                <Text className="text-red-500">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -234,6 +282,33 @@ const styles = StyleSheet.create({
     color: "#4CAF50",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  previewImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 10,
   },
 });
 

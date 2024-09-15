@@ -7,20 +7,21 @@ import {
 } from "react-native-responsive-screen";
 import CircularProgress from "react-native-circular-progress-indicator";
 
-const ProfileCompletionComponent = ({ user }) => {
+import { useTranslation } from "react-i18next";
+const ProfileCompletionComponent = ({ user, handlePress }) => {
   const router = useRouter();
   const percentage = user?.profileCompletionPercentage || 0;
-
+  const { t } = useTranslation();
   if (user?.profileCompletion !== false && percentage === 100) {
     return null;
   }
 
-  const handlePress = () => {
-    router.push({
-      pathname: "/pages/bProfileCompletion",
-      params: {},
-    });
-  };
+  // const handlePress = () => {
+  //   router.push({
+  //     pathname: "/pages/bProfileCompletion",
+  //     params: {},
+  //   });
+  // };
 
   return (
     <TouchableOpacity
@@ -32,10 +33,10 @@ const ProfileCompletionComponent = ({ user }) => {
       <View className="flex-row items-center justify-between w-full">
         <View className="flex-1">
           <Text className="text-lg font-bold text-black mb-2">
-            Complete Your Profile
+            {t("completeYourProfile")}
           </Text>
           <Text className="text-sm text-gray-600">
-            Finish setting up your account to access all features
+            {t("finishSettingUpAccount")}
           </Text>
         </View>
         <CircularProgress

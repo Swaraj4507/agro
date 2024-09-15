@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Switch,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { images, icons } from "../../constants";
@@ -251,168 +253,177 @@ const Create = () => {
       //
     >
       <Loader isLoading={loading} content={t("loactionLoading")} />
-      <ScrollView
-        className=" h-full  "
-        contentContainerStyle={{ paddingBottom: hp("13%") }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        <View className="flex justify-center items-center mt-3">
-          <Text className="text-4xl text-secondary font-pbold pt-2">
-            {t("appName")}
-          </Text>
-          <Text className="text-xm text-black font-pbold mt-5">
-            {t("slogan")}
-          </Text>
-        </View>
-
-        <View
-          className="w-full flex justify-start mt-4 h-full px-4"
-          style={{
-            minHeight: Dimensions.get("window").height - 100,
-          }}
+        <ScrollView
+          className=" h-full  "
+          contentContainerStyle={{ paddingBottom: hp("13%") }}
         >
-          <View className="flex justify-center items-center pt-5 flex-col gap-2">
-            <Text className="text-xl text-black font-pbold">
-              {t("addYourStock")}
+          <View className="flex justify-center items-center mt-3">
+            <Text className="text-4xl text-secondary font-pbold pt-2">
+              {t("appName")}
+            </Text>
+            <Text className="text-xm text-black font-pbold mt-5">
+              {t("slogan")}
             </Text>
           </View>
-          <Text className="text-base text-black font-pmedium mt-4">
-            {t("cropName")}
-          </Text>
-          <Dropdown
-            // className="text-base text-black font-pmedium h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 focus:border-secondary flex flex-row "
-            data={cropsList.map((crop) => ({ label: t(crop), value: crop }))}
-            labelField="label"
-            valueField="value"
-            placeholder={t("selectCrop")}
-            search
-            searchPlaceholder={t("search")}
-            value={form.cropName}
-            onChange={(item) => setForm({ ...form, cropName: item.value })}
+
+          <View
+            className="w-full flex justify-start mt-4 h-full px-4"
             style={{
-              marginBottom: 4,
-              backgroundColor: "#A0C334",
-              height: 64,
-              borderRadius: 12,
-              padding: 4,
+              minHeight: Dimensions.get("window").height - 100,
             }}
-          />
-
-          <FormField
-            title={t("variant")}
-            value={form.varient}
-            handleChangeText={(e) => setForm({ ...form, varient: e })}
-            otherStyles="mt-7"
-          />
-
-          <TouchableOpacity onPress={() => openPicker("image")}>
-            <View className="mt-7 space-y-2">
-              <Text className="text-base text-black font-pmedium">
-                {t("cropImage")}
+          >
+            <View className="flex justify-center items-center pt-5 flex-col gap-2">
+              <Text className="text-xl text-black font-pbold">
+                {t("addYourStock")}
               </Text>
-              <View className="w-full h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2">
-                <Image
-                  source={icons.upload}
-                  resizeMode="contain"
-                  alt="upload"
-                  className="w-5 h-5"
-                />
-                <Text className="text-sm text-black font-pmedium">
-                  {t("uploadImage")}
-                </Text>
-              </View>
             </View>
-          </TouchableOpacity>
-
-          <FormField
-            title={t("sellingAmount")}
-            value={form.amount}
-            handleChangeText={(e) => setForm({ ...form, amount: e })}
-            otherStyles="mt-7"
-            keyboardType="numeric"
-          />
-
-          <FormField
-            title={t("quantity_label")}
-            value={form.quantity}
-            handleChangeText={(e) => setForm({ ...form, quantity: e })}
-            otherStyles="mt-7"
-            keyboardType="numeric"
-          />
-
-          <View className="mt-7 flex flex-row">
-            <TouchableOpacity
-              style={[
-                styles.optionButton,
-                form.unit === "kg" && styles.selectedOption,
-              ]}
-              onPress={() => setForm({ ...form, unit: "kg" })}
-            >
-              <Text style={styles.optionText}>{t("kg")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.optionButton,
-                form.unit === "quintal" && styles.selectedOption,
-              ]}
-              onPress={() => setForm({ ...form, unit: "quintal" })}
-            >
-              <Text style={styles.optionText}>{t("quintal")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.optionButton,
-                form.unit === "ton" && styles.selectedOption,
-              ]}
-              onPress={() => setForm({ ...form, unit: "ton" })}
-            >
-              <Text style={styles.optionText}>{t("ton")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.optionButton,
-                form.unit === "crate" && styles.selectedOption,
-              ]}
-              onPress={() => setForm({ ...form, unit: "crate" })}
-            >
-              <Text style={styles.optionText}>{t("crate")}</Text>
-            </TouchableOpacity>
-          </View>
-          <View className="space-y-2 mt-7">
-            <Text className="text-base text-black font-pmedium">
-              {t("address")}
+            <Text className="text-base text-black font-pmedium mt-4">
+              {t("cropName")}
             </Text>
-            <Text className="text-base text-black">{form.locationString}</Text>
-          </View>
-          <View style={styles.toggleContainer}>
-            <Text style={styles.toggleText}>{t("useCurrentLocation")}: </Text>
-            <Switch
-              value={form.useCurrentLocation}
-              onValueChange={(value) =>
-                setForm((prevForm) => ({
-                  ...prevForm,
-                  useCurrentLocation: value,
-                }))
-              }
+            <Dropdown
+              // className="text-base text-black font-pmedium h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 focus:border-secondary flex flex-row "
+              data={cropsList.map((crop) => ({ label: t(crop), value: crop }))}
+              labelField="label"
+              valueField="value"
+              placeholder={t("selectCrop")}
+              search
+              searchPlaceholder={t("search")}
+              value={form.cropName}
+              onChange={(item) => setForm({ ...form, cropName: item.value })}
+              style={{
+                marginBottom: 4,
+                backgroundColor: "#A0C334",
+                height: 64,
+                borderRadius: 12,
+                padding: 4,
+              }}
             />
-          </View>
-          {/* Display address field if not using current location */}
-          {!form.useCurrentLocation && (
+
             <FormField
-              title={t("address")}
-              value={form.locationString}
-              handleChangeText={(e) => setForm({ ...form, locationString: e })}
+              title={t("variant")}
+              value={form.varient}
+              handleChangeText={(e) => setForm({ ...form, varient: e })}
               otherStyles="mt-7"
             />
-          )}
-          <CustomButton
-            title={t("addCrop")}
-            handlePress={submit}
-            containerStyles="mt-7 "
-            isLoading={isSubmitting}
-            // style={{ marginBottom: 10 }}
-          />
-        </View>
-      </ScrollView>
+
+            <TouchableOpacity onPress={() => openPicker("image")}>
+              <View className="mt-7 space-y-2">
+                <Text className="text-base text-black font-pmedium">
+                  {t("cropImage")}
+                </Text>
+                <View className="w-full h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2">
+                  <Image
+                    source={icons.upload}
+                    resizeMode="contain"
+                    alt="upload"
+                    className="w-5 h-5"
+                  />
+                  <Text className="text-sm text-black font-pmedium">
+                    {t("uploadImage")}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            <FormField
+              title={t("sellingAmount")}
+              value={form.amount}
+              handleChangeText={(e) => setForm({ ...form, amount: e })}
+              otherStyles="mt-7"
+              keyboardType="numeric"
+            />
+
+            <FormField
+              title={t("quantity_label")}
+              value={form.quantity}
+              handleChangeText={(e) => setForm({ ...form, quantity: e })}
+              otherStyles="mt-7"
+              keyboardType="numeric"
+            />
+
+            <View className="mt-7 flex flex-row">
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  form.unit === "kg" && styles.selectedOption,
+                ]}
+                onPress={() => setForm({ ...form, unit: "kg" })}
+              >
+                <Text style={styles.optionText}>{t("kg")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  form.unit === "quintal" && styles.selectedOption,
+                ]}
+                onPress={() => setForm({ ...form, unit: "quintal" })}
+              >
+                <Text style={styles.optionText}>{t("quintal")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  form.unit === "ton" && styles.selectedOption,
+                ]}
+                onPress={() => setForm({ ...form, unit: "ton" })}
+              >
+                <Text style={styles.optionText}>{t("ton")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  form.unit === "crate" && styles.selectedOption,
+                ]}
+                onPress={() => setForm({ ...form, unit: "crate" })}
+              >
+                <Text style={styles.optionText}>{t("crate")}</Text>
+              </TouchableOpacity>
+            </View>
+            <View className="space-y-2 mt-7">
+              <Text className="text-base text-black font-pmedium">
+                {t("address")}
+              </Text>
+              <Text className="text-base text-black">
+                {form.locationString}
+              </Text>
+            </View>
+            <View style={styles.toggleContainer}>
+              <Text style={styles.toggleText}>{t("useCurrentLocation")}: </Text>
+              <Switch
+                value={form.useCurrentLocation}
+                onValueChange={(value) =>
+                  setForm((prevForm) => ({
+                    ...prevForm,
+                    useCurrentLocation: value,
+                  }))
+                }
+              />
+            </View>
+            {/* Display address field if not using current location */}
+            {!form.useCurrentLocation && (
+              <FormField
+                title={t("address")}
+                value={form.locationString}
+                handleChangeText={(e) =>
+                  setForm({ ...form, locationString: e })
+                }
+                otherStyles="mt-7"
+              />
+            )}
+            <CustomButton
+              title={t("addCrop")}
+              handlePress={submit}
+              containerStyles="mt-7 "
+              isLoading={isSubmitting}
+              // style={{ marginBottom: 10 }}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       {/* <View style={{ height: 100 }} /> */}
     </SafeAreaView>
   );

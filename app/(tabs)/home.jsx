@@ -143,8 +143,16 @@ const Home = () => {
               title={t("nothing_found_title")}
               subtitle={t("nothing_found_subtitle")}
             />
+          ) : !showCrops ? (
+            <EmptyState
+              title={t("nothing_found_title")}
+              subtitle={t("nothing_found_subtitle")}
+              showButton={true}
+              btnText={t("addStock")}
+              handlePress={() => router.push("/create")}
+            />
           ) : (
-            <Loader isLoading={true} /> // Show a loader during the delay
+            <Loader isLoading={true} />
           )
         }
         stickyHeaderIndices={[0]}

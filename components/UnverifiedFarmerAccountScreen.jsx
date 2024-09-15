@@ -7,6 +7,7 @@ import {
   View,
   StyleSheet,
   Dimensions,
+  Modal,
 } from "react-native";
 import { Video, ResizeMode } from "expo-av";
 import Animated, {
@@ -21,18 +22,19 @@ import { useTranslation } from "react-i18next";
 import { useGlobalContext } from "../context/GlobalProvider";
 import { getAuth, signOut as firebaseSignOut } from "firebase/auth";
 import { app } from "../lib/fire";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
 
 const UnverifiedFarmerAccountScreen = () => {
   const { user, logout } = useGlobalContext();
   const auth = getAuth(app);
-  const { t } = useTranslation();
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const { t, i18n } = useTranslation();
   const videoRef = useRef(null);
   const [status, setStatus] = useState({});
   const [videoLoaded, setVideoLoaded] = useState(false);
-
+  const [isModalVisible, setModalVisible] = useState(false);
   const fadeAnim = useSharedValue(0);
   const scaleAnim = useSharedValue(1);
   const translateY = useSharedValue(50);
@@ -61,6 +63,11 @@ const UnverifiedFarmerAccountScreen = () => {
       true
     );
   }, []);
+  const handleLanguageChange = (language) => {
+    setSelectedLanguage(language);
+    i18n.changeLanguage(language);
+    setModalVisible(false);
+  };
 
   const fadeAnimStyle = useAnimatedStyle(() => {
     return {
@@ -71,6 +78,13 @@ const UnverifiedFarmerAccountScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* <TouchableOpacity
+        style={styles.languageButton}
+        onPress={() => setModalVisible(true)}
+      >
+        <Ionicons name="language" size={24} color="#4CAF50" />
+      </TouchableOpacity> */}
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Animated.View style={[styles.header, fadeAnimStyle]}>
           <Text style={styles.appName}>{t("appName")}</Text>
@@ -78,11 +92,9 @@ const UnverifiedFarmerAccountScreen = () => {
 
         <Animated.View style={[styles.card, fadeAnimStyle]}>
           <Animated.Text style={[styles.title, pulseAnim]}>
-            Welcome, {user?.fullname}!
+            {t("welcome_message")} {user?.fullname}
           </Animated.Text>
-          <Text style={styles.subtitle}>
-            Your Farmer Account is Being Verified
-          </Text>
+          <Text style={styles.subtitle}>{t("unverified_account")}</Text>
 
           <View style={styles.videoContainer}>
             {!videoLoaded && (
@@ -105,18 +117,26 @@ const UnverifiedFarmerAccountScreen = () => {
             />
           </View>
 
-          <Text style={styles.description}>
-            While we verify your account, explore how our app can help you
-            manage your farm and connect with buyers:
-          </Text>
+          <Text style={styles.description}>{t("explore_features")}</Text>
           <View style={styles.featureList}>
-            <Text style={styles.featureItem}>• Post your harvest listings</Text>
-            <Text style={styles.featureItem}>• Connect with local buyers</Text>
-            <Text style={styles.featureItem}>• Access market insights</Text>
-            <Text style={styles.featureItem}>• Manage your farm inventory</Text>
+            <Text style={styles.featureItem}>{t("feature_post_listings")}</Text>
+            <Text style={styles.featureItem}>
+              {t("feature_connect_buyers")}
+            </Text>
+            <Text style={styles.featureItem}>
+              {t("feature_market_insights")}
+            </Text>
+            <Text style={styles.featureItem}>
+              {t("feature_manage_inventory")}
+            </Text>
           </View>
         </Animated.View>
-
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => setModalVisible(true)}
+        >
+          <Text style={styles.logoutButtonText}> {t("change_language")}</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={async () => {
@@ -124,8 +144,46 @@ const UnverifiedFarmerAccountScreen = () => {
             await logout();
           }}
         >
-          <Text style={styles.logoutButtonText}>Logout</Text>
+          <Text style={styles.logoutButtonText}>{t("logout")} </Text>
         </TouchableOpacity>
+
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Text className="font-psemibold text-lg mb-4">
+                {t("change_language")}
+              </Text>
+              <TouchableOpacity
+                onPress={() => handleLanguageChange("en")}
+                className="mb-2"
+              >
+                <Text className={selectedLanguage === "en" ? "font-bold" : ""}>
+                  English
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => handleLanguageChange("hi")}
+                className="mb-2"
+              >
+                <Text className={selectedLanguage === "hi" ? "font-bold" : ""}>
+                  हिन्दी
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                className="mt-4"
+              >
+                <Text className="text-red-500">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -226,6 +284,36 @@ const styles = StyleSheet.create({
     color: "#4CAF50",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    padding: 10,
+    width: "100%",
+  },
+  languageButton: {
+    padding: 5,
   },
 });
 

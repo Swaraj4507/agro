@@ -29,6 +29,7 @@ import StockCard from "../../components/StockCard";
 import { Loader } from "../../components";
 import { heightPercentageToDP as hp } from "react-native-responsive-screen";
 import { useTranslation } from "react-i18next";
+import ProfileCompletionComponent from "../../components/ProfileCompletionComponent";
 const Profile = () => {
   const { user, logout } = useGlobalContext();
   const { t } = useTranslation();
@@ -115,6 +116,9 @@ const Profile = () => {
           <EmptyState
             title={t("nothing_found_title")}
             subtitle={t("nothing_found_subtitle")}
+            showButton={true}
+            btnText={t("Click here to Add Stock")}
+            handlePress={() => router.push("/create")}
           />
         )}
         contentContainerStyle={{ paddingBottom: hp("12%") }}
@@ -159,6 +163,15 @@ const Profile = () => {
                 titleStyles="text-xl"
               />
             </View>
+            <ProfileCompletionComponent
+              user={user}
+              handlePress={() => {
+                router.push({
+                  pathname: "/pages/farmerProfileCompletion",
+                  params: {},
+                });
+              }}
+            />
             <View>
               <Text className="font-pbold text-lg text-black mt-5">
                 {t("yourStock")}

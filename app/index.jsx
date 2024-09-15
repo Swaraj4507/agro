@@ -2,12 +2,12 @@ import { StatusBar } from "expo-status-bar";
 import {
   ScrollView,
   Text,
-  Image,
   View,
   TouchableOpacity,
   Modal,
   StyleSheet,
 } from "react-native";
+import { Image } from "expo-image";
 import { Redirect, router } from "expo-router";
 import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -67,6 +67,7 @@ export default function App() {
     // You can manually force a re-render here when needed
     setForceRender((prev) => !prev);
   }, [isLogged, userType, isVerified]);
+
   const handleLanguageChange = (language) => {
     setSelectedLanguage(language);
     i18n.changeLanguage(language);
@@ -164,6 +165,15 @@ export default function App() {
                   {t("add_commodity")}
                 </Text>
               </TouchableOpacity>
+              <ProfileCompletionComponent
+                user={user}
+                handlePress={() => {
+                  router.push({
+                    pathname: "/pages/farmerProfileCompletion",
+                    params: {},
+                  });
+                }}
+              />
               <Trending posts={posts ?? []} />
             </Animated.View>
           </ScrollView>
@@ -278,7 +288,15 @@ export default function App() {
                   {t("yourOrders")}
                 </Text>
               </TouchableOpacity>
-              <ProfileCompletionComponent user={user} />
+              <ProfileCompletionComponent
+                user={user}
+                handlePress={() => {
+                  router.push({
+                    pathname: "/pages/bProfileCompletion",
+                    params: {},
+                  });
+                }}
+              />
 
               <Trending posts={posts ?? []} />
             </Animated.View>

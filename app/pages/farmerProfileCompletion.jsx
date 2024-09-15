@@ -23,6 +23,7 @@ import SelectFormField from "../../components/SelectFormField";
 import CustomButton from "../../components/CustomButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import Toast from "react-native-root-toast";
 
 const ProfileCompletionStep = () => {
   // { initialUserData, onComplete }
@@ -32,7 +33,6 @@ const ProfileCompletionStep = () => {
   const [form, setForm] = useState({
     IdType: initialUserData.IdType || "",
     IdImage: initialUserData.IdImage || null,
-    OrgImage: initialUserData.OrgImage || null,
     profileImage: initialUserData.profileImage || null,
   });
   const [uploadProgress, setUploadProgress] = useState({
@@ -42,7 +42,6 @@ const ProfileCompletionStep = () => {
   });
   const [uploadStatus, setUploadStatus] = useState({
     IdImage: initialUserData.IdImage ? "success" : null,
-    OrgImage: initialUserData.OrgImage ? "success" : null,
     profileImage: initialUserData.profileImage ? "success" : null,
   });
   const [selectedID, setSelectedID] = useState(initialUserData.IdType || "");
@@ -57,8 +56,31 @@ const ProfileCompletionStep = () => {
   const handleIdChange = (value) => {
     setSelectedID(value);
     setForm({ ...form, IdType: value });
+    // console.log(form);
   };
-
+  const showToast = (message, type = "default") => {
+    Toast.show(message, {
+      duration: Toast.durations.SHORT,
+      position: Toast.positions.TOP,
+      shadow: true,
+      animation: true,
+      hideOnPress: true,
+      delay: 0,
+      backgroundColor:
+        type === "error" ? "red" : type === "success" ? "#65B741" : "#333",
+      textColor: "white",
+      opacity: 1,
+      textStyle: {
+        fontSize: 16,
+        fontWeight: "bold",
+      },
+      containerStyle: {
+        marginTop: hp("5%"),
+        borderRadius: 20,
+        paddingHorizontal: 20,
+      },
+    });
+  };
   const uploadImage = useCallback(async (blob, type) => {
     const storageRef = ref(storage, `${type}/${Date.now()}`);
     const uploadTask = uploadBytesResumable(storageRef, blob);
@@ -96,6 +118,12 @@ const ProfileCompletionStep = () => {
     });
 
     if (!result.canceled) {
+      setForm((prev) => ({
+        ...prev,
+        [selectType]: result.assets[0].uri, // Update with the local image URI
+      }));
+      setUploadStatus((prev) => ({ ...prev, [selectType]: "selected" }));
+
       const blob = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.onload = function () {
@@ -137,7 +165,6 @@ const ProfileCompletionStep = () => {
         ...prev,
         [selectType]: result.assets[0].uri, // Update with the local image URI
       }));
-      setUploadStatus((prev) => ({ ...prev, [selectType]: "selected" }));
       const blob = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.onload = function () {
@@ -156,20 +183,15 @@ const ProfileCompletionStep = () => {
   }, []);
 
   const submit = async () => {
-    if (
-      form.IdType === "" ||
-      !form.IdImage ||
-      !form.OrgImage ||
-      !form.profileImage
-    ) {
+    console.log(uploadStatus);
+    if (form.IdType === "" || !form.IdImage || !form.profileImage) {
       setSubmitted(true);
       showToast(t("fillAllFields"), "error");
-
       return;
     }
+    console.log(uploadStatus.IdImage !== "success");
     if (
       uploadStatus.IdImage !== "success" ||
-      uploadStatus.OrgImage !== "success" ||
       uploadStatus.profileImage !== "success"
     ) {
       showToast(t("waitForUploads"), "error");
@@ -190,6 +212,7 @@ const ProfileCompletionStep = () => {
       await updateDoc(doc(db, "users", initialUserData.uid), updatedUserData);
       await storeUser(updatedUserData);
       setUser(updatedUserData);
+
       router.replace("/");
 
       // onComplete(updatedUserData);
@@ -215,6 +238,7 @@ const ProfileCompletionStep = () => {
       </View>
       <View style={styles.uploadContent}>
         {form[type] && uploadStatus[type] === "selected" ? (
+          // Show a preview of the selected image if available
           <>
             <Image
               source={{ uri: form[type] }} // Show the local image URI
@@ -265,7 +289,7 @@ const ProfileCompletionStep = () => {
   );
 
   return (
-    <SafeAreaView className="bg-primary">
+    <SafeAreaView className="bg-primary h-full">
       <ScrollView>
         <View style={styles.container} className="">
           <View className="flex justify-center items-center mt-3 mb-5">
@@ -273,7 +297,7 @@ const ProfileCompletionStep = () => {
               {t("appName")}
             </Text>
             <Text className="text-xm text-black font-psemibold mt-5">
-              {t("buyersWaiting")}
+              {t("slogan")}
             </Text>
             <Text className="text-xm text-black font-psemibold mt-5">
               {t("completeYourProfile")}
@@ -338,13 +362,12 @@ const ProfileCompletionStep = () => {
             {renderUploadSection("IdImage", t("idProofImage"))}
           </View>
 
-          {renderUploadSection("OrgImage", t("OrgImage"))}
-
           <CustomButton
-            title={isSubmitting ? t("submitting") : t("completeProfile")}
+            title={t("completeProfile")}
             handlePress={submit}
             disabled={isSubmitting}
             containerStyles={"w-full mt-4"}
+            isLoading={isSubmitting}
           />
         </View>
       </ScrollView>

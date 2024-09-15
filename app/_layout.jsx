@@ -95,6 +95,10 @@ const RootLayout = () => {
               name="pages/bProfileCompletion"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="pages/farmerProfileCompletion"
+              options={{ headerShown: false }}
+            />
           </Stack>
         </RootSiblingParent>
       </I18nextProvider>

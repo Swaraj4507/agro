@@ -9,6 +9,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Toast from "react-native-root-toast";
@@ -86,101 +90,114 @@ const SignUp = () => {
       IdType: value,
     });
   };
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+  const uploadImage = useCallback(async (blob, type) => {
+    const storageRef = ref(storage, `${type}/${Date.now()}`);
+    const uploadTask = uploadBytesResumable(storageRef, blob);
+    // setUploadStatus((prev) => ({ ...prev, [type]: "Uploading" }));
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress((prev) => ({ ...prev, [type]: progress }));
+      },
+      (error) => {
+        console.error("Upload error:", error);
+        setUploadStatus((prev) => ({ ...prev, [type]: "error" }));
+        showToast(t("uploadError"), "error");
+      },
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        setForm((prev) => ({ ...prev, [type]: downloadURL }));
+        setUploadStatus((prev) => ({ ...prev, [type]: "success" }));
+        showToast(t("uploadSuccess"), "success");
+      }
+    );
+  }, []);
 
-  const uploadImage = useCallback(
-    async (blob, type) => {
-      const storageRef = ref(storage, `${type}/${Date.now()}`);
-      const uploadTask = uploadBytesResumable(storageRef, blob);
+  const openPicker = useCallback(async (selectType) => {
+    setForm((prev) => ({
+      ...prev,
+      [selectType]: null,
+    }));
+    setUploadStatus((prev) => ({ ...prev, [selectType]: null }));
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      aspect: [4, 3],
+      quality: 1,
+    });
 
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress((prev) => ({ ...prev, [type]: progress }));
-        },
-        (error) => {
-          console.error("Upload error:", error);
-          setUploadStatus((prev) => ({ ...prev, [type]: "error" }));
-          showToast(t("uploadError"), "error");
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          setForm((prev) => ({ ...prev, [type]: downloadURL }));
-          setUploadStatus((prev) => ({ ...prev, [type]: "success" }));
-          showToast(t("uploadSuccess"), "success");
-        }
-      );
-    },
-    [t]
-  );
-
-  const openPicker = useCallback(
-    async (selectType) => {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        aspect: [4, 3],
-        quality: 1,
+    if (!result.canceled) {
+      setForm((prev) => ({
+        ...prev,
+        [selectType]: result.assets[0].uri, // Update with the local image URI
+      }));
+      setUploadStatus((prev) => ({ ...prev, [selectType]: "selected" }));
+      const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+          resolve(xhr.response);
+        };
+        xhr.onerror = function () {
+          reject(new TypeError("Network request failed"));
+        };
+        xhr.responseType = "blob";
+        xhr.open("GET", result.assets[0].uri, true);
+        xhr.send(null);
       });
 
-      if (!result.canceled) {
-        const blob = await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.onload = function () {
-            resolve(xhr.response);
-          };
-          xhr.onerror = function () {
-            reject(new TypeError("Network request failed"));
-          };
-          xhr.responseType = "blob";
-          xhr.open("GET", result.assets[0].uri, true);
-          xhr.send(null);
-        });
+      uploadImage(blob, selectType);
+    } else {
+      showToast(t("noImagePicked"), "error");
+    }
+  }, []);
 
-        uploadImage(blob, selectType);
-      } else {
-        showToast(t("noImagePicked"), "error");
-      }
-    },
-    [uploadImage, t]
-  );
+  const openCamera = useCallback(async (selectType) => {
+    setForm((prev) => ({
+      ...prev,
+      [selectType]: null,
+    }));
+    setUploadStatus((prev) => ({ ...prev, [selectType]: null }));
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      showToast(t("cameraPermissionDenied"), "error");
+      return;
+    }
 
-  const openCamera = useCallback(
-    async (selectType) => {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        showToast(t("cameraPermissionDenied"), "error");
-        return;
-      }
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
 
-      let result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
+    if (!result.canceled) {
+      setForm((prev) => ({
+        ...prev,
+        [selectType]: result.assets[0].uri, // Update with the local image URI
+      }));
+      setUploadStatus((prev) => ({ ...prev, [selectType]: "selected" }));
+      const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+          resolve(xhr.response);
+        };
+        xhr.onerror = function () {
+          reject(new TypeError("Network request failed"));
+        };
+        xhr.responseType = "blob";
+        xhr.open("GET", result.assets[0].uri, true);
+        xhr.send(null);
       });
 
-      if (!result.canceled) {
-        const blob = await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.onload = function () {
-            resolve(xhr.response);
-          };
-          xhr.onerror = function () {
-            reject(new TypeError("Network request failed"));
-          };
-          xhr.responseType = "blob";
-          xhr.open("GET", result.assets[0].uri, true);
-          xhr.send(null);
-        });
-
-        uploadImage(blob, selectType);
-      } else {
-        showToast(t("noPhotoTaken"), "error");
-      }
-    },
-    [uploadImage, t]
-  );
+      uploadImage(blob, selectType);
+    } else {
+      showToast(t("noPhotoTaken"), "error");
+    }
+  }, []);
 
   const showToast = (message, type = "default") => {
     Toast.show(message, {
@@ -234,13 +251,35 @@ const SignUp = () => {
     if (
       currentStep === 3 &&
       (uploadStatus.IdImage !== "success" ||
-        uploadStatus.OrgImage !== "success")
+        uploadStatus.OrgImage !== "success" ||
+        uploadStatus.profileImage !== "success")
     ) {
       showToast(t("waitForUploads"), "error");
       return;
     }
+    if (
+      currentStep === 3 &&
+      uploadStatus.IdImage === "success" &&
+      uploadStatus.OrgImage === "success" &&
+      uploadStatus.profileImage === "success"
+    ) {
+      console.log("heyy");
+      setForm((prevForm) => ({
+        ...prevForm,
+        profileCompletion: true,
+        profileCompletionPercentage: 100,
+      }));
+    } else {
+      setForm((prevForm) => ({
+        ...prevForm,
+        profileCompletion: false,
+        profileCompletionPercentage: 50,
+      }));
+    }
 
     // setSubmitted(false);
+    // console.log(form);
+    // return;
     setSubmitting(true);
 
     try {
@@ -310,6 +349,7 @@ const SignUp = () => {
       const errorMessage = error.message || "Something went wrong";
       console.log(errorMessage);
       showToast(errorMessage, "error");
+      setCurrentStep(1);
     } finally {
       setSubmitting(false);
     }
@@ -319,11 +359,11 @@ const SignUp = () => {
     setKYCModalVisible(false);
     if (choice === "yes") {
       setCurrentStep(3);
-      setForm({
-        ...form,
-        profileCompletion: true,
-        profileCompletionPercentage: 100,
-      });
+      // setForm({
+      //   ...form,
+      //   profileCompletion: true,
+      //   profileCompletionPercentage: 100,
+      // });
       scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
     } else {
       submit();
@@ -355,7 +395,17 @@ const SignUp = () => {
         showToast(t("fillAllFields"), "error");
         return;
       }
-      setKYCModalVisible(true);
+      if (
+        form.IdType === "" &&
+        form.IdImage === null &&
+        form.OrgImage === null &&
+        form.profileImage === null
+      ) {
+        setKYCModalVisible(true);
+      } else {
+        setCurrentStep(3);
+      }
+
       setSubmitted(false);
     }
     scrollViewRef.current.scrollTo({ x: 0, y: 0, animated: true });
@@ -413,7 +463,6 @@ const SignUp = () => {
         value={form.password}
         handleChangeText={(e) => setForm({ ...form, password: e })}
         otherStyles={styles.formField}
-        secureTextEntry
         leftEmpty={isFieldEmpty("password")}
         submitted={submitted}
       />
@@ -473,16 +522,36 @@ const SignUp = () => {
           )}
         </View>
         <View style={styles.uploadContent}>
-          <CircularProgress
-            value={uploadProgress[type]}
-            radius={30}
-            duration={1000}
-            progressValueColor={"#333"}
-            maxValue={100}
-            title={"%"}
-            titleColor={"#333"}
-            titleStyle={{ fontWeight: "bold" }}
-          />
+          {form[type] && uploadStatus[type] === "selected" ? (
+            // Show a preview of the selected image if available
+            <>
+              <Image
+                source={{ uri: form[type] }} // Show the local image URI
+                style={styles.previewImage}
+              />
+              <CircularProgress
+                value={uploadProgress[type]}
+                radius={30}
+                duration={1000}
+                progressValueColor={"#333"}
+                maxValue={100}
+                title={"%"}
+                titleColor={"#333"}
+                titleStyle={{ fontWeight: "bold" }}
+              />
+            </>
+          ) : (
+            <CircularProgress
+              value={uploadProgress[type]}
+              radius={30}
+              duration={1000}
+              progressValueColor={"#333"}
+              maxValue={100}
+              title={"%"}
+              titleColor={"#333"}
+              titleStyle={{ fontWeight: "bold" }}
+            />
+          )}
           <TouchableOpacity
             style={styles.uploadButton}
             onPress={() => openPicker(type)}
@@ -556,23 +625,8 @@ const SignUp = () => {
         </View>
 
         <View style={styles.idSection}>
-          <Text style={styles.sectionTitle}>{t("idProof")}</Text>
-          {/* <View className="flex-row items-center">
-            <Text className="text-base text-black font-pmedium">
-              {t("idProof")}
-            </Text>
-
-            {submitted && isFieldEmpty("IdType") && (
-              <Ionicons
-                name="alert-circle"
-                size={24}
-                color="red"
-                style={{ marginLeft: 8 }} // Adds some spacing
-              />
-            )}
-          </View> */}
           <SelectFormField
-            title={t("idType")}
+            title={t("idProof")}
             value={selectedID}
             options={ID}
             handleChange={handleIdChange}
@@ -583,7 +637,7 @@ const SignUp = () => {
           {renderUploadSection("IdImage", t("idProofImage"))}
         </View>
 
-        {renderUploadSection("OrgImage", t("organizationImage"))}
+        {renderUploadSection("OrgImage", t("OrgImage"))}
       </View>
     );
   };
@@ -592,65 +646,82 @@ const SignUp = () => {
   }
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollViewContent}
-        ref={scrollViewRef}
+      {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
-        <View style={styles.header}>
-          <Text style={styles.appName}>{t("appName")}</Text>
-          <Text style={styles.subheader}>{t("buyersWaiting")}</Text>
-        </View>
-
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>{t("register")}</Text>
-          <View style={styles.loginPrompt}>
-            <Text style={styles.loginPromptText}>{t("haveAccount")}</Text>
-            <Link href="/sign-in-b" style={styles.loginLink}>
-              {t("signIn")}
-            </Link>
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          ref={scrollViewRef}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <Text style={styles.appName} className="font-psemibold">
+              {t("appName")}
+            </Text>
+            <Text style={styles.subheader} className="font-psemibold">
+              {t("buyersWaiting")}
+            </Text>
           </View>
 
-          <View style={styles.stepIndicator}>
-            <View
-              style={[styles.step, currentStep >= 1 && styles.activeStep]}
-            />
-            <View
-              style={[styles.step, currentStep >= 2 && styles.activeStep]}
-            />
-            <View
-              style={[styles.step, currentStep >= 3 && styles.activeStep]}
-            />
-          </View>
+          <View style={styles.formContainer}>
+            <Text style={styles.title} className="font-psemibold">
+              {t("register")}
+            </Text>
+            <View style={styles.loginPrompt} className="mb-5">
+              <Text style={styles.loginPromptText} className="font-pregular">
+                {t("haveAccount")}
+              </Text>
+              <Link href="/sign-in-b" style={styles.loginLink}>
+                {t("signIn")}
+              </Link>
+            </View>
 
-          {currentStep === 1 && renderStep1()}
-          {currentStep === 2 && renderStep2()}
-          {currentStep === 3 && renderStep3()}
+            <View style={styles.stepIndicator} className="mb-1">
+              <View
+                style={[styles.step, currentStep >= 1 && styles.activeStep]}
+              />
+              <View
+                style={[styles.step, currentStep >= 2 && styles.activeStep]}
+              />
+              <View
+                style={[styles.step, currentStep >= 3 && styles.activeStep]}
+              />
+            </View>
 
-          <View style={styles.buttonContainer}>
-            {currentStep > 1 && (
-              <CustomButton
-                title={t("previous")}
-                handlePress={handlePrevStep}
-                containerStyles={"w-40p"}
-              />
-            )}
-            {currentStep < 3 ? (
-              <CustomButton
-                title={t("next")}
-                handlePress={handleNextStep}
-                containerStyles={"w-40p"}
-              />
-            ) : (
-              <CustomButton
-                title={isSubmitting ? t("submitting") : t("register")}
-                handlePress={submit}
-                disabled={isSubmitting}
-                containerStyles={"w-40p"}
-              />
-            )}
+            {currentStep === 1 && renderStep1()}
+            {currentStep === 2 && renderStep2()}
+            {currentStep === 3 && renderStep3()}
+
+            <View style={styles.buttonContainer}>
+              {currentStep > 1 && (
+                <CustomButton
+                  title={t("previous")}
+                  handlePress={handlePrevStep}
+                  containerStyles={"w-40p"}
+                />
+              )}
+              {currentStep < 3 ? (
+                <CustomButton
+                  title={t("next")}
+                  handlePress={handleNextStep}
+                  containerStyles={"w-40p"}
+                />
+              ) : (
+                <CustomButton
+                  title={t("register")}
+                  handlePress={submit}
+                  disabled={isSubmitting}
+                  containerStyles={"w-40p"}
+                  isLoading={isSubmitting}
+                />
+              )}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      {/* </TouchableWithoutFeedback> */}
 
       <Modal
         visible={isKYCModalVisible}
@@ -692,7 +763,8 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    marginTop: hp("3%"),
+    marginTop: hp("2%"),
+    // marginBottom: hp("4%"),
   },
   appName: {
     fontSize: wp("8%"),
@@ -700,7 +772,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   subheader: {
-    fontSize: wp("4%"),
+    fontSize: wp("3%"),
     color: "#333",
     marginTop: hp("2%"),
   },
@@ -709,15 +781,15 @@ const styles = StyleSheet.create({
     marginTop: hp("5%"),
   },
   title: {
-    fontSize: wp("8%"),
+    fontSize: wp("6%"),
     fontWeight: "600",
     color: "#333",
-    marginBottom: hp("2%"),
+    // marginBottom: hp("2%"),
   },
   loginPrompt: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: hp("3%"),
+    // marginBottom: hp("%"),
   },
   loginPromptText: {
     fontSize: wp("4%"),
@@ -954,6 +1026,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "500",
     marginLeft: wp("2%"),
+  },
+  previewImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 10,
   },
 });
 
