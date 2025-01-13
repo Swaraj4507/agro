@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
   ScrollView,
   Dimensions,
-  Alert,
   Image,
   TouchableOpacity,
   StyleSheet,
@@ -19,7 +18,6 @@ import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import * as ImagePicker from "expo-image-picker";
-import RNDateTimePicker from "@react-native-community/datetimepicker";
 import * as Location from "expo-location";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { addDoc, collection } from "firebase/firestore";
@@ -31,13 +29,18 @@ import { useTranslation } from "react-i18next";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
+  heightPercentageToDP,
 } from "react-native-responsive-screen";
 import Toast from "react-native-root-toast";
+import { Ionicons } from "@expo/vector-icons";
+import useLocationEffect from "../../hooks/useLocationEffect.js";
+
 const Create = () => {
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
-  const { user } = useGlobalContext();
-  const [loading, setLoading] = useState(false);
+  const { user, cropsList } = useGlobalContext();
+
+  const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
     cropName: "",
     varient: "",
@@ -49,72 +52,58 @@ const Create = () => {
     locationCoords: null,
     locationString: user?.address,
     useCurrentLocation: false,
+    state: user?.state,
+    pincode: user?.pincode,
   });
-  const { cropsList } = useGlobalContext();
+
+  const {
+    locationState,
+    loading: locationLoading,
+    getCurrentLocation,
+  } = useLocationEffect(user?.address, user?.state, user?.pincode);
+
   useEffect(() => {
     if (form.useCurrentLocation) {
-      setLoading(true);
-      (async () => {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert("Permission to access location was denied");
-          return;
-        }
-
-        let location = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = location.coords;
-        const geocodeResponse = await Location.reverseGeocodeAsync({
-          latitude,
-          longitude,
-        });
-
-        const address = geocodeResponse[0];
-        const locationString = `${address.name}, ${address.city}, ${address.region}, ${address.country}`;
-
-        setForm((prevForm) => ({
-          ...prevForm,
-          locationCoords: { latitude, longitude },
-          locationString,
-        }));
-        setLoading(false);
-      })();
-    } else {
-      setForm((prevForm) => ({
-        ...prevForm,
-        locationCoords: null,
-        locationString: user.address,
-      }));
+      getCurrentLocation();
     }
-  }, [form.useCurrentLocation]);
+  }, [form.useCurrentLocation, getCurrentLocation]);
+
+  useEffect(() => {
+    setForm((prevForm) => ({
+      ...prevForm,
+      locationCoords: locationState.locationCoords,
+      locationString: form.useCurrentLocation
+        ? locationState.locationString
+        : user?.address,
+      pincode: form.useCurrentLocation
+        ? locationState.pincodeString
+        : user?.pincode,
+      state: form.useCurrentLocation ? locationState.stateString : user?.state,
+    }));
+  }, [locationState, form.useCurrentLocation, user?.address]);
 
   const submit = async () => {
-    if (!form.cropName || !form.photo || !form.amount || !form.quantity) {
+    setSubmitted(true);
+    if (
+      !form.cropName ||
+      !form.photo ||
+      !form.amount ||
+      !form.quantity ||
+      !form.state ||
+      !form.pincode
+    ) {
       Toast.show(t("fillAllFields"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "red", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
-        textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
-        },
-        containerStyle: {
-          // marginTop: 30,
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
-        },
+        backgroundColor: "red",
       });
+      // setSubmitted(false);
       return;
     }
     setSubmitting(true);
+    console.log(form);
     try {
       const uid = user.uid;
-
       const photoUri = form.photo;
 
       const response = await fetch(photoUri);
@@ -122,8 +111,7 @@ const Create = () => {
       const storageRef = ref(getStorage(), `photos/${uid}/${Date.now()}`);
       await uploadBytes(storageRef, blob);
       const photoURL = await getDownloadURL(storageRef);
-      // const timestamp = app.firestore.FieldValue.serverTimestamp();
-      // console.log(timestamp);
+
       await addDoc(collection(db, "stock"), {
         uid: uid,
         cropName: form.cropName,
@@ -140,129 +128,107 @@ const Create = () => {
         match: false,
         mobile: user.mobile,
         timestamp: new Date(),
-        // timestamp: timestamp,
+        sellerName: user?.fullname,
+        state: form.state,
+        pincode: form.pincode,
       });
 
       Toast.show(t("stockAdded"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "green", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
-        textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
-        },
-        containerStyle: {
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
-        },
+        backgroundColor: "green",
       });
 
       setForm({
         cropName: "",
-        photo: "",
+        varient: "",
+        photo: null,
         amount: "",
         quantity: "",
-        dateOfEntry: "",
-        unit: "",
-        locationCoords: "",
-        locationString: "",
+        dateOfEntry: new Date().getTime(),
+        unit: "kg",
+        locationCoords: null,
+        locationString: user?.address,
+        useCurrentLocation: false,
+        state: user?.state,
+        pincode: user?.pincode,
       });
+      setSubmitted(false);
       router.replace("/home");
     } catch (error) {
+      console.log(error);
       Toast.show(t("errorMessage"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "red", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
-        textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
-        },
-        containerStyle: {
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
-        },
+        backgroundColor: "red",
       });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const setDate = (event: DateTimePickerEvent, date: Date) => {
-    setForm((prevForm) => ({
-      ...prevForm,
-      dateOfSow: date,
-    }));
-  };
-
-  const openPicker = async (selectType) => {
+  const openGallery = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
       quality: 1,
     });
 
+    handleImagePickerResult(result);
+  };
+
+  const openCamera = async () => {
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    handleImagePickerResult(result);
+  };
+
+  const handleImagePickerResult = (result) => {
     if (!result.canceled) {
-      if (selectType === "image") {
-        setForm((prevForm) => ({
-          ...prevForm,
-          photo: result.assets[0].uri,
-        }));
-      }
+      setForm((prevForm) => ({
+        ...prevForm,
+        photo: result.assets[0].uri,
+      }));
     } else {
-      // setTimeout(() => {
-      //   Alert.alert("Document picked", JSON.stringify(result, null, 2));
-      // }, 100);
-      Toast.show("No Image Picked", {
+      Toast.show(t("noImagePicked"), {
         duration: Toast.durations.SHORT,
         position: Toast.positions.TOP,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "red", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
-        textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
-        },
-        containerStyle: {
-          marginTop: hp("5%"),
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
-        },
+        backgroundColor: "red",
       });
     }
   };
-
+  const deleteImage = () => {
+    setForm((prevForm) => ({
+      ...prevForm,
+      photo: null,
+    }));
+    Toast.show(t("imageDeleted"), {
+      duration: Toast.durations.SHORT,
+      position: Toast.positions.CENTER,
+      backgroundColor: "red",
+    });
+  };
+  const isFieldEmpty = (field) => {
+    // return form[field] === "";
+    return !form[field];
+  };
   return (
-    <SafeAreaView
-      className="bg-primary h-full"
-      //
-    >
-      <Loader isLoading={loading} content={t("loactionLoading")} />
+    <SafeAreaView className="bg-primary h-full">
+      <Loader isLoading={locationLoading} content={t("loactionLoading")} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <ScrollView
-          className=" h-full  "
+          className="h-full"
           contentContainerStyle={{ paddingBottom: hp("13%") }}
         >
           <View className="flex justify-center items-center mt-3">
-            <Text className="text-4xl text-secondary font-pbold pt-2">
+            <Text className="text-4xl text-secondary font-psemibold pt-2">
               {t("appName")}
             </Text>
             <Text className="text-xm text-black font-pbold mt-5">
@@ -281,11 +247,21 @@ const Create = () => {
                 {t("addYourStock")}
               </Text>
             </View>
-            <Text className="text-base text-black font-pmedium mt-4">
-              {t("cropName")}
-            </Text>
+            <View className="flex-row items-center">
+              <Text className="text-base text-black font-pmedium mt-4">
+                {t("cropName")}
+              </Text>
+
+              {submitted && isFieldEmpty("cropName") && (
+                <Ionicons
+                  name="alert-circle"
+                  size={20}
+                  color="red"
+                  style={{ marginLeft: 8 }} // Adds some spacing
+                />
+              )}
+            </View>
             <Dropdown
-              // className="text-base text-black font-pmedium h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 focus:border-secondary flex flex-row "
               data={cropsList.map((crop) => ({ label: t(crop), value: crop }))}
               labelField="label"
               valueField="value"
@@ -294,13 +270,7 @@ const Create = () => {
               searchPlaceholder={t("search")}
               value={form.cropName}
               onChange={(item) => setForm({ ...form, cropName: item.value })}
-              style={{
-                marginBottom: 4,
-                backgroundColor: "#A0C334",
-                height: 64,
-                borderRadius: 12,
-                padding: 4,
-              }}
+              style={styles.dropdown}
             />
 
             <FormField
@@ -310,24 +280,51 @@ const Create = () => {
               otherStyles="mt-7"
             />
 
-            <TouchableOpacity onPress={() => openPicker("image")}>
-              <View className="mt-7 space-y-2">
+            <View className="mt-7 space-y-2">
+              <View className="flex-row items-center">
                 <Text className="text-base text-black font-pmedium">
                   {t("cropImage")}
                 </Text>
-                <View className="w-full h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2">
-                  <Image
-                    source={icons.upload}
-                    resizeMode="contain"
-                    alt="upload"
-                    className="w-5 h-5"
+                {submitted && isFieldEmpty("photo") && (
+                  <Ionicons
+                    name="alert-circle"
+                    size={24}
+                    color="red"
+                    style={{ marginLeft: 8 }}
                   />
-                  <Text className="text-sm text-black font-pmedium">
-                    {t("uploadImage")}
-                  </Text>
-                </View>
+                )}
               </View>
-            </TouchableOpacity>
+              {!form.photo ? (
+                <View className="flex-row justify-between">
+                  <CustomButton
+                    title={t("chooseFromGallery")}
+                    handlePress={openGallery}
+                    containerStyles="flex-1 mr-2 bg-secondary-1 "
+                    textStyles="text-sm text-black"
+                  />
+                  <CustomButton
+                    title={t("takePhoto")}
+                    handlePress={openCamera}
+                    containerStyles="flex-1 ml-2 bg-secondary-1"
+                    textStyles="text-sm text-black"
+                  />
+                </View>
+              ) : (
+                <View className="mt-4 relative">
+                  <Image
+                    source={{ uri: form.photo }}
+                    style={{ width: "100%", height: 200, borderRadius: 10 }}
+                    resizeMode="cover"
+                  />
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={deleteImage}
+                  >
+                    <Ionicons name="close-circle" size={30} color="white" />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
 
             <FormField
               title={t("sellingAmount")}
@@ -335,6 +332,8 @@ const Create = () => {
               handleChangeText={(e) => setForm({ ...form, amount: e })}
               otherStyles="mt-7"
               keyboardType="numeric"
+              leftEmpty={isFieldEmpty("amount")}
+              submitted={submitted}
             />
 
             <FormField
@@ -343,54 +342,33 @@ const Create = () => {
               handleChangeText={(e) => setForm({ ...form, quantity: e })}
               otherStyles="mt-7"
               keyboardType="numeric"
+              leftEmpty={isFieldEmpty("quantity")}
+              submitted={submitted}
             />
 
             <View className="mt-7 flex flex-row">
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  form.unit === "kg" && styles.selectedOption,
-                ]}
-                onPress={() => setForm({ ...form, unit: "kg" })}
-              >
-                <Text style={styles.optionText}>{t("kg")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  form.unit === "quintal" && styles.selectedOption,
-                ]}
-                onPress={() => setForm({ ...form, unit: "quintal" })}
-              >
-                <Text style={styles.optionText}>{t("quintal")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  form.unit === "ton" && styles.selectedOption,
-                ]}
-                onPress={() => setForm({ ...form, unit: "ton" })}
-              >
-                <Text style={styles.optionText}>{t("ton")}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.optionButton,
-                  form.unit === "crate" && styles.selectedOption,
-                ]}
-                onPress={() => setForm({ ...form, unit: "crate" })}
-              >
-                <Text style={styles.optionText}>{t("crate")}</Text>
-              </TouchableOpacity>
+              {["kg", "quintal", "ton", "crate"].map((unit) => (
+                <TouchableOpacity
+                  key={unit}
+                  style={[
+                    styles.optionButton,
+                    form.unit === unit && styles.selectedOption,
+                  ]}
+                  onPress={() => setForm({ ...form, unit })}
+                >
+                  <Text style={styles.optionText}>{t(unit)}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
-            <View className="space-y-2 mt-7">
+
+            {/* <View className="space-y-2 mt-7">
               <Text className="text-base text-black font-pmedium">
                 {t("address")}
               </Text>
               <Text className="text-base text-black">
                 {form.locationString}
               </Text>
-            </View>
+            </View> */}
             <View style={styles.toggleContainer}>
               <Text style={styles.toggleText}>{t("useCurrentLocation")}: </Text>
               <Switch
@@ -403,33 +381,57 @@ const Create = () => {
                 }
               />
             </View>
-            {/* Display address field if not using current location */}
-            {!form.useCurrentLocation && (
+
+            <FormField
+              title={t("address")}
+              value={form.locationString}
+              handleChangeText={(e) => setForm({ ...form, locationString: e })}
+              otherStyles=""
+            />
+            <View className="flex justify-start  flex-row mb-6 ">
               <FormField
-                title={t("address")}
-                value={form.locationString}
-                handleChangeText={(e) =>
-                  setForm({ ...form, locationString: e })
-                }
-                otherStyles="mt-7"
+                title={t("state")}
+                value={form.state}
+                handleChangeText={(e) => setForm({ ...form, state: e })}
+                otherStyles="mt-7 flex-1 mr-1"
+                formwidith="w-full"
+                leftEmpty={isFieldEmpty("state")}
+                submitted={submitted}
               />
-            )}
+
+              <FormField
+                title={t("pincode")}
+                value={form.pincode}
+                handleChangeText={(e) => setForm({ ...form, pincode: e })}
+                otherStyles="mt-7 flex-1 "
+                keyboardType="numeric"
+                formwidith="w-full"
+                leftEmpty={isFieldEmpty("pincode")}
+                submitted={submitted}
+              />
+            </View>
+
             <CustomButton
-              title={t("addCrop")}
+              title={t("addStock")}
               handlePress={submit}
-              containerStyles="mt-7 "
+              containerStyles="mt-7"
               isLoading={isSubmitting}
-              // style={{ marginBottom: 10 }}
             />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      {/* <View style={{ height: 100 }} /> */}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  dropdown: {
+    marginBottom: 4,
+    backgroundColor: "#A0C334",
+    height: 64,
+    borderRadius: 12,
+    padding: 4,
+  },
   optionButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -448,11 +450,18 @@ const styles = StyleSheet.create({
   toggleContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 10,
+    marginVertical: heightPercentageToDP("2%"),
   },
   toggleText: {
     fontSize: 16,
     marginRight: 5,
+  },
+  deleteButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 15,
   },
 });
 

@@ -110,8 +110,12 @@ const ShowReq = () => {
           }
         >
           <View style={styles.header}>
-            <Text style={styles.title}>{t("appName")}</Text>
-            <Text style={styles.subtitle}>{t("bringingFields")}</Text>
+            <Text style={styles.title} cropName="font-psemibold">
+              {t("appName")}
+            </Text>
+            <Text style={styles.subtitle} cropName="font-psemibold">
+              {t("bringingFields")}
+            </Text>
           </View>
 
           <View style={styles.requestsContainer}>
@@ -162,7 +166,7 @@ const ShowReq = () => {
                     />
                     <RequestInfoItem
                       label={t("deliveryDetails")}
-                      value={request.deliveryDetails}
+                      value={`${request.deliveryDetails}, ${request.pincode}, ${request.state} `}
                     />
                   </View>
                 </TouchableOpacity>
@@ -178,7 +182,9 @@ const ShowReq = () => {
 const RequestInfoItem = ({ label, value }) => (
   <View style={styles.infoItem}>
     <Text style={styles.infoLabel}>{label}:</Text>
-    <Text style={styles.infoValue}>{value}</Text>
+    <Text style={styles.infoValue} numberOfLines={3}>
+      {value}
+    </Text>
   </View>
 );
 
@@ -277,15 +283,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 5,
+    alignItems: "flex-start",
   },
   infoLabel: {
     color: "#666",
     fontSize: 14,
+    width: "40%",
   },
   infoValue: {
     color: "#333",
     fontSize: 14,
     fontWeight: "500",
+    width: "60%", // Allow this part to take up more space and wrap
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
 });
 

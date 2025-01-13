@@ -121,7 +121,9 @@
   "sold_out_label": "Sold Out",
   "request_button": "Request",
   "addYourCrops": "Add Your Crops",
-  "addCrop": "Add Crop",
+  "addStock": "Add Stock",
+  "verification_status": "Verification Status",
+  "addCropT": "Add Crop",
   "quoted_price": "Quoted Price",
   "quantity": "Quantity",
   "loactionLoading": "Fetching your Location Please Wait",
@@ -188,5 +190,13 @@
   "feature_connect_buyers": "• Connect with local buyers",
   "feature_market_insights": "• Access market insights",
   "feature_manage_inventory": "• Manage your farm inventory",
-  "welcome_message": "Welcome,"
+  "welcome_message": "Welcome,",
+  "Buyer": {
+    "verificationMessage": "Your Buyer Account is Being Verified",
+    "exploreMessage": "While we verify your account, explore how our app can help you manage your farm and connect with buyers:",
+    "feature1": "• Browse local harvest listings",
+    "feature2": "• Connect directly with farmers",
+    "feature3": "• Access real-time market prices",
+    "feature4": "• Manage your purchase orders"
+  }
 }

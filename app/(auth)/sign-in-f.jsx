@@ -20,6 +20,7 @@ const SignIn = () => {
   const auth = getAuth(app);
   const { setIsLogged, setUserType, storeUser, setIsVerified } =
     useGlobalContext();
+  const [submitted, setSubmitted] = useState(false);
   const { t } = useTranslation();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -27,6 +28,7 @@ const SignIn = () => {
     password: "",
   });
   const submit = async () => {
+    setSubmitted(true);
     if (form.email === "" || form.password === "") {
       // Alert.alert("Error", "Please fill in all fields");
       Toast.show(t("fillAllFields"), {
@@ -184,7 +186,10 @@ const SignIn = () => {
       setSubmitting(false);
     }
   };
-
+  const isFieldEmpty = (field) => {
+    // return form[field] === "";
+    return !form[field];
+  };
   return (
     <SafeAreaView className="bg-primary h-full">
       <ScrollView className="">
@@ -224,6 +229,8 @@ const SignIn = () => {
             handleChangeText={(e) => setForm({ ...form, mobile: e })}
             otherStyles="mt-7"
             keyboardType="numeric"
+            leftEmpty={isFieldEmpty("mobile")}
+            submitted={submitted}
           />
 
           <FormField
@@ -231,6 +238,8 @@ const SignIn = () => {
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
+            leftEmpty={isFieldEmpty("password")}
+            submitted={submitted}
           />
 
           <CustomButton

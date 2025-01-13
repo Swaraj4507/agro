@@ -230,7 +230,7 @@ const addCrop = () => {
             keyboardType="numeric"
           />
           <CustomButton
-            title={t("addCrop")}
+            title={t("addCropT")}
             handlePress={submit}
             containerStyles="mt-7 "
             isLoading={isSubmitting}

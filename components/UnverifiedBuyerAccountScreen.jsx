@@ -23,6 +23,7 @@ import { useGlobalContext } from "../context/GlobalProvider";
 import { getAuth, signOut as firebaseSignOut } from "firebase/auth";
 import { app } from "../lib/fire";
 import { AntDesign } from "@expo/vector-icons";
+import LottieView from "lottie-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -84,50 +85,25 @@ const UnverifiedBuyerAccountScreen = () => {
 
         <Animated.View style={[styles.card, fadeAnimStyle]}>
           <Animated.Text style={[styles.title, pulseAnim]}>
-            Welcome, {user?.fullname}!
+            {t("welcome_message")} {user?.fullname}!
           </Animated.Text>
-          <Text style={styles.subtitle}>
-            Your Buyer Account is Being Verified
-          </Text>
+          <Text style={styles.subtitle}>{t("Buyer.verificationMessage")}</Text>
 
-          <View style={styles.videoContainer}>
-            {!videoLoaded && (
-              <View style={styles.placeholderContainer}>
-                <AntDesign name="videocamera" size={48} color="#4CAF50" />
-                <Text style={styles.placeholderText}>Loading video...</Text>
-              </View>
-            )}
-            <Video
-              ref={videoRef}
-              style={styles.video}
-              source={{
-                uri: "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4",
-              }}
-              useNativeControls
-              resizeMode={ResizeMode.COVER}
-              isLooping
-              onPlaybackStatusUpdate={(status) => setStatus(() => status)}
-              onLoad={() => setVideoLoaded(true)}
+          <View style={styles.lottieContainer}>
+            <LottieView
+              source={require("../assets/verificationLoader.json")} // Make sure to add your Lottie JSON file
+              autoPlay
+              loop
+              style={styles.lottieAnimation}
             />
           </View>
 
-          <Text style={styles.description}>
-            While we verify your account, explore how our app can help you
-            manage your farm and connect with buyers:
-          </Text>
+          <Text style={styles.description}>{t("Buyer.exploreMessage")}</Text>
           <View style={styles.featureList}>
-            <Text style={styles.featureItem}>
-              • Browse local harvest listings
-            </Text>
-            <Text style={styles.featureItem}>
-              • Connect directly with farmers
-            </Text>
-            <Text style={styles.featureItem}>
-              • Access real-time market prices
-            </Text>
-            <Text style={styles.featureItem}>
-              • Manage your purchase orders
-            </Text>
+            <Text style={styles.featureItem}>{t("Buyer.feature1")}</Text>
+            <Text style={styles.featureItem}>{t("Buyer.feature3")}</Text>
+            <Text style={styles.featureItem}>{t("Buyer.feature3")}</Text>
+            <Text style={styles.featureItem}>{t("Buyer.feature4")}</Text>
           </View>
         </Animated.View>
         <TouchableOpacity
@@ -309,6 +285,19 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     marginRight: 10,
+  },
+  lottieContainer: {
+    width: "100%",
+    aspectRatio: 1,
+    marginBottom: 20,
+    borderRadius: 10,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#4CAF50",
+  },
+  lottieAnimation: {
+    width: "100%",
+    height: "100%",
   },
 });
 

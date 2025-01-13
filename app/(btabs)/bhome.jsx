@@ -102,11 +102,11 @@ const bhome = () => {
     });
   };
   const MemoizedOrderCard = React.memo(OrderCard, (prevProps, nextProps) => {
-    return prevProps.item.id === nextProps.item.id; // Avoid re-render if the item ID is the same
+    return JSON.stringify(prevProps.item) === JSON.stringify(nextProps.item);
   });
 
   const MemoizedBStockCard = React.memo(BStockCard, (prevProps, nextProps) => {
-    return prevProps.item.id === nextProps.item.id; // Avoid re-render if the item ID is the same
+    return JSON.stringify(prevProps.item) === JSON.stringify(nextProps.item);
   });
   const renderItem = useCallback(
     ({ item }) => {

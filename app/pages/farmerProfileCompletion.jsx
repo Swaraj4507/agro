@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -183,13 +185,13 @@ const ProfileCompletionStep = () => {
   }, []);
 
   const submit = async () => {
-    console.log(uploadStatus);
+    // console.log(uploadStatus);
     if (form.IdType === "" || !form.IdImage || !form.profileImage) {
       setSubmitted(true);
       showToast(t("fillAllFields"), "error");
       return;
     }
-    console.log(uploadStatus.IdImage !== "success");
+    // console.log(uploadStatus.IdImage !== "success");
     if (
       uploadStatus.IdImage !== "success" ||
       uploadStatus.profileImage !== "success"

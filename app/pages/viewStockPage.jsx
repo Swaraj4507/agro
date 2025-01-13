@@ -10,7 +10,7 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
@@ -29,15 +29,18 @@ const ViewStockRequests = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStock = async () => {
-      const stockRef = doc(db, "stock", stockId);
-      const stockDoc = await getDoc(stockRef);
+    const stockRef = doc(db, "stock", stockId);
+
+    const unsubscribe = onSnapshot(stockRef, (stockDoc) => {
       if (stockDoc.exists()) {
         setStock({ id: stockDoc.id, ...stockDoc.data() });
+      } else {
+        console.log("No such document!");
       }
       setLoading(false);
-    };
-    fetchStock();
+    });
+
+    return () => unsubscribe();
   }, [stockId]);
 
   if (loading) {

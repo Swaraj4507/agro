@@ -9,6 +9,8 @@ import {
   SafeAreaView,
   Dimensions,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import {
@@ -25,6 +27,7 @@ import { FormField } from "../../components";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
+import Toast from "react-native-root-toast";
 const RequestStock = () => {
   const { user } = useGlobalContext();
   const { t } = useTranslation();
@@ -41,7 +44,11 @@ const RequestStock = () => {
 
   const handleRequest = async () => {
     setSubmitting(true);
-    if (!isNaN(requestedQuantity) || requestedQuantity > stockItem.quantity) {
+    if (
+      !isNaN(requestedQuantity) ||
+      requestedQuantity > stockItem.quantity ||
+      requestedQuantity === ""
+    ) {
       // Alert.alert("Error", "Check Requested Quantity");
       Toast.show(t("checkRequestedQuantity"), {
         duration: Toast.durations.SHORT,
@@ -62,6 +69,8 @@ const RequestStock = () => {
           paddingHorizontal: 20,
         },
       });
+      setSubmitting(false);
+      return;
     }
     try {
       // Add order to orders collection first
@@ -170,55 +179,57 @@ const RequestStock = () => {
         paddingTop: 30,
       }}
     >
-      <ScrollView className="">
-        <Animated.View className="p-4">
-          <Text className="text-4xl text-secondary font-pbold mb-1">
-            {t(`${stockItem.cropName}`)}
-          </Text>
-          {/* <SharedElement id={photoURL}> */}
-          <Image
-            source={{ uri: photoURL }}
-            className="w-full h-40 rounded-lg mb-4"
-          />
-          {/* </SharedElement> */}
-          <Text className="text-base text-black font-pmedium">
-            {t("available_quantity_label")}: {stockItem.availableQuantity}{" "}
-            {stockItem.unit}
-          </Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView className="">
+          <Animated.View className="p-4">
+            <Text className="text-4xl text-secondary font-pbold mb-1">
+              {t(`${stockItem.cropName}`)}
+            </Text>
+            {/* <SharedElement id={photoURL}> */}
+            <Image
+              source={{ uri: photoURL }}
+              className="w-full h-40 rounded-lg mb-4"
+            />
+            {/* </SharedElement> */}
+            <Text className="text-base text-black font-pmedium">
+              {t("available_quantity_label")}: {stockItem.availableQuantity}{" "}
+              {stockItem.unit}
+            </Text>
+            <Text className="text-base text-black font-pmedium">
+              {t("quotedPrice")}: {quotedPrice}
+              {"/"}
+              {stockItem.unit}
+            </Text>
 
-          <FormField
-            title={t("quotedPrice")}
-            value={quotedPrice}
-            handleChangeText={(text) => setQuotedPrice(text)}
-            keyboardType="numeric"
-            otherStyles=" mt-1 "
-            readOnly={true}
-          />
-          <FormField
-            title={t("requestedQuantity")}
-            value={requestedQuantity.toString()}
-            handleChangeText={(text) => {
-              // const newValue = parseInt(text);
+            <FormField
+              title={t("requestedQuantity")}
+              value={requestedQuantity.toString()}
+              handleChangeText={(text) => {
+                // const newValue = parseInt(text);
 
-              setRequestedQuantity(text);
-            }}
-            keyboardType="numeric"
-            otherStyles="mt-1"
-          />
-          <FormField
-            title={t("deliveryDetails")}
-            value={deliveryDetails}
-            handleChangeText={(text) => setDeliveryDetails(text)}
-            otherStyles="mt-1"
-          />
-          <CustomButton
-            title={t("placeOrder")}
-            handlePress={handleRequest}
-            containerStyles="mt-7"
-            isLoading={isSubmitting}
-          />
-        </Animated.View>
-      </ScrollView>
+                setRequestedQuantity(text);
+              }}
+              keyboardType="numeric"
+              otherStyles="mt-1"
+            />
+            <FormField
+              title={t("deliveryDetails")}
+              value={deliveryDetails}
+              handleChangeText={(text) => setDeliveryDetails(text)}
+              otherStyles="mt-1"
+            />
+            <CustomButton
+              title={t("placeOrder")}
+              handlePress={handleRequest}
+              containerStyles="mt-7"
+              isLoading={isSubmitting}
+            />
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

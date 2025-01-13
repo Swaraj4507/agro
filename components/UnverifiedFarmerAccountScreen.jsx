@@ -23,6 +23,7 @@ import { useGlobalContext } from "../context/GlobalProvider";
 import { getAuth, signOut as firebaseSignOut } from "firebase/auth";
 import { app } from "../lib/fire";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
+import LottieView from "lottie-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -96,7 +97,7 @@ const UnverifiedFarmerAccountScreen = () => {
           </Animated.Text>
           <Text style={styles.subtitle}>{t("unverified_account")}</Text>
 
-          <View style={styles.videoContainer}>
+          {/* <View style={styles.videoContainer}>
             {!videoLoaded && (
               <View style={styles.placeholderContainer}>
                 <AntDesign name="videocamera" size={48} color="#4CAF50" />
@@ -114,6 +115,14 @@ const UnverifiedFarmerAccountScreen = () => {
               isLooping
               onPlaybackStatusUpdate={(status) => setStatus(() => status)}
               onLoad={() => setVideoLoaded(true)}
+            />
+          </View> */}
+          <View style={styles.lottieContainer}>
+            <LottieView
+              source={require("../assets/verificationLoader.json")} // Make sure to add your Lottie JSON file
+              autoPlay
+              loop
+              style={styles.lottieAnimation}
             />
           </View>
 
@@ -314,6 +323,19 @@ const styles = StyleSheet.create({
   },
   languageButton: {
     padding: 5,
+  },
+  lottieContainer: {
+    width: "100%",
+    aspectRatio: 1,
+    marginBottom: 20,
+    borderRadius: 10,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#4CAF50",
+  },
+  lottieAnimation: {
+    width: "100%",
+    height: "100%",
   },
 });
 

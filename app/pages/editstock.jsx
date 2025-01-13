@@ -8,6 +8,8 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { updateDoc, doc } from "firebase/firestore";
@@ -133,98 +135,105 @@ const EditStock = () => {
 
   return (
     <SafeAreaView className="bg-primary h-full">
-      <ScrollView style={{ paddingBottom: hp("5%") }}>
-        <View className="flex justify-center items-center mt-3">
-          <Text className="text-4xl text-secondary font-pbold">
-            {t("editStock")}
-          </Text>
-        </View>
-
-        <View
-          className="w-full flex justify-start mt-4 h-full px-4"
-          style={{ minHeight: Dimensions.get("window").height - 100 }}
-        >
-          <FormField
-            title={t("cropName")}
-            value={form.cropName}
-            handleChangeText={(e) => setForm({ ...form, cropName: e })}
-            otherStyles="mt-7"
-          />
-
-          <TouchableOpacity onPress={openPicker}>
-            <View className="mt-7 space-y-2">
-              <Text className="text-base text-black font-pmedium">
-                {t("cropImage")}
-              </Text>
-              <Image
-                source={{ uri: form.photoURL }}
-                className="w-full h-40 rounded-lg mb-4"
-              />
-              <View className="w-full h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2">
-                <Text className="text-sm text-black font-pmedium">
-                  {t("changeImage")}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-
-          <FormField
-            title={t("sellingAmount")}
-            value={form.amount}
-            handleChangeText={(e) => setForm({ ...form, amount: e })}
-            otherStyles="mt-7"
-            keyboardType="numeric"
-          />
-
-          <View className="mt-7 flex flex-row">
-            <TouchableOpacity
-              className={`py-2 px-4 rounded-md ${
-                form.unit === "kg" ? "bg-secondary" : "bg-gray-400"
-              }`}
-              onPress={() => setForm({ ...form, unit: "kg" })}
-            >
-              <Text className="text-white font-semibold">{t("kg")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`py-2 px-4 rounded-md ml-2 ${
-                form.unit === "quintal" ? "bg-secondary" : "bg-gray-400"
-              }`}
-              onPress={() => setForm({ ...form, unit: "quintal" })}
-            >
-              <Text className="text-white font-semibold">{t("quintal")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`py-2 px-4 rounded-md ml-2 ${
-                form.unit === "ton" ? "bg-secondary" : "bg-gray-400"
-              }`}
-              onPress={() => setForm({ ...form, unit: "ton" })}
-            >
-              <Text className="text-white font-semibold">{t("ton")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`py-2 px-4 rounded-md ml-2 ${
-                form.unit === "crate" ? "bg-secondary" : "bg-gray-400"
-              }`}
-              onPress={() => setForm({ ...form, unit: "crate" })}
-            >
-              <Text className="text-white font-semibold">{t("crate")}</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View className="space-y-2 mt-7">
-            <Text className="text-base text-black font-pmedium">
-              {t("location_label")}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <ScrollView style={{ paddingBottom: hp("5%") }}>
+          <View className="flex justify-center items-center mt-3">
+            <Text className="text-4xl text-secondary font-pbold">
+              {t("editStock")}
             </Text>
-            <Text className="text-base text-black">{form.locationString}</Text>
           </View>
-          <CustomButton
-            title={t("updateStock")}
-            handlePress={submit}
-            containerStyles="mt-7"
-            isLoading={isSubmitting}
-          />
-        </View>
-      </ScrollView>
+
+          <View
+            className="w-full flex justify-start mt-4 h-full px-4"
+            style={{ minHeight: Dimensions.get("window").height - 100 }}
+          >
+            <FormField
+              title={t("cropName")}
+              value={form.cropName}
+              handleChangeText={(e) => setForm({ ...form, cropName: e })}
+              otherStyles="mt-7"
+            />
+
+            <TouchableOpacity onPress={openPicker}>
+              <View className="mt-7 space-y-2">
+                <Text className="text-base text-black font-pmedium">
+                  {t("cropImage")}
+                </Text>
+                <Image
+                  source={{ uri: form.photoURL }}
+                  className="w-full h-40 rounded-lg mb-4"
+                />
+                <View className="w-full h-16 px-4 bg-secondary-1 rounded-2xl border-2 border-secondary-1 flex justify-center items-center flex-row space-x-2">
+                  <Text className="text-sm text-black font-pmedium">
+                    {t("changeImage")}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            <FormField
+              title={t("sellingAmount")}
+              value={form.amount}
+              handleChangeText={(e) => setForm({ ...form, amount: e })}
+              otherStyles="mt-7"
+              keyboardType="numeric"
+            />
+
+            <View className="mt-7 flex flex-row">
+              <TouchableOpacity
+                className={`py-2 px-4 rounded-md ${
+                  form.unit === "kg" ? "bg-secondary" : "bg-gray-400"
+                }`}
+                onPress={() => setForm({ ...form, unit: "kg" })}
+              >
+                <Text className="text-white font-semibold">{t("kg")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`py-2 px-4 rounded-md ml-2 ${
+                  form.unit === "quintal" ? "bg-secondary" : "bg-gray-400"
+                }`}
+                onPress={() => setForm({ ...form, unit: "quintal" })}
+              >
+                <Text className="text-white font-semibold">{t("quintal")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`py-2 px-4 rounded-md ml-2 ${
+                  form.unit === "ton" ? "bg-secondary" : "bg-gray-400"
+                }`}
+                onPress={() => setForm({ ...form, unit: "ton" })}
+              >
+                <Text className="text-white font-semibold">{t("ton")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`py-2 px-4 rounded-md ml-2 ${
+                  form.unit === "crate" ? "bg-secondary" : "bg-gray-400"
+                }`}
+                onPress={() => setForm({ ...form, unit: "crate" })}
+              >
+                <Text className="text-white font-semibold">{t("crate")}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View className="space-y-2 mt-7">
+              <Text className="text-base text-black font-pmedium">
+                {t("location_label")}
+              </Text>
+              <Text className="text-base text-black">
+                {form.locationString}
+              </Text>
+            </View>
+            <CustomButton
+              title={t("updateStock")}
+              handlePress={submit}
+              containerStyles="mt-7"
+              isLoading={isSubmitting}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

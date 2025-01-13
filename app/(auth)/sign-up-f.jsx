@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
+  Switch,
 } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -43,11 +44,13 @@ import CircularProgress from "react-native-circular-progress-indicator";
 import { Ionicons } from "@expo/vector-icons";
 import { Dropdown } from "react-native-element-dropdown";
 import RNDateTimePicker from "@react-native-community/datetimepicker";
+import useLocationEffect from "../../hooks/useLocationEffect";
 
 const SignUpF = () => {
   const { t } = useTranslation();
   const { setUser, setIsLogged, setUserType, storeUser, setIsVerified } =
     useGlobalContext();
+
   const [isSubmitting, setSubmitting] = useState(false);
   const [isKYCModalVisible, setKYCModalVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -68,7 +71,13 @@ const SignUpF = () => {
     profileCompletion: false,
     profileCompletionPercentage: 50,
     profileImage: null,
+    useCurrentLocation: false,
   });
+  const {
+    locationState,
+    loading: locationLoading,
+    getCurrentLocation,
+  } = useLocationEffect(form.address, form.state, form.pincode);
   const [uploadProgress, setUploadProgress] = useState({
     IdImage: 0,
   });
@@ -132,7 +141,25 @@ const SignUpF = () => {
       IdType: value,
     });
   };
+  useEffect(() => {
+    if (form.useCurrentLocation) {
+      getCurrentLocation();
+    }
+  }, [form.useCurrentLocation, getCurrentLocation]);
 
+  useEffect(() => {
+    setForm((prevForm) => ({
+      ...prevForm,
+      locationCoords: locationState.locationCoords,
+      address: form.useCurrentLocation
+        ? locationState.locationString
+        : form.address,
+      pincode: form.useCurrentLocation
+        ? locationState.pincodeString
+        : form.pincode,
+      state: form.useCurrentLocation ? locationState.stateString : form.state,
+    }));
+  }, [locationState, form.useCurrentLocation]);
   const uploadImage = useCallback(async (blob, type) => {
     const storageRef = ref(storage, `${type}/${Date.now()}`);
     const uploadTask = uploadBytesResumable(storageRef, blob);
@@ -218,19 +245,20 @@ const SignUpF = () => {
         [selectType]: result.assets[0].uri, // Update with the local image URI
       }));
       setUploadStatus((prev) => ({ ...prev, [selectType]: "selected" }));
-      const blob = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-          resolve(xhr.response);
-        };
-        xhr.onerror = function () {
-          reject(new TypeError("Network request failed"));
-        };
-        xhr.responseType = "blob";
-        xhr.open("GET", result.assets[0].uri, true);
-        xhr.send(null);
-      });
-
+      // const blob = await new Promise((resolve, reject) => {
+      //   const xhr = new XMLHttpRequest();
+      //   xhr.onload = function () {
+      //     resolve(xhr.response);
+      //   };
+      //   xhr.onerror = function () {
+      //     reject(new TypeError("Network request failed"));
+      //   };
+      //   xhr.responseType = "blob";
+      //   xhr.open("GET", result.assets[0].uri, true);
+      //   xhr.send(null);
+      // });
+      const response = await fetch(result.assets[0].uri);
+      const blob = await response.blob();
       uploadImage(blob, selectType);
     } else {
       showToast(t("noImagePicked"), "error");
@@ -288,91 +316,108 @@ const SignUpF = () => {
       showToast(t("waitForUploads"), "error");
       return;
     }
-    console.log(uploadStatus);
-
     if (
       currentStep === 3 &&
       uploadStatus.IdImage === "success" &&
       uploadStatus.profileImage === "success"
     ) {
-      setForm((prevForm) => ({
-        ...prevForm,
+      const updatedForm = {
+        ...form,
         profileCompletion: true,
         profileCompletionPercentage: 100,
-      }));
+      };
+      // console.log(updatedForm);
 
-      // return;
+      saveToFirestore(updatedForm);
+    } else {
+      saveToFirestore(form); // If no profile completion change, save current form state
     }
-    // console.log(form);
-    // return;
+  };
+  const updateFormAndSave = async () => {
+    return new Promise((resolve) => {
+      setForm((prevForm) => {
+        const updatedForm = {
+          ...prevForm,
+          profileCompletion: true,
+          profileCompletionPercentage: 100,
+        };
+        console.log("Form updated successfully!", updatedForm); // Debugging step
+        resolve(updatedForm); // Resolve the promise after form is updated
+        return updatedForm;
+      });
+    }).then((updatedForm) => {
+      // Proceed with saving to Firestore only after state update
+      // console.log(updatedForm);
+      saveToFirestore(updatedForm);
+    });
+  };
+  const saveToFirestore = async (updatedForm) => {
     setSubmitting(true);
 
     try {
       const mobileQuery = query(
         collection(db, "users"),
-        where("mobile", "==", form.mobile)
+        where("mobile", "==", updatedForm.mobile)
       );
       const mobileSnapshot = await getDocs(mobileQuery);
 
       if (!mobileSnapshot.empty) {
         showToast(t("mobileNumberExists"), "error");
         setSubmitting(false);
-        setCurrentStep(1);
         return;
       }
 
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        form.email,
-        form.password
+        updatedForm.email,
+        updatedForm.password
       );
 
       const uid = userCredential.user.uid;
 
       await setDoc(doc(db, "users", uid), {
         uid: uid,
-        fullname: form.fullname,
+        fullname: updatedForm.fullname,
         role: "farmer",
-        mobile: form.mobile,
-        email: form.email,
-        address: form.address,
-        state: form.state,
-        pincode: form.pincode,
-        idProofUrl: form.IdImage,
-        idType: form.IdType,
-        profileCompletion: form.profileCompletion,
-        profileCompletionPercentage: form.profileCompletionPercentage,
+        mobile: updatedForm.mobile,
+        email: updatedForm.email,
+        address: updatedForm.address,
+        state: updatedForm.state,
+        pincode: updatedForm.pincode,
+        idProofUrl: updatedForm.IdImage,
+        idType: updatedForm.IdType,
+        profileCompletion: updatedForm.profileCompletion,
+        profileCompletionPercentage: updatedForm.profileCompletionPercentage,
         verified: false,
         registrationDate: new Date(),
-        profileImage: form.profileImage,
+        profileImage: updatedForm.profileImage,
       });
-
       const cropImageRef = ref(storage, `cropImages/${form.cropName}.jpg`);
       const cropImageUrl = await getDownloadURL(cropImageRef);
 
       await addDoc(collection(db, "crops"), {
         uid: uid,
-        cropName: form.cropName,
-        timestamp: form.dateOfSow,
-        area: form.area,
+        cropName: updatedForm.cropName,
+        timestamp: updatedForm.dateOfSow,
+        area: updatedForm.area,
         cropImage: cropImageUrl,
       });
 
       await storeUser({
         uid: uid,
-        fullname: form.fullname,
+        fullname: updatedForm.fullname,
         role: "farmer",
-        mobile: form.mobile,
-        address: form.address,
-        email: form.email,
-        state: form.state,
-        pincode: form.pincode,
-        idProofUrl: form.IdImage,
-        idType: form.IdType,
-        profileCompletion: form.profileCompletion,
-        profileCompletionPercentage: form.profileCompletionPercentage,
+        mobile: updatedForm.mobile,
+        address: updatedForm.address,
+        email: updatedForm.email,
+        state: updatedForm.state,
+        pincode: updatedForm.pincode,
+        idProofUrl: updatedForm.IdImage,
+        idType: updatedForm.IdType,
+        profileCompletion: updatedForm.profileCompletion,
+        profileCompletionPercentage: updatedForm.profileCompletionPercentage,
         verified: false,
-        profileImage: form.profileImage,
+        profileImage: updatedForm.profileImage,
       });
 
       setIsLogged(true);
@@ -513,6 +558,18 @@ const SignUpF = () => {
 
   const renderStep2 = () => (
     <>
+      <View style={styles.toggleContainer}>
+        <Text style={styles.toggleText}>{t("useCurrentLocation")}: </Text>
+        <Switch
+          value={form.useCurrentLocation}
+          onValueChange={(value) =>
+            setForm((prevForm) => ({
+              ...prevForm,
+              useCurrentLocation: value,
+            }))
+          }
+        />
+      </View>
       <FormField
         title={t("address")}
         value={form.address}
@@ -748,6 +805,10 @@ const SignUpF = () => {
       </View>
     );
   };
+  // console.log(locationLoading);
+  if (locationLoading) {
+    return <Loader isLoading={true} content={t("loactionLoading")} />;
+  }
   if (isSubmitting) {
     return <Loader isLoading={true} />;
   }
@@ -1138,6 +1199,15 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     marginRight: 10,
+  },
+  toggleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  toggleText: {
+    fontSize: 16,
+    marginRight: 5,
   },
 });
 

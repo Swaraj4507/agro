@@ -101,11 +101,13 @@ const Home = () => {
     setRefreshing(false);
   };
   const MemoizedOrderCard = React.memo(CropCard, (prevProps, nextProps) => {
-    return prevProps.item.id === nextProps.item.id; // Avoid re-render if the item ID is the same
+    // Compare the entire item object for changes, not just the ID
+    return JSON.stringify(prevProps.item) === JSON.stringify(nextProps.item);
   });
 
   const MemoizedStockCard = React.memo(StockCard, (prevProps, nextProps) => {
-    return prevProps.item.id === nextProps.item.id; // Avoid re-render if the item ID is the same
+    // Compare the entire item object for changes, not just the ID
+    return JSON.stringify(prevProps.item) === JSON.stringify(nextProps.item);
   });
   const renderItem = useCallback(
     ({ item }) => {

@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -24,7 +26,7 @@ import CustomButton from "../../components/CustomButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
-const ProfileCompletionStep = () => {
+const bProfileCompletionStep = () => {
   // { initialUserData, onComplete }
   const { t } = useTranslation();
   const { setUser, storeUser, user: initialUserData } = useGlobalContext();
@@ -266,6 +268,10 @@ const ProfileCompletionStep = () => {
 
   return (
     <SafeAreaView className="bg-primary">
+      {/* <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      > */}
       <ScrollView>
         <View style={styles.container} className="">
           <View className="flex justify-center items-center mt-3 mb-5">
@@ -348,6 +354,7 @@ const ProfileCompletionStep = () => {
           />
         </View>
       </ScrollView>
+      {/* </KeyboardAvoidingView> */}
     </SafeAreaView>
   );
 };
@@ -442,4 +449,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProfileCompletionStep;
+export default bProfileCompletionStep;

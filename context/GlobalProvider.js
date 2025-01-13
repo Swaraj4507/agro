@@ -3,6 +3,7 @@ import { collection, doc, getDocs, onSnapshot } from "firebase/firestore";
 
 import { db } from "../lib/fire";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 
 
 
@@ -12,6 +13,7 @@ const cropsList = ["Apple", "Banana", "Beans", "Beetroot", "Betel", "Bhendi", "B
 const GlobalProvider = ({ children }) => {
   const [isLogged, setIsLogged] = useState(false);
   const [user, setUser] = useState(null);
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState("");
   const [posts, setPosts] = useState([]);

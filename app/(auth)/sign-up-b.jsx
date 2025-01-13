@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
+  Switch,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import Toast from "react-native-root-toast";
@@ -41,6 +42,8 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 import { Loader } from "../../components";
 import CircularProgress from "react-native-circular-progress-indicator";
 import { Ionicons } from "@expo/vector-icons";
+
+import useLocationEffect from "../../hooks/useLocationEffect";
 const SignUp = () => {
   const { t } = useTranslation();
   const { setUser, setIsLogged, setUserType, storeUser, setIsVerified } =
@@ -64,7 +67,13 @@ const SignUp = () => {
     email: "",
     profileCompletion: false,
     profileCompletionPercentage: 50,
+    useCurrentLocation: false,
   });
+  const {
+    locationState,
+    loading: locationLoading,
+    getCurrentLocation,
+  } = useLocationEffect(form.address, form.state, form.pincode);
   const [uploadProgress, setUploadProgress] = useState({
     IdImage: 0,
     OrgImage: 0,
@@ -90,6 +99,25 @@ const SignUp = () => {
       IdType: value,
     });
   };
+  useEffect(() => {
+    if (form.useCurrentLocation) {
+      getCurrentLocation();
+    }
+  }, [form.useCurrentLocation, getCurrentLocation]);
+
+  useEffect(() => {
+    setForm((prevForm) => ({
+      ...prevForm,
+      locationCoords: locationState.locationCoords,
+      address: form.useCurrentLocation
+        ? locationState.locationString
+        : form.address,
+      pincode: form.useCurrentLocation
+        ? locationState.pincodeString
+        : form.pincode,
+      state: form.useCurrentLocation ? locationState.stateString : form.state,
+    }));
+  }, [locationState, form.useCurrentLocation]);
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
@@ -224,13 +252,8 @@ const SignUp = () => {
   };
 
   const submit = async () => {
-    if (
-      (currentStep === 3 && form.IdType === "") ||
-      !form.IdImage ||
-      !form.OrgImage
-    ) {
+    if (currentStep === 3 && (form.IdType === "" || !form.IdImage)) {
       setSubmitted(true);
-      // return;
     }
 
     if (
@@ -238,20 +261,18 @@ const SignUp = () => {
       form.mobile === "" ||
       form.password === "" ||
       form.email === "" ||
-      form.orgname === "" ||
       form.address === "" ||
       form.state === "" ||
       form.pincode === "" ||
-      (currentStep === 3 &&
-        (form.IdType === "" || !form.IdImage || !form.OrgImage))
+      (currentStep === 3 && (form.IdType === "" || !form.IdImage))
     ) {
       showToast(t("fillAllFields"), "error");
       return;
     }
+
     if (
       currentStep === 3 &&
       (uploadStatus.IdImage !== "success" ||
-        uploadStatus.OrgImage !== "success" ||
         uploadStatus.profileImage !== "success")
     ) {
       showToast(t("waitForUploads"), "error");
@@ -263,29 +284,26 @@ const SignUp = () => {
       uploadStatus.OrgImage === "success" &&
       uploadStatus.profileImage === "success"
     ) {
-      console.log("heyy");
-      setForm((prevForm) => ({
-        ...prevForm,
+      const updatedForm = {
+        ...form,
         profileCompletion: true,
         profileCompletionPercentage: 100,
-      }));
-    } else {
-      setForm((prevForm) => ({
-        ...prevForm,
-        profileCompletion: false,
-        profileCompletionPercentage: 50,
-      }));
-    }
+      };
 
-    // setSubmitted(false);
-    // console.log(form);
-    // return;
+      // Save to Firestore after state is updated
+      saveToFirestore(updatedForm);
+    } else {
+      saveToFirestore(form); // If no profile completion change, save current form state
+    }
+  };
+
+  const saveToFirestore = async (updatedForm) => {
     setSubmitting(true);
 
     try {
       const mobileQuery = query(
         collection(db, "users"),
-        where("mobile", "==", form.mobile)
+        where("mobile", "==", updatedForm.mobile)
       );
       const mobileSnapshot = await getDocs(mobileQuery);
 
@@ -297,48 +315,49 @@ const SignUp = () => {
 
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        form.email,
-        form.password
+        updatedForm.email,
+        updatedForm.password
       );
 
       const uid = userCredential.user.uid;
 
       await setDoc(doc(db, "users", uid), {
         uid: uid,
-        fullname: form.fullname,
+        fullname: updatedForm.fullname,
         role: "buyer",
-        mobile: form.mobile,
-        email: form.email,
-        address: form.address,
-        state: form.state,
-        pincode: form.pincode,
-        orgName: form.orgname,
-        idProofUrl: form.IdImage,
-        OrgImage: form.OrgImage,
-        profileImage: form.profileImage,
-        idType: form.IdType,
-        profileCompletion: form.profileCompletion,
-        profileCompletionPercentage: form.profileCompletionPercentage,
+        mobile: updatedForm.mobile,
+        email: updatedForm.email,
+        address: updatedForm.address,
+        state: updatedForm.state,
+        pincode: updatedForm.pincode,
+        orgName: updatedForm.orgname,
+        idProofUrl: updatedForm.IdImage,
+        OrgImage: updatedForm.OrgImage,
+        profileImage: updatedForm.profileImage,
+        idType: updatedForm.IdType,
+        profileCompletion: updatedForm.profileCompletion,
+        profileCompletionPercentage: updatedForm.profileCompletionPercentage,
         verified: false,
         registrationDate: new Date(),
       });
       await storeUser({
         uid: uid,
-        fullname: form.fullname,
+        fullname: updatedForm.fullname,
         role: "buyer",
-        mobile: form.mobile,
-        address: form.address,
-        email: form.email,
-        state: form.state,
-        pincode: form.pincode,
-        idProofUrl: form.IdImage,
-        idType: form.IdType,
-        orgName: form.orgname,
-        profileImage: form.profileImage,
-        profileCompletion: form.profileCompletion,
-        profileCompletionPercentage: form.profileCompletionPercentage,
+        mobile: updatedForm.mobile,
+        address: updatedForm.address,
+        email: updatedForm.email,
+        state: updatedForm.state,
+        pincode: updatedForm.pincode,
+        idProofUrl: updatedForm.IdImage,
+        idType: updatedForm.IdType,
+        orgName: updatedForm.orgname,
+        profileImage: updatedForm.profileImage,
+        profileCompletion: updatedForm.profileCompletion,
+        profileCompletionPercentage: updatedForm.profileCompletionPercentage,
         verified: false,
       });
+
       setIsLogged(true);
       setUserType("buyer");
       setIsVerified(false);
@@ -471,6 +490,18 @@ const SignUp = () => {
 
   const renderStep2 = () => (
     <>
+      <View style={styles.toggleContainer}>
+        <Text style={styles.toggleText}>{t("useCurrentLocation")}: </Text>
+        <Switch
+          value={form.useCurrentLocation}
+          onValueChange={(value) =>
+            setForm((prevForm) => ({
+              ...prevForm,
+              useCurrentLocation: value,
+            }))
+          }
+        />
+      </View>
       <FormField
         title={t("address")}
         value={form.address}
@@ -641,6 +672,9 @@ const SignUp = () => {
       </View>
     );
   };
+  if (locationLoading) {
+    return <Loader isLoading={true} content={t("loactionLoading")} />;
+  }
   if (isSubmitting) {
     return <Loader isLoading={true} />;
   }
@@ -1032,6 +1066,15 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     marginRight: 10,
+  },
+  toggleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  toggleText: {
+    fontSize: 16,
+    marginRight: 5,
   },
 });
 

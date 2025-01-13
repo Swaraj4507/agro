@@ -96,7 +96,7 @@ const TabsLayout = () => {
               <TabIcon
                 icon={icons.crop}
                 color={color}
-                name={t("addCrop")}
+                name={t("addCropT")}
                 focused={focused}
               />
             ),
