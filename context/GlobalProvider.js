@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { collection, doc, getDocs, onSnapshot } from "firebase/firestore";
 
 import { db } from "../lib/fire";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from 'expo-secure-store';
 import { useTranslation } from "react-i18next";
 
 
@@ -25,7 +25,7 @@ const GlobalProvider = ({ children }) => {
     console.log("hiiiiii");
     const checkUserLogin = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem("user");
+        const storedUser = await SecureStore.getItemAsync("user");
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
           console.log(parsedUser)
@@ -45,7 +45,7 @@ const GlobalProvider = ({ children }) => {
               setIsVerified(updatedUser.verified);
               // console.log(userType);
               // Update AsyncStorage
-              AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+              SecureStore.setItemAsync("user", JSON.stringify(updatedUser));
             }
           });
           return () => unsubscribe();
@@ -98,7 +98,7 @@ const GlobalProvider = ({ children }) => {
   };
   const storeUser = async (user) => {
     try {
-      await AsyncStorage.setItem("user", JSON.stringify(user));
+      await SecureStore.setItemAsync("user", JSON.stringify(user));
       console.log(user)
       setUser(user);
       setIsLogged(true);
@@ -109,7 +109,7 @@ const GlobalProvider = ({ children }) => {
   };
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem("user");
+      await SecureStore.deleteItemAsync("user");
       setUser(null);
       setIsLogged(false);
       setUserType("");

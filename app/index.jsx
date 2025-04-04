@@ -30,13 +30,11 @@ import {
 
 import { Trending, OnboardingScreen } from "../components";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Video } from "expo-av";
 import UnverifiedBuyerAccountScreen from "../components/UnverifiedBuyerAccountScreen";
 import AnimatedCharacter from "../components/AnimatedCharacter";
 import ProfileCompletionComponent from "../components/ProfileCompletionComponent";
-
-// import { useCopilot, CopilotStep } from "react-native-copilot";
+import "intl-pluralrules";
 export default function App() {
   // const { start } = useCopilot();
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
@@ -48,10 +46,10 @@ export default function App() {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("en"); // Default language is English
   useEffect(() => {
-    AsyncStorage.getItem("alreadyLaunched").then((value) => {
+    SecureStore.getItemAsync("alreadyLaunched").then((value) => {
       if (value === null) {
         console.log("NotLaunched");
-        AsyncStorage.setItem("alreadyLaunched", "true"); // No need to await here
+        SecureStore.setItemAsync("alreadyLaunched", "true"); // No need to await here
         setIsFirstLaunch(true);
       } else {
         console.log("alreadyLaunched");
@@ -75,7 +73,7 @@ export default function App() {
   };
   const clearAsyncStorage = async () => {
     try {
-      await AsyncStorage.removeItem("alreadyLaunched");
+      await SecureStore.deleteItemAsync("alreadyLaunched");
       console.log("AsyncStorage cleared successfully.");
     } catch (error) {
       console.error("Error clearing AsyncStorage:", error);

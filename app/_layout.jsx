@@ -5,9 +5,6 @@ import { useFonts } from "expo-font";
 import { I18nextProvider } from "react-i18next";
 import GlobalProvider from "../context/GlobalProvider";
 import i18n from "../i18n/i18n";
-import { CopilotProvider } from "react-native-copilot";
-import OnboardingScreen from "../components/OnboardingScreen";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { RootSiblingParent } from "react-native-root-siblings";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();

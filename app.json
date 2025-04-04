@@ -2,23 +2,28 @@
   "expo": {
     "name": "Agrotech",
     "slug": "Agrotech",
-    "scheme": "Agrotech",
+    "scheme": "agrotech",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/jsk-splash.jpg",
+      "image": "./assets/jsk-splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
+      "newArchEnabled": false,
       "supportsTablet": true,
-      "package": "com.mycorp.myapp"
+      "bundleIdentifier": "com.agrotech.jsk"
     },
     "android": {
       "package": "com.agrotech.jsk",
+      "newArchEnabled": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -27,8 +32,18 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-router", "expo-build-properties", "expo-image-picker"],
-    "permissions": ["LOCATION", "CAMERA", "READ_EXTERNAL_STORAGE"],
+    "plugins": [
+      "expo-router",
+      "expo-build-properties",
+      "expo-image-picker",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true,
+          "faceIDPermission": "Allow JSK Agrotech to access your Face ID biometric data."
+        }
+      ]
+    ],
     "extra": {
       "router": {
         "origin": false
