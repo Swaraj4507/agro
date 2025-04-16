@@ -17,7 +17,7 @@ export const login = async (phoneNumber: string, password: string) => {
     console.error("Login failed:", error);
     return {
       success: false,
-      error: error.response?.data?.message || "Login error",
+      error: error.response?.data?.data?.message || "Login error",
     };
   }
 };
@@ -40,5 +40,26 @@ export const refreshAccessToken = async (refreshToken: string) => {
   } catch (error) {
     console.error("Token refresh failed:", error);
     return { success: false };
+  }
+};
+export const getUserRole = async (mobile: string) => {
+  try {
+    const response = await api.get("/users/role", {
+      params: { mobile },
+      headers: {
+        accept: "*/*",
+      },
+    });
+    console.log("User role response:", response.data);
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      // Extract and return the error message from the response body.
+      console.error("Error fetching user role:", error.response.data);
+      return error.response.data; // Return the entire error response to be handled by the caller.
+    } else {
+      console.error("Unexpected error:", error.message);
+      throw new Error("An unexpected error occurred while fetching user role.");
+    }
   }
 };
