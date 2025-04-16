@@ -4,7 +4,7 @@ import { collection, doc, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/fire";
 import * as SecureStore from 'expo-secure-store';
 import { useTranslation } from "react-i18next";
-
+import { useAuthStore } from "../stores/authStore";
 
 
 const GlobalContext = createContext();
@@ -12,53 +12,70 @@ export const useGlobalContext = () => useContext(GlobalContext);
 const cropsList = ["Apple", "Banana", "Beans", "Beetroot", "Betel", "Bhendi", "Brinjal", "Cabbage", "Carrot", "Cauliflower", "Chilli", "Citrus", "Coconut", "Coffee", "Cucumber", "Garlic", "Gourds", "Grapes", "Guava", "Mango", "Mulberry", "Muskmelon", "OilPalm", "Onion", "Papaya", "Pomegranate", "Potato", "Radish", "Rose", "Sapota", "Satawar", "Squash", "Tea", "Tomato", "Turnip", "Watermelon"];
 const GlobalProvider = ({ children }) => {
   const [isLogged, setIsLogged] = useState(false);
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
-  const [userType, setUserType] = useState("");
+  // const [userType, setUserType] = useState("");
   const [posts, setPosts] = useState([]);
   const [diseasesData, setDiseasesData] = useState({});
   const [diseasesLoading, setDiseasesLoading] = useState(true);
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] = useState(true);
+  const {
+    accessToken,
+    user,
+    isAuthenticated,
+    isLoading: authLoading,
+    initializeAuth,
+    logout: authLogout,
+    userType
+  } = useAuthStore();
   useEffect(() => {
-    //check persistent user here
-    console.log("hiiiiii");
-    const checkUserLogin = async () => {
-      try {
-        const storedUser = await SecureStore.getItemAsync("user");
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          console.log(parsedUser)
-          setUser(parsedUser);
-          setIsLogged(true);
-          setUserType(parsedUser.role);
-          setIsVerified(parsedUser.verified);
-          const userDocRef = doc(db, "users", parsedUser.uid);
-          const unsubscribe = onSnapshot(userDocRef, (doc) => {
-            if (doc.exists()) {
-              const updatedUser = { ...parsedUser, ...doc.data() };
-              console.log("updated")
-              // console.log(updatedUser)
-
-              setUser(updatedUser);
-              // setUserType(updatedUser.role);
-              setIsVerified(updatedUser.verified);
-              // console.log(userType);
-              // Update AsyncStorage
-              SecureStore.setItemAsync("user", JSON.stringify(updatedUser));
-            }
-          });
-          return () => unsubscribe();
-        }
-      } catch (error) {
-        console.error("Error fetching stored user data:", error);
-      } finally {
-        setLoading(false);
-      }
+    const initialize = async () => {
+      await initializeAuth();
+      setLoading(false);
     };
-    checkUserLogin();
+    initialize();
+  }, []);
 
-  }, [isLogged, userType, isVerified]);
+  // useEffect(() => {
+  //   //check persistent user here
+  //   console.log("hiiiiii");
+  //   const checkUserLogin = async () => {
+  //     try {
+  //       const storedUser = await SecureStore.getItemAsync("user");
+  //       if (storedUser) {
+  //         const parsedUser = JSON.parse(storedUser);
+  //         console.log(parsedUser)
+  //         setUser(parsedUser);
+  //         setIsLogged(true);
+  //         setUserType(parsedUser.role);
+  //         setIsVerified(parsedUser.verified);
+  //         const userDocRef = doc(db, "users", parsedUser.uid);
+  //         const unsubscribe = onSnapshot(userDocRef, (doc) => {
+  //           if (doc.exists()) {
+  //             const updatedUser = { ...parsedUser, ...doc.data() };
+  //             console.log("updated")
+  //             // console.log(updatedUser)
+
+  //             setUser(updatedUser);
+  //             // setUserType(updatedUser.role);
+  //             setIsVerified(updatedUser.verified);
+  //             // console.log(userType);
+  //             // Update AsyncStorage
+  //             SecureStore.setItemAsync("user", JSON.stringify(updatedUser));
+  //           }
+  //         });
+  //         return () => unsubscribe();
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching stored user data:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   checkUserLogin();
+
+  // }, [isLogged, userType, isVerified]);
 
   const fetchPosts = async () => {
     try {
@@ -100,19 +117,18 @@ const GlobalProvider = ({ children }) => {
     try {
       await SecureStore.setItemAsync("user", JSON.stringify(user));
       console.log(user)
-      setUser(user);
+      // setUser(user);
       setIsLogged(true);
-      setUserType(user.role);
+      // setUserType(user.role);
     } catch (error) {
       // console.error("Error storing user data:", error);
     }
   };
   const logout = async () => {
     try {
-      await SecureStore.deleteItemAsync("user");
-      setUser(null);
+      // await authLogout();
       setIsLogged(false);
-      setUserType("");
+      // setUserType("");
     } catch (error) {
       // console.error("Error logging out:", error);
     }
@@ -124,8 +140,7 @@ const GlobalProvider = ({ children }) => {
         isLogged,
         setIsLogged,
         user,
-        setUser,
-        userType, setUserType,
+        userType,
         loading,
         cropsList,
         diseasesData,
@@ -135,7 +150,7 @@ const GlobalProvider = ({ children }) => {
         logout,
         posts,
         fetchPosts,
-        isVerified,
+        isVerified: user?.verified || false,
         setIsVerified
       }}
     >

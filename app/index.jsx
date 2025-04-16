@@ -13,7 +13,7 @@ import { Link } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 // import { images, icons } from "../constants";
 import { icons } from "../constants";
-
+import { checkHealth } from "../api/healthAPI";
 import CustomButton from "../components/CustomButton";
 import UnverifiedAccountScreenWithVideo from "../components/UnverifiedAccountScreenWithVideo";
 import UnverifiedFarmerAccountScreen from "../components/UnverifiedFarmerAccountScreen";
@@ -27,7 +27,7 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-
+import * as SecureStore from "expo-secure-store";
 import { Trending, OnboardingScreen } from "../components";
 
 import { Video } from "expo-av";
@@ -35,6 +35,7 @@ import UnverifiedBuyerAccountScreen from "../components/UnverifiedBuyerAccountSc
 import AnimatedCharacter from "../components/AnimatedCharacter";
 import ProfileCompletionComponent from "../components/ProfileCompletionComponent";
 import "intl-pluralrules";
+import { useAuthStore } from "../stores/authStore";
 export default function App() {
   // const { start } = useCopilot();
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
@@ -42,9 +43,18 @@ export default function App() {
     useGlobalContext();
   const [forceRender, setForceRender] = useState(false);
   const { t, i18n } = useTranslation();
-  // console.log(process.env.EXPO_FIREBASE_API_KEY);
+  const { logout } = useAuthStore();
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("en"); // Default language is English
+  const [healthStatus, setHealthStatus] = useState(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+
+  const handleCheckHealth = async () => {
+    setCheckingStatus(true);
+    const status = await checkHealth();
+    setHealthStatus(status ? status : "🔴 Down");
+    setCheckingStatus(false);
+  };
   useEffect(() => {
     SecureStore.getItemAsync("alreadyLaunched").then((value) => {
       if (value === null) {
@@ -87,7 +97,12 @@ export default function App() {
     return <OnboardingScreen />;
   }
 
-  if (userType === "farmer") {
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/");
+  };
+
+  if (userType === "FARMER") {
     // console.log("yesss");
     if (isVerified) {
       return (
@@ -163,6 +178,11 @@ export default function App() {
                   {t("add_commodity")}
                 </Text>
               </TouchableOpacity>
+              <CustomButton
+                title={t("clear storage")}
+                handlePress={clearAsyncStorage}
+                containerStyles="w-full mt-10"
+              />
               <ProfileCompletionComponent
                 user={user}
                 handlePress={() => {
@@ -173,6 +193,11 @@ export default function App() {
                 }}
               />
               <Trending posts={posts ?? []} />
+              <CustomButton
+                title={t("Log out")}
+                handlePress={handleLogout}
+                containerStyles="w-full mt-10 bg-red-500"
+              />
             </Animated.View>
           </ScrollView>
           <Modal
@@ -224,7 +249,7 @@ export default function App() {
     }
   }
 
-  if (userType === "buyer") {
+  if (userType === "BUYER") {
     if (isVerified) {
       return (
         <SafeAreaView className="bg-primary h-full">
@@ -377,6 +402,24 @@ export default function App() {
               {t("bringingFields")}
             </Text>
           </Animated.View>
+          <View className="mt-6 w-full">
+            <CustomButton
+              title={checkingStatus ? "Checking..." : "Check Server Status"}
+              handlePress={handleCheckHealth}
+              containerStyles="w-full mt-4"
+            />
+            {healthStatus && (
+              <Text
+                className={`text-lg font-bold text-center mt-2 ${
+                  healthStatus.includes("🟢")
+                    ? "text-green-500"
+                    : "text-red-500"
+                }`}
+              >
+                {healthStatus}
+              </Text>
+            )}
+          </View>
           <CustomButton
             title={t("continueAsFarmer")}
             handlePress={() => router.push("/sign-in-f")}
@@ -392,11 +435,11 @@ export default function App() {
             handlePress={() => setModalVisible(true)}
             containerStyles="w-full mt-10"
           />
-          {/* <CustomButton
+          <CustomButton
             title={t("clear storage")}
             handlePress={clearAsyncStorage}
             containerStyles="w-full mt-10"
-          /> */}
+          />
           <Trending posts={posts ?? []} />
         </Animated.View>
       </ScrollView>

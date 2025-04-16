@@ -10,14 +10,15 @@ import { useGlobalContext } from "../../context/GlobalProvider";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { app, db } from "../../lib/fire";
 import Toast from "react-native-root-toast";
-// import { app } from "../../lib/fire";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
+import { useAuthStore } from "../../stores/authStore";
 const SignIn = () => {
-  const auth = getAuth(app);
+  // const auth = getAuth(app);
+  const { login } = useAuthStore();
   const { setIsLogged, setUserType, storeUser, setIsVerified } =
     useGlobalContext();
   const [submitted, setSubmitted] = useState(false);
@@ -55,19 +56,16 @@ const SignIn = () => {
     }
     setSubmitting(true);
     try {
-      // console.log(form.mobile + "@gmail.com");
-      const usersRef = collection(db, "users"); // Assuming 'users' is the collection name
-      const q = query(usersRef, where("mobile", "==", form.mobile));
-      const querySnapshot = await getDocs(q);
-      if (querySnapshot.empty) {
-        Toast.show(t("noUserFound"), {
+      const success = await login(form.mobile, form.password);
+      if (success) {
+        Toast.show(t("userSignedIn"), {
           duration: Toast.durations.SHORT,
           position: Toast.positions.TOP,
           shadow: true,
           animation: true,
           hideOnPress: true,
           delay: 0,
-          backgroundColor: "red", // Custom background color
+          backgroundColor: "green", // Custom background color
           textColor: "white", // Custom text color
           opacity: 1, // Custom opacity
           textStyle: {
@@ -80,62 +78,10 @@ const SignIn = () => {
             paddingHorizontal: 20, // Custom padding
           },
         });
-        return;
       }
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
-      // console.log(userData);
-      // Check if the user's ID is verified
-      // if (userData.verified) {.......................................................
-      // If verified, proceed with login
-      const email = userData.email;
-      // console.log(email);
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        form.password
-      );
-      await storeUser({
-        uid: userData.uid,
-        fullname: userData.fullname,
-        role: userData.role,
-        mobile: userData.mobile,
-        address: userData.address,
-        state: userData.state,
-        pincode: userData.pincode,
-        idProofUrl: userData.idProofUrl,
-        idType: userData.idType,
 
-        // orgName: userData.orgName,
-      });
-
-      setIsLogged(true);
-      setUserType(userData.role);
-      setIsVerified(userData.verified);
-      // Alert.alert("Success", "User signed in successfully");
-      Toast.show(t("userSignedIn"), {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.TOP,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-        delay: 0,
-        backgroundColor: "green", // Custom background color
-        textColor: "white", // Custom text color
-        opacity: 1, // Custom opacity
-        textStyle: {
-          fontSize: 16, // Custom text size
-          fontWeight: "bold", // Custom text weight
-        },
-        containerStyle: {
-          marginTop: hp("5%"),
-          borderRadius: 20, // Custom border radius
-          paddingHorizontal: 20, // Custom padding
-        },
-      });
       router.replace("/");
       router.dismissAll();
-      // } else {.................................................................
       // If not verified, show a message to the user
       // console.log("Please wait for your ID to be verified.");
       //   Toast.show(t("idVerificationPending"), {

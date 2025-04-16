@@ -13,9 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "newArchEnabled": false,
       "supportsTablet": true,
@@ -23,7 +21,7 @@
     },
     "android": {
       "package": "com.agrotech.jsk",
-      "newArchEnabled": true,
+      "newArchEnabled": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
