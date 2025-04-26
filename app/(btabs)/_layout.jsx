@@ -43,7 +43,7 @@ const TabsLayout = () => {
             height: hp("10%"),
             marginHorizontal: hp("2%"),
             marginBottom: hp("2%"),
-            paddingVertical: hp("2.5%"),
+            paddingVertical: hp("2%"),
             borderRadius: 25,
             borderCurve: "continuous",
             shadowColor: "black",
@@ -55,7 +55,7 @@ const TabsLayout = () => {
         }}
       >
         <Tabs.Screen
-          name="bhome"
+          name="marketplace"
           options={{
             title: "Home",
             headerShown: false,

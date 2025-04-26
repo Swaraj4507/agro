@@ -284,7 +284,7 @@ export default function App() {
               <View className="flex-row justify-between w-full mt-10 ">
                 <TouchableOpacity
                   className="bg-secondary p-4 rounded-md flex-1 items-center justify-center mr-2 "
-                  onPress={() => router.push("/bhome")}
+                  onPress={() => router.push("/marketplace")}
                 >
                   <Text className="font-psemibold text-black">{t("home")}</Text>
                 </TouchableOpacity>
@@ -322,6 +322,11 @@ export default function App() {
               />
 
               <Trending posts={posts ?? []} />
+              <CustomButton
+                title={t("Log out")}
+                handlePress={handleLogout}
+                containerStyles="w-full mt-10 bg-red-500"
+              />
             </Animated.View>
           </ScrollView>
           <Modal
@@ -420,6 +425,11 @@ export default function App() {
               </Text>
             )}
           </View>
+          <CustomButton
+            title={t("Marketplace")}
+            handlePress={() => router.push("pages/marketplace")}
+            containerStyles="w-full mt-10 bg-red-500"
+          />
           <CustomButton
             title={t("continueAsFarmer")}
             handlePress={() => router.push("/sign-in-f")}

@@ -6,6 +6,7 @@ import { I18nextProvider } from "react-i18next";
 import GlobalProvider from "../context/GlobalProvider";
 import i18n from "../i18n/i18n";
 import { RootSiblingParent } from "react-native-root-siblings";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 const RootLayout = () => {
@@ -52,54 +53,67 @@ const RootLayout = () => {
   }
 
   return (
-    <GlobalProvider>
-      <I18nextProvider i18n={i18n}>
-        <RootSiblingParent>
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="(btabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(crops)"
-              options={{ headerShown: false, presentation: "modal" }}
-            />
-            <Stack.Screen
-              name="search/[query]"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="diseases/[crop]"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="pages/editstock"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="pages/requestStock"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="pages/viewStockPage"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="pages/chatScreen"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="pages/bProfileCompletion"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="pages/farmerProfileCompletion"
-              options={{ headerShown: false }}
-            />
-          </Stack>
-        </RootSiblingParent>
-      </I18nextProvider>
-    </GlobalProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GlobalProvider>
+        <I18nextProvider i18n={i18n}>
+          <RootSiblingParent>
+            <Stack>
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="(btabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(crops)"
+                options={{ headerShown: false, presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="search/[query]"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="diseases/[crop]"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="pages/editstock"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="pages/requestStock"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="pages/viewStockPage"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="pages/chatScreen"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="pages/bProfileCompletion"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="pages/farmerProfileCompletion"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="pages/marketplace"
+                options={{
+                  title: "Agricultural Marketplace",
+                  headerShadowVisible: false,
+                }}
+              />
+              <Stack.Screen
+                name="stock/[id]"
+                options={{ headerShown: false }}
+              />
+            </Stack>
+          </RootSiblingParent>
+        </I18nextProvider>
+      </GlobalProvider>
+    </GestureHandlerRootView>
   );
 };
 

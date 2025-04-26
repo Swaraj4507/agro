@@ -7,8 +7,8 @@ import {
   View,
   RefreshControl,
 } from "react-native";
-import { useGlobalContext } from "../../context/GlobalProvider";
-import { db } from "../../lib/fire";
+import { useGlobalContext } from "../context/GlobalProvider";
+import { db } from "../lib/fire";
 import {
   collection,
   query,
@@ -20,11 +20,11 @@ import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
-import BStockCard from "../../components/BstockCard";
-import OrderCard from "../../components/OrderCard";
+import BStockCard from "./BstockCard";
+import OrderCard from "./OrderCard";
 import { router } from "expo-router";
-import { CustomButton, EmptyState, SearchInput } from "../../components";
-import Loader from "../../components/Loader";
+import { CustomButton, EmptyState, SearchInput } from ".";
+import Loader from "./Loader";
 import LottieView from "lottie-react-native";
 import { useTranslation } from "react-i18next";
 const bhome = () => {
@@ -185,7 +185,7 @@ const bhome = () => {
               >
                 <LottieView
                   style={{ width: 50, height: 50 }}
-                  source={require("../../assets/AvailStock.json")}
+                  source={require("../assets/AvailStock.json")}
                   // autoPlay={showCrops ? true : false}
                   autoPlay
                   // loop
@@ -202,7 +202,7 @@ const bhome = () => {
               >
                 <LottieView
                   style={{ width: 50, height: 50 }}
-                  source={require("../../assets/Order1.json")}
+                  source={require("../assets/Order1.json")}
                   // autoPlay={!showCrops ? true : false}
                   autoPlay
                   // loop
