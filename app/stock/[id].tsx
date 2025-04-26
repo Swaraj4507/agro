@@ -27,7 +27,8 @@ import { format } from "date-fns";
 import { fetchStockDetails } from "../../api/marketplace";
 
 const { width } = Dimensions.get("window");
-
+import { useAddressStore } from "../../stores/addressStore";
+import { useAuthStore } from "../../stores/authStore";
 // Mock data with multiple images for each stock
 const mockStocks = [
   {
@@ -113,16 +114,16 @@ export default function StockDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const scrollViewRef = useRef(null);
-
+  const { addresses, fetchAddresses } = useAddressStore();
+  const { user } = useAuthStore();
   const [stock, setStock] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState(
-    mockAddresses.find((addr) => addr.isDefault) || mockAddresses[0]
-  );
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const [error, setError] = useState(null);
+  const [addressLoading, setAddressLoading] = useState(false);
   useEffect(() => {
     const loadStockDetails = async () => {
       try {
@@ -139,7 +140,22 @@ export default function StockDetailScreen() {
 
     loadStockDetails();
   }, [id]);
-
+  useEffect(() => {
+    if (!addresses) {
+      setAddressLoading(true);
+      fetchAddresses(user.id)
+        .catch((err) => {
+          setError("Failed to load addresses");
+          console.error(err);
+        })
+        .finally(() => setAddressLoading(false));
+    }
+  }, [addresses, fetchAddresses]);
+  useEffect(() => {
+    if (addresses && addresses.length > 0 && !selectedAddress) {
+      setSelectedAddress(addresses[0]);
+    }
+  }, [addresses]);
   const handlePlaceOrder = () => {
     if (!selectedAddress) {
       Alert.alert(
@@ -216,7 +232,9 @@ export default function StockDetailScreen() {
     >
       <View className="flex-row justify-between items-start">
         <View className="flex-row items-center">
-          <Text className="font-psemibold text-black mr-2">{item.name}</Text>
+          <Text className="font-psemibold text-black mr-2">
+            {item.landmark}
+          </Text>
           {item.isDefault && (
             <View className="bg-secondary rounded-full px-2 py-1">
               <Text className="text-white text-xs font-pmedium">Default</Text>
@@ -235,10 +253,7 @@ export default function StockDetailScreen() {
           )}
         </View>
       </View>
-      <Text className="font-pregular text-black-100 mt-1">
-        {item.addressLine1}
-      </Text>
-      <Text className="font-pregular text-black-100">{item.addressLine2}</Text>
+      <Text className="font-pregular text-black-100">{item.addressLine}</Text>
       <Text className="font-pregular text-black-100">
         {item.city}, {item.state}, {item.pincode}
       </Text>
@@ -366,7 +381,7 @@ export default function StockDetailScreen() {
                 </Text>
                 <View className="flex-row items-center mt-1">
                   <MaterialIcons name="location-on" size={16} color="#65B741" />
-                  <Text className="text-sm font-pregular text-gray-100 ml-1">
+                  <Text className="text-sm font-pregular text-black ml-1">
                     {stock.city}
                   </Text>
                 </View>
@@ -397,14 +412,16 @@ export default function StockDetailScreen() {
             {/* Important Dates with Improved Styling */}
             <View className="mt-6 flex-row justify-between border-b border-gray-100 pb-4">
               <View className="items-start">
-                <Text className="font-plight text-gray-100">Harvested On</Text>
+                <Text className="font-plight text-secondary-200">
+                  Harvested On
+                </Text>
                 <Text className="font-pmedium text-black text-base mt-1">
                   {format(new Date(stock.harvestedAt), "dd MMM yyyy")}
                 </Text>
               </View>
 
               <View className="items-start">
-                <Text className="font-plight text-gray-100">
+                <Text className="font-plight text-secondary-200">
                   Available Until
                 </Text>
                 <Text className="font-pmedium text-black text-base mt-1">
@@ -413,7 +430,9 @@ export default function StockDetailScreen() {
               </View>
 
               <View className="items-start">
-                <Text className="font-plight text-gray-100">Available Qty</Text>
+                <Text className="font-plight text-secondary-200">
+                  Available Qty
+                </Text>
                 <Text className="font-pmedium text-black text-base mt-1">
                   {stock.availableQuantity} kg
                 </Text>
@@ -443,15 +462,12 @@ export default function StockDetailScreen() {
                 >
                   <View className="flex-row justify-between">
                     <Text className="font-psemibold text-black">
-                      {selectedAddress.name}
+                      {selectedAddress.landmark}
                     </Text>
                     <Text className="text-secondary font-pmedium">Change</Text>
                   </View>
-                  <Text className="font-pregular text-black-100 mt-1">
-                    {selectedAddress.addressLine1}
-                  </Text>
                   <Text className="font-pregular text-black-100">
-                    {selectedAddress.addressLine2}
+                    {selectedAddress.addressLine}
                   </Text>
                   <Text className="font-pregular text-black-100">
                     {selectedAddress.city}, {selectedAddress.state},{" "}
@@ -546,7 +562,7 @@ export default function StockDetailScreen() {
                 </View>
 
                 <FlatList
-                  data={mockAddresses}
+                  data={addresses || []}
                   renderItem={renderAddressItem}
                   keyExtractor={(item) => item.id}
                   contentContainerStyle={{ padding: 16 }}

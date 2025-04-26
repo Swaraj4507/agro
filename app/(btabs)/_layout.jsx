@@ -10,7 +10,7 @@ import {
 import { useTranslation } from "react-i18next";
 const TabIcon = ({ icon, color, name, focused }) => {
   return (
-    <View className="flex items-center justify-center gap-2">
+    <View className="flex items-center justify-center ">
       <Image
         source={icon}
         resizeMode="contain"
@@ -18,8 +18,14 @@ const TabIcon = ({ icon, color, name, focused }) => {
         className="w-6 h-6"
       />
       <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
         className={`${focused ? "font-psemibold" : "font-pregular"} text-xs`}
-        style={{ color: color }}
+        style={{
+          color: color,
+          textAlign: "center",
+          width: "100%",
+        }}
       >
         {name}
       </Text>
@@ -40,17 +46,20 @@ const TabsLayout = () => {
             backgroundColor: "#fff",
             borderTopWidth: 0,
             borderTopColor: "#222831",
-            height: hp("10%"),
+            height: hp("9%"),
             marginHorizontal: hp("2%"),
             marginBottom: hp("2%"),
-            paddingVertical: hp("2%"),
             borderRadius: 25,
             borderCurve: "continuous",
             shadowColor: "black",
             shadowOffset: { width: 0, height: 10 },
             shadowRadius: 10,
             shadowOpacity: 0.1,
-            // paddingBottom: hp("3%"),
+            paddingTop: hp("2%"),
+          },
+          tabBarItemStyle: {
+            justifyContent: "center", // center icon+text inside tab
+            alignItems: "center",
           },
         }}
       >

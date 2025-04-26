@@ -68,3 +68,13 @@ export interface StockResponseDTO {
   expiryDate: string;
   createdAt: string;
 }
+export interface Address {
+  id: string;
+  addressLine: string;
+  landmark: string;
+  city: string;
+  state: string;
+  pincode: string;
+  latitude: number;
+  longitude: number;
+}
