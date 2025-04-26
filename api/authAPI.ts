@@ -1,5 +1,5 @@
 import api from "../api/axiosInstance";
-
+import { useAuthStore } from "../stores/authStore";
 export const login = async (phoneNumber: string, password: string) => {
   try {
     const res = await api.post(
@@ -35,10 +35,12 @@ export const logoutAPI = async () => {
 
 export const refreshAccessToken = async (refreshToken: string) => {
   try {
-    const res = await api.post("/auth/refresh", { refreshToken });
+    console.log("Refreshing access token with refresh token:", refreshToken);
+    const res = await api.post("/auth/refresh-token", { refreshToken });
     return { success: true, data: res.data };
   } catch (error) {
     console.error("Token refresh failed:", error);
+    useAuthStore.getState().logout();
     return { success: false };
   }
 };

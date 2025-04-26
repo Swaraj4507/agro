@@ -4,6 +4,7 @@ import {
   PaginatedResponse,
   MarketplaceStockProjection,
   StockFilterParams,
+  StockResponseDTO,
 } from "../types/marketplace";
 
 export const fetchStocks = async (
@@ -14,6 +15,17 @@ export const fetchStocks = async (
     return response.data;
   } catch (error) {
     console.error("Error fetching stocks:", error);
+    throw error;
+  }
+};
+export const fetchStockDetails = async (
+  stockId: string
+): Promise<ApiResponse<StockResponseDTO>> => {
+  try {
+    const response = await api.get(`/stocks/${stockId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching stock details:", error);
     throw error;
   }
 };

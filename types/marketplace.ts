@@ -55,3 +55,16 @@ export interface StockFilterParams {
   page?: number;
   size?: number;
 }
+export interface StockResponseDTO {
+  id: string;
+  cropName: string;
+  cropId: string;
+  stockImage: string;
+  category: string;
+  description: string;
+  finalPricePerKg: number;
+  availableQuantity: number;
+  harvestedAt: string;
+  expiryDate: string;
+  createdAt: string;
+}

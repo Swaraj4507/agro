@@ -120,7 +120,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const res = await refreshAccessToken(currentRefreshToken);
       if (res.success) {
-        const { accessToken } = res.data;
+        console.log("[Auth] New access token:", res.data);
+        const { accessToken } = res.data.data;
         await storeAccessToken(accessToken);
         set({
           accessToken,

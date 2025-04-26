@@ -1,3 +1,4 @@
+// app/marketplace.tsx
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
@@ -16,107 +17,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import RangeSlider from "@react-native-community/slider";
 import { format } from "date-fns";
 import { Loader } from "../../components";
-
-// Mock data for demonstration
-const mockStocks = [
-  {
-    id: "1",
-    cropName: "Organic Wheat",
-    category: "Grains",
-    description:
-      "Premium quality organic wheat, harvested from sustainable farms",
-    pricePerKg: 45.5,
-    finalPricePerKg: 40.0,
-    availableQuantity: 500,
-    city: "Bangalore",
-    harvestedAt: new Date("2025-03-15"),
-    expiryDate: new Date("2025-06-15"),
-    createdAt: new Date("2025-03-20"),
-    farmerId: "101",
-    stockImage:
-      "https://firebasestorage.googleapis.com/v0/b/agrotech-93561.appspot.com/o/photos%2FWnZ7W0P7nESe4YkHAycyuiKFzqt1%2F1720871934897?alt=media&token=24544c72-6f17-433f-86bc-fe7cefd24e80",
-  },
-  {
-    id: "2",
-    cropName: "Fresh Tomatoes",
-    category: "Vegetables",
-    description: "Juicy red tomatoes, perfect for salads and cooking",
-    pricePerKg: 30.0,
-    finalPricePerKg: 25.0,
-    availableQuantity: 200,
-    city: "Mumbai",
-    harvestedAt: new Date("2025-04-10"),
-    expiryDate: new Date("2025-04-25"),
-    createdAt: new Date("2025-04-12"),
-    farmerId: "102",
-    stockImage:
-      "https://firebasestorage.googleapis.com/v0/b/agrotech-93561.appspot.com/o/photos%2FWnZ7W0P7nESe4YkHAycyuiKFzqt1%2F1720871934897?alt=media&token=24544c72-6f17-433f-86bc-fe7cefd24e80",
-  },
-  {
-    id: "3",
-    cropName: "Basmati Rice",
-    category: "Grains",
-    description: "Premium quality basmati rice with aromatic flavor",
-    pricePerKg: 85.0,
-    finalPricePerKg: 80.0,
-    availableQuantity: 1000,
-    city: "Delhi",
-    harvestedAt: new Date("2025-02-20"),
-    expiryDate: new Date("2025-08-20"),
-    createdAt: new Date("2025-02-25"),
-    farmerId: "103",
-    stockImage:
-      "https://firebasestorage.googleapis.com/v0/b/agrotech-93561.appspot.com/o/photos%2FWnZ7W0P7nESe4YkHAycyuiKFzqt1%2F1720871934897?alt=media&token=24544c72-6f17-433f-86bc-fe7cefd24e80",
-  },
-  {
-    id: "4",
-    cropName: "Fresh Apples",
-    category: "Fruits",
-    description: "Crisp and sweet apples from the foothills of Himalayas",
-    pricePerKg: 120.0,
-    finalPricePerKg: 110.0,
-    availableQuantity: 300,
-    city: "Shimla",
-    harvestedAt: new Date("2025-04-05"),
-    expiryDate: new Date("2025-05-15"),
-    createdAt: new Date("2025-04-07"),
-    farmerId: "104",
-    stockImage:
-      "https://firebasestorage.googleapis.com/v0/b/agrotech-93561.appspot.com/o/photos%2FWnZ7W0P7nESe4YkHAycyuiKFzqt1%2F1720871934897?alt=media&token=24544c72-6f17-433f-86bc-fe7cefd24e80",
-  },
-  {
-    id: "5",
-    cropName: "Organic Potatoes",
-    category: "Vegetables",
-    description: "Farm fresh organic potatoes",
-    pricePerKg: 25.0,
-    finalPricePerKg: 22.0,
-    availableQuantity: 800,
-    city: "Chandigarh",
-    harvestedAt: new Date("2025-03-28"),
-    expiryDate: new Date("2025-06-28"),
-    createdAt: new Date("2025-03-30"),
-    farmerId: "105",
-    stockImage:
-      "https://firebasestorage.googleapis.com/v0/b/agrotech-93561.appspot.com/o/photos%2FWnZ7W0P7nESe4YkHAycyuiKFzqt1%2F1720871934897?alt=media&token=24544c72-6f17-433f-86bc-fe7cefd24e80",
-  },
-  {
-    id: "6",
-    cropName: "Organic Onions",
-    category: "Vegetables",
-    description: "Fresh organic onions with rich flavor",
-    pricePerKg: 35.0,
-    finalPricePerKg: 30.0,
-    availableQuantity: 600,
-    city: "Pune",
-    harvestedAt: new Date("2025-04-02"),
-    expiryDate: new Date("2025-06-02"),
-    createdAt: new Date("2025-04-05"),
-    farmerId: "106",
-    stockImage:
-      "https://firebasestorage.googleapis.com/v0/b/agrotech-93561.appspot.com/o/photos%2FWnZ7W0P7nESe4YkHAycyuiKFzqt1%2F1720871934897?alt=media&token=24544c72-6f17-433f-86bc-fe7cefd24e80",
-  },
-];
+import { fetchStocks } from "../../api/marketplace";
+import { MarketplaceStockProjection } from "../../types/marketplace";
 
 // Categories for filter
 const categories = [
@@ -131,129 +33,106 @@ const categories = [
 // Cities for filter
 const cities = [
   "All",
-  "Bangalore",
-  "Mumbai",
-  "Delhi",
-  "Shimla",
-  "Chandigarh",
-  "Pune",
+  "NARASANNAPETA",
+  "BANGALORE",
+  "MUMBAI",
+  "DELHI",
+  "SHIMLA",
+  "CHANDIGARH",
+  "PUNE",
 ];
 
 export default function MarketplaceScreen() {
   const router = useRouter();
-  const [stocks, setStocks] = useState([]);
+  const [stocks, setStocks] = useState<MarketplaceStockProjection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   // Filter states
   const [selectedCity, setSelectedCity] = useState("All");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [priceRange, setPriceRange] = useState([0, 200]);
-  const [harvestedAfter, setHarvestedAfter] = useState(null);
-  const [harvestedBefore, setHarvestedBefore] = useState(null);
-  const [expiryAfter, setExpiryAfter] = useState(null);
-  const [expiryBefore, setExpiryBefore] = useState(null);
 
-  // Date picker states
-  const [showHarvestedAfterPicker, setShowHarvestedAfterPicker] =
-    useState(false);
-  const [showHarvestedBeforePicker, setShowHarvestedBeforePicker] =
-    useState(false);
-  const [showExpiryAfterPicker, setShowExpiryAfterPicker] = useState(false);
-  const [showExpiryBeforePicker, setShowExpiryBeforePicker] = useState(false);
+  const loadStocks = async (reset = false) => {
+    try {
+      const currentPage = reset ? 0 : page;
+      const params = {
+        page: currentPage,
+        size: 10,
+        ...(selectedCity !== "All" && { city: selectedCity }),
+        ...(selectedCategory !== "All" && { category: selectedCategory }),
+        ...(searchQuery && { cropName: searchQuery }),
+      };
+
+      if (reset) {
+        setLoading(true);
+      } else if (currentPage > 0) {
+        setLoadingMore(true);
+      }
+
+      const response = await fetchStocks(params);
+      const newStocks = response.data.content;
+
+      if (reset) {
+        setStocks(newStocks);
+      } else {
+        setStocks((prev) => [...prev, ...newStocks]);
+      }
+
+      setHasMore(!response.data.last);
+      setPage(currentPage + 1);
+    } catch (error) {
+      console.error("Error loading stocks:", error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (!loading && !loadingMore && hasMore) {
+      loadStocks();
+    }
+  };
+
+  const handleSearch = () => {
+    setPage(0);
+    loadStocks(true);
+  };
+
+  const handleFilterApply = () => {
+    setShowFilters(false);
+    setPage(0);
+    loadStocks(true);
+  };
 
   useFocusEffect(
     useCallback(() => {
-      // This will run **every time** the screen comes into focus
-      setLoading(true);
-      setTimeout(() => {
-        setStocks(mockStocks);
-        setLoading(false);
-      }, 1000);
+      loadStocks(true);
     }, [])
   );
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     setStocks(mockStocks);
-  //     setLoading(false);
-  //   }, 1000);
-  // }, []);
-
-  const filteredStocks = stocks.filter((stock) => {
-    // Filter by search query
-    if (
-      searchQuery &&
-      !stock.cropName.toLowerCase().includes(searchQuery.toLowerCase())
-    ) {
-      return false;
-    }
-
-    // Filter by city
-    if (selectedCity !== "All" && stock.city !== selectedCity) {
-      return false;
-    }
-
-    // Filter by category
-    if (selectedCategory !== "All" && stock.category !== selectedCategory) {
-      return false;
-    }
-
-    // Filter by price range
-    if (
-      stock.finalPricePerKg < priceRange[0] ||
-      stock.finalPricePerKg > priceRange[1]
-    ) {
-      return false;
-    }
-
-    // Filter by harvested date
-    if (harvestedAfter && new Date(stock.harvestedAt) < harvestedAfter) {
-      return false;
-    }
-
-    if (harvestedBefore && new Date(stock.harvestedAt) > harvestedBefore) {
-      return false;
-    }
-
-    // Filter by expiry date
-    if (expiryAfter && new Date(stock.expiryDate) < expiryAfter) {
-      return false;
-    }
-
-    if (expiryBefore && new Date(stock.expiryDate) > expiryBefore) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const handleDateChange = (event, selectedDate, setter, setShowPicker) => {
-    setShowPicker(false);
-    if (selectedDate) {
-      setter(selectedDate);
-    }
-  };
 
   const resetFilters = () => {
     setSelectedCity("All");
     setSelectedCategory("All");
     setPriceRange([0, 200]);
-    setHarvestedAfter(null);
-    setHarvestedBefore(null);
-    setExpiryAfter(null);
-    setExpiryBefore(null);
     setSearchQuery("");
+    setPage(0);
+    loadStocks(true);
   };
 
-  const navigateToStockDetail = (stock) => {
+  const navigateToStockDetail = (stock: MarketplaceStockProjection) => {
     router.push({
       pathname: `/stock/${stock.id}`,
       params: { stockId: stock.id },
     });
   };
 
-  const renderStock = ({ item }) => (
+  const renderStock = ({ item }: { item: MarketplaceStockProjection }) => (
     <TouchableOpacity
       className="mb-4 rounded-xl overflow-hidden bg-white shadow-md"
       onPress={() => navigateToStockDetail(item)}
@@ -312,6 +191,15 @@ export default function MarketplaceScreen() {
     </TouchableOpacity>
   );
 
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return (
+      <View className="py-4">
+        <ActivityIndicator size="small" color="#65B741" />
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-primary">
       <View className="flex-1 p-4">
@@ -337,9 +225,16 @@ export default function MarketplaceScreen() {
             placeholder="Search crops..."
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
           />
           {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <TouchableOpacity
+              onPress={() => {
+                setSearchQuery("");
+                handleSearch();
+              }}
+            >
               <Feather name="x" size={20} color="#CDCDE0" />
             </TouchableOpacity>
           ) : null}
@@ -426,135 +321,6 @@ export default function MarketplaceScreen() {
               maximumTrackTintColor="#CDCDE0"
             />
 
-            {/* Date Filters */}
-            <View className="flex-row justify-between">
-              <View className="w-40p">
-                <Text className="text-sm font-pmedium text-black-100 mb-1">
-                  Harvested After
-                </Text>
-                <TouchableOpacity
-                  className="border border-gray-100 p-2 rounded-lg"
-                  onPress={() => setShowHarvestedAfterPicker(true)}
-                >
-                  <Text className="font-pregular">
-                    {harvestedAfter
-                      ? format(harvestedAfter, "dd/MM/yyyy")
-                      : "Select date"}
-                  </Text>
-                </TouchableOpacity>
-                {showHarvestedAfterPicker && (
-                  <DateTimePicker
-                    value={harvestedAfter || new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={(event, date) =>
-                      handleDateChange(
-                        event,
-                        date,
-                        setHarvestedAfter,
-                        setShowHarvestedAfterPicker
-                      )
-                    }
-                  />
-                )}
-              </View>
-
-              <View className="w-40p">
-                <Text className="text-sm font-pmedium text-black-100 mb-1">
-                  Harvested Before
-                </Text>
-                <TouchableOpacity
-                  className="border border-gray-100 p-2 rounded-lg"
-                  onPress={() => setShowHarvestedBeforePicker(true)}
-                >
-                  <Text className="font-pregular">
-                    {harvestedBefore
-                      ? format(harvestedBefore, "dd/MM/yyyy")
-                      : "Select date"}
-                  </Text>
-                </TouchableOpacity>
-                {showHarvestedBeforePicker && (
-                  <DateTimePicker
-                    value={harvestedBefore || new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={(event, date) =>
-                      handleDateChange(
-                        event,
-                        date,
-                        setHarvestedBefore,
-                        setShowHarvestedBeforePicker
-                      )
-                    }
-                  />
-                )}
-              </View>
-            </View>
-
-            <View className="flex-row justify-between mt-3">
-              <View className="w-40p">
-                <Text className="text-sm font-pmedium text-black-100 mb-1">
-                  Expiry After
-                </Text>
-                <TouchableOpacity
-                  className="border border-gray-100 p-2 rounded-lg"
-                  onPress={() => setShowExpiryAfterPicker(true)}
-                >
-                  <Text className="font-pregular">
-                    {expiryAfter
-                      ? format(expiryAfter, "dd/MM/yyyy")
-                      : "Select date"}
-                  </Text>
-                </TouchableOpacity>
-                {showExpiryAfterPicker && (
-                  <DateTimePicker
-                    value={expiryAfter || new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={(event, date) =>
-                      handleDateChange(
-                        event,
-                        date,
-                        setExpiryAfter,
-                        setShowExpiryAfterPicker
-                      )
-                    }
-                  />
-                )}
-              </View>
-
-              <View className="w-40p">
-                <Text className="text-sm font-pmedium text-black-100 mb-1">
-                  Expiry Before
-                </Text>
-                <TouchableOpacity
-                  className="border border-gray-100 p-2 rounded-lg"
-                  onPress={() => setShowExpiryBeforePicker(true)}
-                >
-                  <Text className="font-pregular">
-                    {expiryBefore
-                      ? format(expiryBefore, "dd/MM/yyyy")
-                      : "Select date"}
-                  </Text>
-                </TouchableOpacity>
-                {showExpiryBeforePicker && (
-                  <DateTimePicker
-                    value={expiryBefore || new Date()}
-                    mode="date"
-                    display="default"
-                    onChange={(event, date) =>
-                      handleDateChange(
-                        event,
-                        date,
-                        setExpiryBefore,
-                        setShowExpiryBeforePicker
-                      )
-                    }
-                  />
-                )}
-              </View>
-            </View>
-
             {/* Filter Actions */}
             <View className="flex-row justify-between mt-4">
               <TouchableOpacity
@@ -566,7 +332,7 @@ export default function MarketplaceScreen() {
 
               <TouchableOpacity
                 className="bg-secondary py-2 px-4 rounded-lg"
-                onPress={() => setShowFilters(false)}
+                onPress={handleFilterApply}
               >
                 <Text className="font-pmedium text-white">Apply</Text>
               </TouchableOpacity>
@@ -579,7 +345,7 @@ export default function MarketplaceScreen() {
           <View className="flex-1 justify-center items-center">
             <Loader isLoading={true} content="stocks being loaded" />
           </View>
-        ) : filteredStocks.length === 0 ? (
+        ) : stocks.length === 0 ? (
           <View className="flex-1 justify-center items-center">
             <Feather name="package" size={60} color="#CDCDE0" />
             <Text className="mt-4 font-pmedium text-black-100 text-lg">
@@ -591,11 +357,14 @@ export default function MarketplaceScreen() {
           </View>
         ) : (
           <FlatList
-            data={filteredStocks}
+            data={stocks}
             renderItem={renderStock}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={renderFooter}
           />
         )}
       </View>

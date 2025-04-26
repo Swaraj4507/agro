@@ -24,6 +24,7 @@ import {
 } from "@expo/vector-icons";
 import NumericInput from "react-native-numeric-input";
 import { format } from "date-fns";
+import { fetchStockDetails } from "../../api/marketplace";
 
 const { width } = Dimensions.get("window");
 
@@ -121,14 +122,22 @@ export default function StockDetailScreen() {
   const [selectedAddress, setSelectedAddress] = useState(
     mockAddresses.find((addr) => addr.isDefault) || mockAddresses[0]
   );
-
+  const [error, setError] = useState(null);
   useEffect(() => {
-    // Simulate API call to fetch stock details
-    setTimeout(() => {
-      const foundStock = mockStocks.find((item) => item.id === id);
-      setStock(foundStock);
-      setLoading(false);
-    }, 800);
+    const loadStockDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchStockDetails(id as string);
+        setStock(response.data);
+      } catch (err) {
+        setError("Failed to load stock details");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStockDetails();
   }, [id]);
 
   const handlePlaceOrder = () => {
@@ -249,7 +258,7 @@ export default function StockDetailScreen() {
     );
   }
 
-  if (!stock) {
+  if (error || !stock) {
     return (
       <SafeAreaView className="flex-1 bg-primary">
         <View className="flex-1 justify-center items-center p-4">
@@ -274,7 +283,15 @@ export default function StockDetailScreen() {
   }
 
   const totalPrice = (stock.finalPricePerKg * quantity).toFixed(2);
+  const images =
+    stock.images && Array.isArray(stock.images)
+      ? stock.images
+      : stock.stockImage
+      ? [stock.stockImage]
+      : [];
 
+  const hasVideo = !!stock.videoUrl;
+  const imageIndicators = hasVideo ? [...images, stock.videoUrl] : images;
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -300,7 +317,7 @@ export default function StockDetailScreen() {
           <View className="relative">
             <View className="h-72 w-full">
               <FlatList
-                data={[...stock.images, stock.videoUrl]}
+                data={images}
                 renderItem={renderImageItem}
                 keyExtractor={(_, index) => `image-${index}`}
                 horizontal
@@ -317,7 +334,7 @@ export default function StockDetailScreen() {
 
             {/* Image Indicators */}
             <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
-              {[...stock.images, stock.videoUrl].map((_, index) => (
+              {imageIndicators.map((_, index) => (
                 <View
                   key={index}
                   className={`h-2 w-2 rounded-full mx-1 ${
@@ -330,7 +347,7 @@ export default function StockDetailScreen() {
             </View>
 
             {/* Badge for Video */}
-            {activeImageIndex === stock.images.length && (
+            {activeImageIndex === stock.images?.length && (
               <View className="absolute top-4 right-4 bg-black bg-opacity-70 rounded-lg py-1 px-2 flex-row items-center">
                 <Feather name="video" size={14} color="#fff" />
                 <Text className="text-white font-pmedium text-xs ml-1">
