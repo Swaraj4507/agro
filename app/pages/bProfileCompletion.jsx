@@ -17,17 +17,16 @@ import {
 } from "react-native-responsive-screen";
 import { Ionicons } from "@expo/vector-icons";
 import CircularProgress from "react-native-circular-progress-indicator";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { doc, updateDoc } from "firebase/firestore";
-import { storage, db } from "../../lib/fire";
+import { db } from "../../lib/fire";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import SelectFormField from "../../components/SelectFormField";
 import CustomButton from "../../components/CustomButton";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { uploadFile } from "../../api/upload";
 
 const bProfileCompletionStep = () => {
-  // { initialUserData, onComplete }
   const { t } = useTranslation();
   const { setUser, storeUser, user: initialUserData } = useGlobalContext();
   const [isSubmitting, setSubmitting] = useState(false);
@@ -61,28 +60,33 @@ const bProfileCompletionStep = () => {
     setForm({ ...form, IdType: value });
   };
 
-  const uploadImage = useCallback(async (blob, type) => {
-    const storageRef = ref(storage, `${type}/${Date.now()}`);
-    const uploadTask = uploadBytesResumable(storageRef, blob);
+  const uploadImage = useCallback(async (uri, type) => {
+    try {
+      setUploadStatus((prev) => ({ ...prev, [type]: "uploading" }));
 
-    // setUploadStatus((prev) => ({ ...prev, [type]: "Uploading" }));
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress((prev) => ({ ...prev, [type]: progress }));
-      },
-      (error) => {
-        console.error("Upload error:", error);
-        setUploadStatus((prev) => ({ ...prev, [type]: "error" }));
-      },
-      async () => {
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        setForm((prev) => ({ ...prev, [type]: downloadURL }));
-        setUploadStatus((prev) => ({ ...prev, [type]: "success" }));
-      }
-    );
+      // Create a file object from the URI
+      const filename = uri.split("/").pop();
+      const match = /\.(\w+)$/.exec(filename);
+      const ext = match?.[1] || "jpg";
+      const type = `image/${ext}`;
+
+      const formData = new FormData();
+      formData.append("file", {
+        uri,
+        name: filename,
+        type,
+      });
+
+      const folder = type.toLowerCase().replace("image", "");
+      const response = await uploadFile(formData, folder);
+      console.log("Upload response:", response);
+      setForm((prev) => ({ ...prev, [type]: response }));
+      setUploadStatus((prev) => ({ ...prev, [type]: "success" }));
+      setUploadProgress((prev) => ({ ...prev, [type]: 100 }));
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadStatus((prev) => ({ ...prev, [type]: "error" }));
+    }
   }, []);
 
   const openPicker = useCallback(async (selectType) => {
@@ -91,6 +95,7 @@ const bProfileCompletionStep = () => {
       [selectType]: null,
     }));
     setUploadStatus((prev) => ({ ...prev, [selectType]: null }));
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       aspect: [4, 3],
@@ -98,20 +103,12 @@ const bProfileCompletionStep = () => {
     });
 
     if (!result.canceled) {
-      const blob = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-          resolve(xhr.response);
-        };
-        xhr.onerror = function () {
-          reject(new TypeError("Network request failed"));
-        };
-        xhr.responseType = "blob";
-        xhr.open("GET", result.assets[0].uri, true);
-        xhr.send(null);
-      });
-
-      uploadImage(blob, selectType);
+      setForm((prev) => ({
+        ...prev,
+        [selectType]: result.assets[0].uri,
+      }));
+      setUploadStatus((prev) => ({ ...prev, [selectType]: "selected" }));
+      uploadImage(result.assets[0].uri, selectType);
     }
   }, []);
 
@@ -121,6 +118,7 @@ const bProfileCompletionStep = () => {
       [selectType]: null,
     }));
     setUploadStatus((prev) => ({ ...prev, [selectType]: null }));
+
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       console.log("Camera permission denied");
@@ -137,23 +135,10 @@ const bProfileCompletionStep = () => {
     if (!result.canceled) {
       setForm((prev) => ({
         ...prev,
-        [selectType]: result.assets[0].uri, // Update with the local image URI
+        [selectType]: result.assets[0].uri,
       }));
       setUploadStatus((prev) => ({ ...prev, [selectType]: "selected" }));
-      const blob = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-          resolve(xhr.response);
-        };
-        xhr.onerror = function () {
-          reject(new TypeError("Network request failed"));
-        };
-        xhr.responseType = "blob";
-        xhr.open("GET", result.assets[0].uri, true);
-        xhr.send(null);
-      });
-
-      uploadImage(blob, selectType);
+      uploadImage(result.assets[0].uri, selectType);
     }
   }, []);
 
@@ -166,7 +151,6 @@ const bProfileCompletionStep = () => {
     ) {
       setSubmitted(true);
       showToast(t("fillAllFields"), "error");
-
       return;
     }
     if (
@@ -193,8 +177,6 @@ const bProfileCompletionStep = () => {
       await storeUser(updatedUserData);
       setUser(updatedUserData);
       router.replace("/");
-
-      // onComplete(updatedUserData);
     } catch (error) {
       console.error("Error updating profile:", error);
     } finally {
@@ -216,12 +198,11 @@ const bProfileCompletionStep = () => {
         )}
       </View>
       <View style={styles.uploadContent}>
-        {form[type] && uploadStatus[type] === "selected" ? (
+        {form[type] &&
+        (uploadStatus[type] === "selected" ||
+          uploadStatus[type] === "uploading") ? (
           <>
-            <Image
-              source={{ uri: form[type] }} // Show the local image URI
-              style={styles.previewImage}
-            />
+            <Image source={{ uri: form[type] }} style={styles.previewImage} />
             <CircularProgress
               value={uploadProgress[type]}
               radius={30}
@@ -268,10 +249,6 @@ const bProfileCompletionStep = () => {
 
   return (
     <SafeAreaView className="bg-primary">
-      {/* <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      > */}
       <ScrollView>
         <View style={styles.container} className="">
           <View className="flex justify-center items-center mt-3 mb-5">
@@ -354,7 +331,6 @@ const bProfileCompletionStep = () => {
           />
         </View>
       </ScrollView>
-      {/* </KeyboardAvoidingView> */}
     </SafeAreaView>
   );
 };

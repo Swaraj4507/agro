@@ -426,18 +426,8 @@ export default function App() {
             )}
           </View>
           <CustomButton
-            title={t("Marketplace")}
-            handlePress={() => router.push("pages/marketplace")}
-            containerStyles="w-full mt-10 bg-red-500"
-          />
-          <CustomButton
-            title={t("continueAsFarmer")}
+            title={t("login")}
             handlePress={() => router.push("/sign-in-f")}
-            containerStyles="w-full mt-20"
-          />
-          <CustomButton
-            title={t("continueAsBuyer")}
-            handlePress={() => router.push("/sign-up-b")}
             containerStyles="w-full mt-10"
           />
           <CustomButton

@@ -13,6 +13,8 @@ import {
   Dimensions,
   FlatList,
   TextInput,
+  StatusBar,
+  useWindowDimensions,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,93 +24,10 @@ import {
   Ionicons,
   AntDesign,
 } from "@expo/vector-icons";
-import NumericInput from "react-native-numeric-input";
 import { format } from "date-fns";
 import { fetchStockDetails } from "../../api/marketplace";
-
-const { width } = Dimensions.get("window");
 import { useAddressStore } from "../../stores/addressStore";
 import { useAuthStore } from "../../stores/authStore";
-// Mock data with multiple images for each stock
-const mockStocks = [
-  {
-    id: "1",
-    cropName: "Organic Wheat",
-    category: "Grains",
-    description:
-      "Premium quality organic wheat, harvested from sustainable farms. Grown without pesticides and chemical fertilizers, this wheat is perfect for making chapatis, bread, and other wheat-based products. Our farmers follow traditional farming methods to ensure the best quality.",
-    pricePerKg: 45.5,
-    finalPricePerKg: 40.0,
-    availableQuantity: 500,
-    city: "Bangalore",
-    harvestedAt: new Date("2025-03-15"),
-    expiryDate: new Date("2025-06-15"),
-    createdAt: new Date("2025-03-20"),
-    farmerId: "101",
-    images: [
-      "https://firebasestorage.googleapis.com/v0/b/agrotech-93561.appspot.com/o/photos%2FWnZ7W0P7nESe4YkHAycyuiKFzqt1%2F1720871934897?alt=media&token=24544c72-6f17-433f-86bc-fe7cefd24e80",
-      "https://firebasestorage.googleapis.com/v0/b/agrotech-93561.appspot.com/o/photos%2FWnZ7W0P7nESe4YkHAycyuiKFzqt1%2F1720871934897?alt=media&token=24544c72-6f17-433f-86bc-fe7cefd24e80",
-      "https://firebasestorage.googleapis.com/v0/b/agrotech-93561.appspot.com/o/photos%2FWnZ7W0P7nESe4YkHAycyuiKFzqt1%2F1720871934897?alt=media&token=24544c72-6f17-433f-86bc-fe7cefd24e80",
-    ],
-    videoUrl: "https://via.placeholder.com/500/65B741/FFFFFF?text=Video",
-  },
-  {
-    id: "2",
-    cropName: "Fresh Tomatoes",
-    category: "Vegetables",
-    description:
-      "Juicy red tomatoes, perfect for salads and cooking. These tomatoes are grown in our farms using organic methods. They are harvested at the peak of ripeness to ensure the best flavor and nutritional value.",
-    pricePerKg: 30.0,
-    finalPricePerKg: 25.0,
-    availableQuantity: 200,
-    city: "Mumbai",
-    harvestedAt: new Date("2025-04-10"),
-    expiryDate: new Date("2025-04-25"),
-    createdAt: new Date("2025-04-12"),
-    farmerId: "102",
-    images: [
-      "https://via.placeholder.com/500/FF8E01/FFFFFF?text=Tomatoes+1",
-      "https://via.placeholder.com/500/FF8E01/FFFFFF?text=Tomatoes+2",
-      "https://via.placeholder.com/500/FF8E01/FFFFFF?text=Tomatoes+3",
-    ],
-    videoUrl: "https://via.placeholder.com/500/FF8E01/FFFFFF?text=Video",
-  },
-  // Other stock items...
-];
-
-// Mock user addresses
-const mockAddresses = [
-  {
-    id: "1",
-    name: "Home",
-    addressLine1: "123 Green Valley",
-    addressLine2: "Koramangala",
-    city: "Bangalore",
-    state: "Karnataka",
-    pincode: "560034",
-    isDefault: true,
-  },
-  {
-    id: "2",
-    name: "Office",
-    addressLine1: "Tech Park, Building B",
-    addressLine2: "Whitefield",
-    city: "Bangalore",
-    state: "Karnataka",
-    pincode: "560066",
-    isDefault: false,
-  },
-  {
-    id: "3",
-    name: "Parents Home",
-    addressLine1: "45 Sunshine Colony",
-    addressLine2: "Jayanagar",
-    city: "Bangalore",
-    state: "Karnataka",
-    pincode: "560041",
-    isDefault: false,
-  },
-];
 
 export default function StockDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -124,11 +43,17 @@ export default function StockDetailScreen() {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [error, setError] = useState(null);
   const [addressLoading, setAddressLoading] = useState(false);
+  
+  // Use window dimensions for responsive layout
+  const { width, height } = useWindowDimensions();
+  const imageHeight = height * 0.4; // 40% of screen height for images
+  
   useEffect(() => {
     const loadStockDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetchStockDetails(id as string);
+        const response = await fetchStockDetails(id);
+        console.log("Stock details response:", response.data);
         setStock(response.data);
       } catch (err) {
         setError("Failed to load stock details");
@@ -140,6 +65,7 @@ export default function StockDetailScreen() {
 
     loadStockDetails();
   }, [id]);
+  
   useEffect(() => {
     if (!addresses) {
       setAddressLoading(true);
@@ -151,11 +77,13 @@ export default function StockDetailScreen() {
         .finally(() => setAddressLoading(false));
     }
   }, [addresses, fetchAddresses]);
+  
   useEffect(() => {
     if (addresses && addresses.length > 0 && !selectedAddress) {
       setSelectedAddress(addresses[0]);
     }
   }, [addresses]);
+  
   const handlePlaceOrder = () => {
     if (!selectedAddress) {
       Alert.alert(
@@ -206,15 +134,15 @@ export default function StockDetailScreen() {
     );
   };
 
-  const renderImageItem = ({ item, index }) => (
+  const renderImageItem = ({ item }) => (
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={() => setActiveImageIndex(index)}
-      style={{ width: width }}
+      style={{ width }}
     >
       <Image
         source={{ uri: item }}
-        className="h-full w-full"
+        style={{ height: imageHeight, width }}
         resizeMode="cover"
       />
     </TouchableOpacity>
@@ -262,7 +190,8 @@ export default function StockDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-primary">
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }} edges={['right', 'left']}>
+        <StatusBar barStyle="dark-content" />
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#65B741" />
           <Text className="mt-2 font-pmedium text-secondary">
@@ -275,7 +204,8 @@ export default function StockDetailScreen() {
 
   if (error || !stock) {
     return (
-      <SafeAreaView className="flex-1 bg-primary">
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }} edges={['right', 'left']}>
+        <StatusBar barStyle="dark-content" />
         <View className="flex-1 justify-center items-center p-4">
           <Feather name="alert-circle" size={60} color="#FF8E01" />
           <Text className="mt-4 font-pmedium text-black-100 text-lg">
@@ -307,45 +237,61 @@ export default function StockDetailScreen() {
 
   const hasVideo = !!stock.videoUrl;
   const imageIndicators = hasVideo ? [...images, stock.videoUrl] : images;
+  
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
+      style={{ flex: 1 }}
     >
-      <SafeAreaView className="flex-1 bg-primary">
-        {/* Back Button */}
-        <View className="absolute top-2 left-2 z-10">
+      {/* Use edges prop to control which edges get safe area insets */}
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#FFFFFF" }} edges={['right', 'left']}>
+        <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+        
+        {/* Back Button - Absolute positioned over the image */}
+        <View className="absolute top-12 left-4 z-10">
           <TouchableOpacity
-            className="bg-white w-10 h-10 rounded-full items-center justify-center shadow-md"
+            className="bg-black bg-opacity-30 w-10 h-10 rounded-full items-center justify-center"
             onPress={() => router.back()}
           >
-            <Ionicons name="arrow-back" size={24} color="#65B741" />
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
         <ScrollView
           ref={scrollViewRef}
-          className="flex-1"
           showsVerticalScrollIndicator={false}
+          bounces={false}
+          style={{ flex: 1 }}
         >
           {/* Image Gallery */}
-          <View className="relative">
-            <View className="h-72 w-full">
-              <FlatList
-                data={images}
-                renderItem={renderImageItem}
-                keyExtractor={(_, index) => `image-${index}`}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onMomentumScrollEnd={(e) => {
-                  const newIndex = Math.round(
-                    e.nativeEvent.contentOffset.x / width
-                  );
-                  setActiveImageIndex(newIndex);
-                }}
-              />
-            </View>
+          <View style={{ height: imageHeight }}>
+            <FlatList
+              data={images}
+              renderItem={renderImageItem}
+              keyExtractor={(_, index) => `image-${index}`}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(e) => {
+                const newIndex = Math.round(
+                  e.nativeEvent.contentOffset.x / width
+                );
+                setActiveImageIndex(newIndex);
+              }}
+            />
+
+            {/* Semi-transparent gradient overlay at the top for status bar */}
+            <View 
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 60,
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                zIndex: 5,
+              }}
+            />
 
             {/* Image Indicators */}
             <View className="absolute bottom-4 left-0 right-0 flex-row justify-center">
@@ -363,7 +309,7 @@ export default function StockDetailScreen() {
 
             {/* Badge for Video */}
             {activeImageIndex === stock.images?.length && (
-              <View className="absolute top-4 right-4 bg-black bg-opacity-70 rounded-lg py-1 px-2 flex-row items-center">
+              <View className="absolute top-16 right-4 bg-black bg-opacity-70 rounded-lg py-1 px-2 flex-row items-center">
                 <Feather name="video" size={14} color="#fff" />
                 <Text className="text-white font-pmedium text-xs ml-1">
                   Video
@@ -372,11 +318,11 @@ export default function StockDetailScreen() {
             )}
           </View>
 
-          {/* Product Details */}
-          <View className="bg-white -mt-6 rounded-t-3xl p-6">
+          {/* Product Details - with enhanced styling and responsiveness */}
+          <View className="bg-white -mt-6 rounded-t-3xl px-4 py-6">
             <View className="flex-row justify-between items-start">
-              <View className="flex-1">
-                <Text className="text-2xl font-pbold text-black">
+              <View className="flex-1 mr-2">
+                <Text style={{ fontSize: Math.min(width * 0.06, 24) }} className="font-pbold text-black">
                   {stock.cropName}
                 </Text>
                 <View className="flex-row items-center mt-1">
@@ -393,49 +339,58 @@ export default function StockDetailScreen() {
               </View>
             </View>
 
-            {/* Price */}
-            <View className="flex-row items-end mt-5 bg-secondary bg-opacity-10 p-4 rounded-xl">
-              <Text className="text-2xl font-pbold text-black">
-                ₹{stock.finalPricePerKg}
-              </Text>
-              <Text className="text-base font-pregular text-black ml-1">
-                /kg
-              </Text>
-              <TouchableOpacity
-                className="ml-auto bg-secondary rounded-lg py-2 px-4"
-                onPress={handleNegotiate}
-              >
-                <Text className="text-white font-pmedium">Negotiate Price</Text>
-              </TouchableOpacity>
+            {/* Price - With improved layout */}
+            <View className="mt-5 bg-secondary bg-opacity-10 p-4 rounded-xl">
+              <View className="flex-row justify-between items-center flex-wrap">
+                <View className="flex-row items-baseline">
+                  <Text style={{ fontSize: Math.min(width * 0.06, 24) }} className="font-pbold text-black">
+                    ₹{stock.finalPricePerKg}
+                  </Text>
+                  <Text className="text-base font-pregular text-black ml-1">
+                    /kg
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  className="bg-secondary rounded-lg py-2 px-4 mt-2"
+                  onPress={handleNegotiate}
+                >
+                  <Text className="text-white font-pmedium">Negotiate Price</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            {/* Important Dates with Improved Styling */}
-            <View className="mt-6 flex-row justify-between border-b border-gray-100 pb-4">
-              <View className="items-start">
-                <Text className="font-plight text-secondary-200">
-                  Harvested On
-                </Text>
-                <Text className="font-pmedium text-black text-base mt-1">
-                  {format(new Date(stock.harvestedAt), "dd MMM yyyy")}
-                </Text>
-              </View>
+            {/* Important Dates with responsive grid layout */}
+            <View className="mt-6 border-b border-gray-100 pb-4">
+              <View style={{ 
+                flexDirection: width > 380 ? 'row' : 'column',
+                justifyContent: 'space-between'
+              }}>
+                <View className={`items-start ${width <= 380 ? 'mb-4' : ''}`}>
+                  <Text className="font-plight text-secondary-200">
+                    Harvested On
+                  </Text>
+                  <Text className="font-pmedium text-black text-base mt-1">
+                    {format(new Date(stock.harvestedAt), "dd MMM yyyy")}
+                  </Text>
+                </View>
 
-              <View className="items-start">
-                <Text className="font-plight text-secondary-200">
-                  Available Until
-                </Text>
-                <Text className="font-pmedium text-black text-base mt-1">
-                  {format(new Date(stock.expiryDate), "dd MMM yyyy")}
-                </Text>
-              </View>
+                <View className={`items-start ${width <= 380 ? 'mb-4' : ''}`}>
+                  <Text className="font-plight text-secondary-200">
+                    Available Until
+                  </Text>
+                  <Text className="font-pmedium text-black text-base mt-1">
+                    {format(new Date(stock.expiryDate), "dd MMM yyyy")}
+                  </Text>
+                </View>
 
-              <View className="items-start">
-                <Text className="font-plight text-secondary-200">
-                  Available Qty
-                </Text>
-                <Text className="font-pmedium text-black text-base mt-1">
-                  {stock.availableQuantity} kg
-                </Text>
+                <View className="items-start">
+                  <Text className="font-plight text-secondary-200">
+                    Available Qty
+                  </Text>
+                  <Text className="font-pmedium text-black text-base mt-1">
+                    {stock.availableQuantity} kg
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -487,12 +442,16 @@ export default function StockDetailScreen() {
               )}
             </View>
 
-            {/* Quantity Selection */}
+            {/* Quantity Selection - Improved for better touch targets */}
             <View className="mt-6">
               <Text className="text-lg font-psemibold text-black mb-2">
                 Order Quantity
               </Text>
-              <View className="flex-row items-center justify-between">
+              <View style={{ 
+                flexDirection: width > 380 ? 'row' : 'column',
+                alignItems: width > 380 ? 'center' : 'stretch',
+                justifyContent: 'space-between'
+              }}>
                 <View className="flex-row items-center space-x-2">
                   <TouchableOpacity
                     className="bg-secondary rounded-lg px-4 py-2"
@@ -543,7 +502,7 @@ export default function StockDetailScreen() {
                     <Text className="text-white font-pbold text-lg">+10</Text>
                   </TouchableOpacity>
                 </View>
-                <Text className="font-psemibold text-black">
+                <Text className={`font-psemibold text-black ${width <= 380 ? 'mt-4' : ''}`}>
                   Total: ₹{totalPrice}
                 </Text>
               </View>
@@ -551,7 +510,18 @@ export default function StockDetailScreen() {
 
             {/* Address Modal */}
             {showAddressModal && (
-              <View className="absolute top-0 left-0 right-0 bottom-0 bg-white pt-4 z-20">
+              <ScrollView 
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: '#FFFFFF',
+                  paddingTop: 16,
+                  zIndex: 20,
+                }}
+              >
                 <View className="flex-row justify-between items-center border-b border-gray-100 pb-4 px-4">
                   <Text className="text-xl font-pbold text-black">
                     Select Address
@@ -567,16 +537,32 @@ export default function StockDetailScreen() {
                   keyExtractor={(item) => item.id}
                   contentContainerStyle={{ padding: 16 }}
                 />
-              </View>
+              </ScrollView>
             )}
 
             {/* Space at the bottom for fixed button */}
-            <View className="h-24" />
+            <View style={{ height: 100 }} />
           </View>
         </ScrollView>
 
-        {/* Place Order Button */}
-        <View className="absolute bottom-0 left-0 right-0 bg-white p-4 border-t border-gray-100 shadow-sm">
+        {/* Place Order Button - Fixed at bottom with shadow */}
+        <View 
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: '#FFFFFF',
+            padding: 16,
+            borderTopWidth: 1,
+            borderTopColor: '#F5F5F5',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -3 },
+            shadowOpacity: 0.1,
+            shadowRadius: 5,
+            elevation: 10,
+          }}
+        >
           <TouchableOpacity
             className="bg-secondary rounded-xl py-4 items-center"
             onPress={handlePlaceOrder}

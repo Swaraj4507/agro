@@ -5,11 +5,11 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Image,
   TextInput,
   ActivityIndicator,
   FlatList,
 } from "react-native";
+import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Feather, MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -141,7 +141,6 @@ export default function MarketplaceScreen() {
         <Image
           source={{ uri: item.stockImage }}
           className="h-full w-full"
-          resizeMode="cover"
         />
       </View>
       <View className="p-3">
@@ -201,7 +200,8 @@ export default function MarketplaceScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary">
+    <SafeAreaView className="flex-1 bg-slate-1">
+      
       <View className="flex-1 p-4">
         {/* Header */}
         <View className="flex-row justify-between items-center mb-4">

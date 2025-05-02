@@ -10,7 +10,7 @@ import {
   logoutAPI,
   refreshAccessToken,
 } from "../api/authAPI";
-
+import { useAddressStore } from "./addressStore";
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
@@ -41,7 +41,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         console.log("[Auth] Extracted tokens:", {
           accessToken: accessToken,
           refreshToken: refreshToken,
-          userType: user,
+          user: user,
         });
         await storeToken(accessToken, refreshToken, user);
         set({
@@ -64,6 +64,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       // await logoutAPI();
       await removeToken();
+      useAddressStore.getState().clearAddresses();
       set({
         accessToken: null,
         refreshToken: null,
@@ -75,7 +76,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       console.error("Logout error:", error);
     }
   },
-
+ 
   setAuth: (accessToken, refreshToken, user) => {
     set({
       accessToken,

@@ -23,6 +23,7 @@ export const fetchStockDetails = async (
 ): Promise<ApiResponse<StockResponseDTO>> => {
   try {
     const response = await api.get(`/stocks/${stockId}`);
+    console.log("Raw API response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching stock details:", error);
