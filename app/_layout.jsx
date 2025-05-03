@@ -106,6 +106,12 @@ const RootLayout = () => {
                 }}
               />
               <Stack.Screen
+                name="pages/confirm-order"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
                 name="stock/[id]"
                 options={{ headerShown: false }}
               />
