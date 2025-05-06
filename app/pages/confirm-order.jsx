@@ -26,25 +26,33 @@ import { Loader } from "../../components";
 import { fetchStockDetails } from "../../api/marketplace";
 import { useAddressStore } from "../../stores/addressStore";
 import { useAuthStore } from "../../stores/authStore";
-
+import { createOrder } from "../../api/orderAPI";
 const ConfirmOrderScreen = () => {
   const router = useRouter();
   const { stockId } = useLocalSearchParams();
-  const { addresses, fetchAddresses, addAddress, updateAddress, deleteAddress } = useAddressStore();
+  const {
+    addresses,
+    fetchAddresses,
+    addAddress,
+    updateAddress,
+    deleteAddress,
+  } = useAddressStore();
   const { user } = useAuthStore();
 
   const [loading, setLoading] = useState(true);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
   const [stock, setStock] = useState(null);
   const [selectedPayment, setSelectedPayment] = useState("upi");
-  const [selectedDeliveryOption, setSelectedDeliveryOption] = useState("standard");
+  const [selectedDeliveryOption, setSelectedDeliveryOption] =
+    useState("standard");
   const [deliveryAddress, setDeliveryAddress] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
   const [showAddressDialog, setShowAddressDialog] = useState(false);
   const [quantity, setQuantity] = useState(20);
-
+  const [mobileNumber, setMobileNumber] = useState(user?.phoneNumber || "");
+  const [orderReferenceId, setOrderReferenceId] = useState("");
   // Simulated backend fees and payment methods
   const [platformFee, setPlatformFee] = useState(0);
   const [deliveryFees, setDeliveryFees] = useState({ standard: 0, express: 0 });
@@ -77,7 +85,7 @@ const ConfirmOrderScreen = () => {
   useEffect(() => {
     // Set default address
     if (addresses && addresses.length > 0 && !deliveryAddress) {
-      setDeliveryAddress(addresses.find(a => a.isDefault) || addresses[0]);
+      setDeliveryAddress(addresses.find((a) => a.isDefault) || addresses[0]);
     }
   }, [addresses]);
 
@@ -85,7 +93,7 @@ const ConfirmOrderScreen = () => {
     // Simulate backend fee and payment method fetch
     setTimeout(() => {
       setPlatformFee(0); // fetched from backend
-      setDeliveryFees({ standard: 0, express:100 }); // fetched from backend
+      setDeliveryFees({ standard: 0, express: 100 }); // fetched from backend
       setPaymentMethods([
         { id: "upi", name: "UPI / QR", icon: "qrcode" },
         // { id: "card", name: "Credit / Debit Card", icon: "credit-card" },
@@ -94,7 +102,9 @@ const ConfirmOrderScreen = () => {
       ]);
     }, 800);
   }, []);
-
+  useEffect(() => {
+    if (user?.mobileNumber) setMobileNumber(user.mobileNumber);
+  }, [user?.mobileNumber]);
   const deliveryOptions = [
     {
       id: "standard",
@@ -114,7 +124,10 @@ const ConfirmOrderScreen = () => {
 
   // Price calculations
   const itemTotal = stock ? parseFloat(quantity) * stock.finalPricePerKg : 0;
-  const deliveryFee = selectedDeliveryOption === "standard" ? deliveryFees.standard : deliveryFees.express;
+  const deliveryFee =
+    selectedDeliveryOption === "standard"
+      ? deliveryFees.standard
+      : deliveryFees.express;
   const grandTotal = itemTotal + deliveryFee + platformFee;
 
   // Address management
@@ -129,14 +142,18 @@ const ConfirmOrderScreen = () => {
   };
 
   const handleDeleteAddress = (id) => {
-    Alert.alert("Delete Address", "Are you sure you want to delete this address?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => deleteAddress(id),
-      },
-    ]);
+    Alert.alert(
+      "Delete Address",
+      "Are you sure you want to delete this address?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deleteAddress(id),
+        },
+      ]
+    );
   };
 
   const handleSaveAddress = (address) => {
@@ -148,7 +165,7 @@ const ConfirmOrderScreen = () => {
     setShowAddressDialog(false);
   };
 
-  const handleConfirmOrder = () => {
+  const handleConfirmOrder = async () => {
     if (!deliveryAddress) {
       Alert.alert("Select Address", "Please select a delivery address.");
       return;
@@ -157,14 +174,45 @@ const ConfirmOrderScreen = () => {
       Alert.alert("Invalid Quantity", "Please enter a valid quantity.");
       return;
     }
+    if (!mobileNumber) {
+      Alert.alert("Mobile Number", "Please enter your mobile number.");
+      return;
+    }
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
-      setOrderConfirmed(true);
-      setTimeout(() => { 
-        router.dismissTo("/marketplace"); 
-      }, 3000);
-    }, 2000);
+    try {
+      const body = {
+        stockId: stock.id,
+        orderQuantity: quantity,
+        buyerId: user.id,
+        address: {
+          id: deliveryAddress.id,
+          addressLine: deliveryAddress.addressLine,
+          landmark: deliveryAddress.landmark,
+          city: deliveryAddress.city,
+          state: deliveryAddress.state,
+          pincode: deliveryAddress.pincode,
+          latitude: deliveryAddress.latitude || 0,
+          longitude: deliveryAddress.longitude || 0,
+        },
+        buyerMobileNumber: mobileNumber,
+        expectedDeliveryDate: new Date(
+          Date.now() + 3 * 24 * 60 * 60 * 1000
+        ).toISOString(), // Example: 3 days from now
+      };
+      const res = await createOrder(body);
+      if (res.success && res.data?.referenceId) {
+        setOrderReferenceId(res.data.referenceId);
+        setOrderConfirmed(true);
+        setTimeout(() => {
+          router.dismissTo("/marketplace");
+        }, 3000);
+      } else {
+        Alert.alert("Order Failed", res.message || "Something went wrong.");
+      }
+    } catch (err) {
+      Alert.alert("Order Failed", "Something went wrong.");
+    }
+    setProcessing(false);
   };
 
   if (orderConfirmed) {
@@ -178,12 +226,15 @@ const ConfirmOrderScreen = () => {
             loop={false}
             style={{ width: 200, height: 200 }}
           />
-          <Text className="text-2xl font-bold text-secondary mt-5">Order Confirmed!</Text>
+          <Text className="text-2xl font-bold text-secondary mt-5">
+            Order Confirmed!
+          </Text>
           <Text className="text-base text-gray-600 text-center mt-2">
-            Your order has been placed successfully. You will receive a confirmation shortly.
+            Your order has been placed successfully. You will receive a
+            confirmation shortly.
           </Text>
           <Text className="text-sm text-gray-400 mt-5">
-            Order ID: ORD{Math.floor(Math.random() * 1000000)}
+            Order Reference: {orderReferenceId}
           </Text>
           {/* <TouchableOpacity
             className="bg-secondary py-3 px-6 rounded-lg mt-8"
@@ -243,21 +294,28 @@ const ConfirmOrderScreen = () => {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F7F9FC]" edges={['right', 'left', 'top']}>
+    <SafeAreaView
+      className="flex-1 bg-[#F7F9FC]"
+      edges={["right", "left", "top"]}
+    >
       <StatusBar barStyle="dark-content" backgroundColor="#F7F9FC" />
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 py-3 bg-[#F7F9FC]">
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text className="text-lg font-semibold text-gray-800">Review Order</Text>
+        <Text className="text-lg font-semibold text-gray-800">
+          Review Order
+        </Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
         {/* Order Summary */}
         <View className="bg-white rounded-2xl p-4 mx-4 mt-3 shadow-sm">
-          <Text className="text-base font-semibold text-gray-800 mb-3">Order Summary</Text>
+          <Text className="text-base font-semibold text-gray-800 mb-3">
+            Order Summary
+          </Text>
           <View className="flex-row items-center">
             <Image
               source={{ uri: stock.stockImage }}
@@ -265,19 +323,28 @@ const ConfirmOrderScreen = () => {
               resizeMode="cover"
             />
             <View className="flex-1 ml-3">
-              <Text className="text-base font-semibold text-gray-800">{stock.cropName}</Text>
+              <Text className="text-base font-semibold text-gray-800">
+                {stock.cropName}
+              </Text>
               <View className="flex-row items-center mt-1">
                 <View className="bg-[#E8F5E9] px-2 py-0.5 rounded-xl mr-2">
-                  <Text className="text-xs font-medium text-secondary">{stock.category}</Text>
+                  <Text className="text-xs font-medium text-secondary">
+                    {stock.category}
+                  </Text>
                 </View>
                 <Text className="text-xs text-gray-600 flex-row items-center">
-                  <MaterialIcons name="location-on" size={14} color="#65B741" /> {stock.city}
+                  <MaterialIcons name="location-on" size={14} color="#65B741" />{" "}
+                  {stock.city}
                 </Text>
               </View>
               <View className="flex-row items-baseline mt-2">
-                <Text className="text-base font-bold text-gray-800">₹{stock.finalPricePerKg}</Text>
+                <Text className="text-base font-bold text-gray-800">
+                  ₹{stock.finalPricePerKg}
+                </Text>
                 <Text className="text-xs text-gray-600 ml-1">/kg</Text>
-                <Text className="text-sm text-gray-600 ml-3">× {quantity} kg</Text>
+                <Text className="text-sm text-gray-600 ml-3">
+                  × {quantity} kg
+                </Text>
               </View>
             </View>
           </View>
@@ -306,7 +373,9 @@ const ConfirmOrderScreen = () => {
 
         {/* Quantity Selection */}
         <View className="bg-white rounded-2xl p-4 mx-4 mt-3 shadow-sm">
-          <Text className="text-base font-semibold text-gray-800 mb-3">Order Quantity</Text>
+          <Text className="text-base font-semibold text-gray-800 mb-3">
+            Order Quantity
+          </Text>
           <View className="flex-row items-center space-x-2">
             <TouchableOpacity
               className="bg-secondary rounded-lg px-4 py-2"
@@ -365,7 +434,9 @@ const ConfirmOrderScreen = () => {
         {/* Delivery Address */}
         <View className="bg-white rounded-2xl p-4 mx-4 mt-3 shadow-sm">
           <View className="flex-row justify-between items-center mb-3">
-            <Text className="text-base font-semibold text-gray-800">Delivery Address</Text>
+            <Text className="text-base font-semibold text-gray-800">
+              Delivery Address
+            </Text>
             <TouchableOpacity onPress={() => setShowAddressModal(true)}>
               <Text className="text-secondary font-medium text-sm">Change</Text>
             </TouchableOpacity>
@@ -377,16 +448,23 @@ const ConfirmOrderScreen = () => {
               </View>
               <View className="flex-1">
                 <View className="flex-row items-center mb-1">
-                  <Text className="text-base font-semibold text-gray-800 mr-2">{deliveryAddress.landmark}</Text>
+                  <Text className="text-base font-semibold text-gray-800 mr-2">
+                    {deliveryAddress.landmark}
+                  </Text>
                   {deliveryAddress.isDefault && (
                     <View className="bg-[#E8F5E9] px-2 py-0.5 rounded-xl">
-                      <Text className="text-xs text-secondary font-medium">Default</Text>
+                      <Text className="text-xs text-secondary font-medium">
+                        Default
+                      </Text>
                     </View>
                   )}
                 </View>
-                <Text className="text-sm text-gray-600">{deliveryAddress.addressLine}</Text>
                 <Text className="text-sm text-gray-600">
-                  {deliveryAddress.city}, {deliveryAddress.state}, {deliveryAddress.pincode}
+                  {deliveryAddress.addressLine}
+                </Text>
+                <Text className="text-sm text-gray-600">
+                  {deliveryAddress.city}, {deliveryAddress.state},{" "}
+                  {deliveryAddress.pincode}
                 </Text>
               </View>
             </View>
@@ -402,7 +480,19 @@ const ConfirmOrderScreen = () => {
             </TouchableOpacity>
           )}
         </View>
-
+        <View className="bg-white rounded-2xl p-4 mx-4 mt-3 shadow-sm">
+          <Text className="text-base font-semibold text-gray-800 mb-3">
+            Mobile Number
+          </Text>
+          <TextInput
+            value={mobileNumber}
+            onChangeText={setMobileNumber}
+            keyboardType="phone-pad"
+            maxLength={15}
+            className="border border-gray-200 rounded-lg px-2 py-2 text-base text-black bg-gray-50"
+            placeholder="Enter your mobile number"
+          />
+        </View>
         {/* Address Modal */}
         {showAddressModal && (
           <View
@@ -434,7 +524,9 @@ const ConfirmOrderScreen = () => {
                     className="mt-4 bg-secondary py-3 px-6 rounded-lg items-center"
                     onPress={handleAddAddress}
                   >
-                    <Text className="text-white font-semibold">Add New Address</Text>
+                    <Text className="text-white font-semibold">
+                      Add New Address
+                    </Text>
                   </TouchableOpacity>
                 }
               />
@@ -444,24 +536,42 @@ const ConfirmOrderScreen = () => {
 
         {/* Delivery Options */}
         <View className="bg-white rounded-2xl p-4 mx-4 mt-3 shadow-sm">
-          <Text className="text-base font-semibold text-gray-800 mb-3">Delivery Options</Text>
+          <Text className="text-base font-semibold text-gray-800 mb-3">
+            Delivery Options
+          </Text>
           {deliveryOptions.map((option) => (
             <TouchableOpacity
               key={option.id}
               className={`flex-row justify-between items-center p-3 rounded-xl mb-2 ${
-                selectedDeliveryOption === option.id ? "bg-[#F0F9EA] border border-[#E1F1D8]" : "bg-[#F8F8F8]"
+                selectedDeliveryOption === option.id
+                  ? "bg-[#F0F9EA] border border-[#E1F1D8]"
+                  : "bg-[#F8F8F8]"
               }`}
               onPress={() => setSelectedDeliveryOption(option.id)}
             >
               <View className="flex-row items-center">
-                <View className={`w-9 h-9 rounded-full justify-center items-center mr-3 ${
-                  selectedDeliveryOption === option.id ? "bg-secondary" : "bg-[#F0F9EA]"
-                }`}>
-                  <FontAwesome name={option.icon} size={16} color={selectedDeliveryOption === option.id ? "#fff" : "#65B741"} />
+                <View
+                  className={`w-9 h-9 rounded-full justify-center items-center mr-3 ${
+                    selectedDeliveryOption === option.id
+                      ? "bg-secondary"
+                      : "bg-[#F0F9EA]"
+                  }`}
+                >
+                  <FontAwesome
+                    name={option.icon}
+                    size={16}
+                    color={
+                      selectedDeliveryOption === option.id ? "#fff" : "#65B741"
+                    }
+                  />
                 </View>
                 <View>
-                  <Text className="text-base font-semibold text-gray-800">{option.name}</Text>
-                  <Text className="text-xs text-gray-500 mt-1">Estimated delivery: {option.time}</Text>
+                  <Text className="text-base font-semibold text-gray-800">
+                    {option.name}
+                  </Text>
+                  <Text className="text-xs text-gray-500 mt-1">
+                    Estimated delivery: {option.time}
+                  </Text>
                 </View>
               </View>
               <View className="flex-row items-center">
@@ -478,22 +588,36 @@ const ConfirmOrderScreen = () => {
 
         {/* Payment Methods */}
         <View className="bg-white rounded-2xl p-4 mx-4 mt-3 shadow-sm">
-          <Text className="text-base font-semibold text-gray-800 mb-3">Payment Method</Text>
+          <Text className="text-base font-semibold text-gray-800 mb-3">
+            Payment Method
+          </Text>
           {paymentMethods.map((method) => (
             <TouchableOpacity
               key={method.id}
               className={`flex-row justify-between items-center p-3 rounded-xl mb-2 ${
-                selectedPayment === method.id ? "bg-[#F0F9EA] border border-[#E1F1D8]" : "bg-[#F8F8F8]"
+                selectedPayment === method.id
+                  ? "bg-[#F0F9EA] border border-[#E1F1D8]"
+                  : "bg-[#F8F8F8]"
               }`}
               onPress={() => setSelectedPayment(method.id)}
             >
               <View className="flex-row items-center">
-                <View className={`w-9 h-9 rounded-full justify-center items-center mr-3 ${
-                  selectedPayment === method.id ? "bg-secondary" : "bg-[#F0F9EA]"
-                }`}>
-                  <FontAwesome name={method.icon} size={16} color={selectedPayment === method.id ? "#fff" : "#65B741"} />
+                <View
+                  className={`w-9 h-9 rounded-full justify-center items-center mr-3 ${
+                    selectedPayment === method.id
+                      ? "bg-secondary"
+                      : "bg-[#F0F9EA]"
+                  }`}
+                >
+                  <FontAwesome
+                    name={method.icon}
+                    size={16}
+                    color={selectedPayment === method.id ? "#fff" : "#65B741"}
+                  />
                 </View>
-                <Text className="text-base font-medium text-gray-800">{method.name}</Text>
+                <Text className="text-base font-medium text-gray-800">
+                  {method.name}
+                </Text>
               </View>
               {selectedPayment === method.id ? (
                 <View className="w-5 h-5 rounded-full border-2 border-secondary items-center justify-center">
@@ -508,10 +632,14 @@ const ConfirmOrderScreen = () => {
 
         {/* Price Details */}
         <View className="bg-white rounded-2xl p-4 mx-4 mt-3 shadow-sm mb-6">
-          <Text className="text-base font-semibold text-gray-800 mb-3">Price Details</Text>
+          <Text className="text-base font-semibold text-gray-800 mb-3">
+            Price Details
+          </Text>
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-gray-600">Item Total</Text>
-            <Text className="text-sm font-medium text-gray-800">₹{itemTotal.toFixed(2)}</Text>
+            <Text className="text-sm font-medium text-gray-800">
+              ₹{itemTotal.toFixed(2)}
+            </Text>
           </View>
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-gray-600">Delivery Fee</Text>
@@ -527,8 +655,12 @@ const ConfirmOrderScreen = () => {
           </View>
           <View className="h-px bg-gray-200 my-3" />
           <View className="flex-row justify-between items-center">
-            <Text className="text-base font-semibold text-gray-800">Total Amount</Text>
-            <Text className="text-lg font-bold text-secondary">₹{grandTotal.toFixed(2)}</Text>
+            <Text className="text-base font-semibold text-gray-800">
+              Total Amount
+            </Text>
+            <Text className="text-lg font-bold text-secondary">
+              ₹{grandTotal.toFixed(2)}
+            </Text>
           </View>
         </View>
         <View className="h-24" />
@@ -538,7 +670,9 @@ const ConfirmOrderScreen = () => {
       <View className="absolute bottom-0 left-0 right-0 bg-white flex-row items-center justify-between px-4 py-4 border-t border-gray-100 shadow-lg">
         <View>
           <Text className="text-xs text-gray-400">Total:</Text>
-          <Text className="text-lg font-bold text-gray-800">₹{grandTotal.toFixed(2)}</Text>
+          <Text className="text-lg font-bold text-gray-800">
+            ₹{grandTotal.toFixed(2)}
+          </Text>
         </View>
         <TouchableOpacity
           className="bg-secondary py-3 px-8 rounded-xl min-w-[140px] items-center"
@@ -548,7 +682,9 @@ const ConfirmOrderScreen = () => {
           {processing ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text className="text-white font-semibold text-base">Place Order</Text>
+            <Text className="text-white font-semibold text-base">
+              Place Order
+            </Text>
           )}
         </TouchableOpacity>
       </View>
