@@ -226,7 +226,7 @@ const Profile = () => {
               <View className="flex-row justify-between w-full">
                 <TouchableOpacity
                   className="bg-white p-4 rounded-lg shadow-sm w-[48%] items-center"
-                  onPress={() => router.push("/pages/my-orders")}
+                  onPress={() => router.push("/pages/ordersListing")}
                 >
                   <Image
                     source={icons.booking}

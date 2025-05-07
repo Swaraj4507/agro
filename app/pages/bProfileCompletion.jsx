@@ -68,17 +68,20 @@ const bProfileCompletionStep = () => {
       const filename = uri.split("/").pop();
       const match = /\.(\w+)$/.exec(filename);
       const ext = match?.[1] || "jpg";
-      const type = `image/${ext}`;
+      const fileType = `image/${ext}`;
 
-      const formData = new FormData();
-      formData.append("file", {
+      const file = {
         uri,
         name: filename,
-        type,
-      });
+        type: fileType,
+      };
 
-      const folder = type.toLowerCase().replace("image", "");
-      const response = await uploadFile(formData, folder);
+      // Use a proper folder structure based on the type
+      const folder = type === "profileImage" ? "profiles" : 
+                    type === "IdImage" ? "id-proofs" : 
+                    "organization";
+                    
+      const response = await uploadFile(file, folder);
       console.log("Upload response:", response);
       setForm((prev) => ({ ...prev, [type]: response }));
       setUploadStatus((prev) => ({ ...prev, [type]: "success" }));
@@ -97,7 +100,7 @@ const bProfileCompletionStep = () => {
     setUploadStatus((prev) => ({ ...prev, [selectType]: null }));
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       aspect: [4, 3],
       quality: 1,
     });
@@ -126,7 +129,7 @@ const bProfileCompletionStep = () => {
     }
 
     let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,

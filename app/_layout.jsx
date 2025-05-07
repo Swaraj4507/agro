@@ -114,7 +114,10 @@ const RootLayout = () => {
               <Stack.Screen
                 name="stock/[id]"
                 options={{ headerShown: false }}
-              />
+              /><Stack.Screen
+              name="pages/ordersListing"
+              options={{ headerShown: false }}
+            />
             </Stack>
           </RootSiblingParent>
         </I18nextProvider>

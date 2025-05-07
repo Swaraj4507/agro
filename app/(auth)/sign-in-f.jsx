@@ -129,8 +129,13 @@ const SignIn = () => {
     closeRegisterModal();
     // Short delay to allow modal closing animation to complete
     setTimeout(() => {
-      const route = role === "farmer" ? "/sign-up-f" : "/sign-up-b";
-      router.push(route);
+      // const route = role === "farmer" ? "/sign-up-f" : "/sign-up-b";
+      // router.push(route);
+
+      router.push({
+        pathname: "/sign-up",
+        params: { userType: role }
+      });
     }, 200);
   };
 
